@@ -1,7 +1,7 @@
 FROM php:8.4-fpm
 
-# set your user name, ex: user=bernardo
-ARG user=italofmd
+# override via DOCKER_USER / DOCKER_UID in .env
+ARG user=laravel
 ARG uid=1000
 
 # Install system dependencies
