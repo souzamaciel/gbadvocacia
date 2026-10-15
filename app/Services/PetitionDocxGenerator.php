@@ -14,6 +14,11 @@ class PetitionDocxGenerator
 {
     protected PhpWord $word;
 
+    /**
+     * Next sequential number for the merit section headings (01 – contract, 02 – first topic, ...).
+     */
+    protected int $nextTopicNumber = 1;
+
     /** @var array<string, mixed> */
     protected array $styles;
 
@@ -302,12 +307,11 @@ class PetitionDocxGenerator
         if (is_array($preliminares) && $preliminares !== []) {
             $section->addText('PRELIMINARES', $this->styles['boldUpper'], $this->styles['sectionTitle']);
 
-            foreach (array_values($preliminares) as $index => $preliminar) {
+            foreach (array_values($preliminares) as $preliminar) {
                 $titulo = $preliminar['titulo'] ?? '';
                 if ($titulo !== '') {
-                    $roman = $this->toRoman($index + 1);
                     $section->addText(
-                        mb_strtoupper("{$roman} - {$titulo}"),
+                        mb_strtoupper($titulo),
                         $this->styles['boldUpper'],
                         $this->styles['topicTitle']
                     );
@@ -324,7 +328,7 @@ class PetitionDocxGenerator
 
         // Contrato de trabalho
         $section->addText(
-            '01 – DO CONTRATO DE TRABALHO.',
+            $this->nextTopicHeading('DO CONTRATO DE TRABALHO'),
             $this->styles['boldUpper'],
             $this->styles['topicTitle']
         );
@@ -337,11 +341,11 @@ class PetitionDocxGenerator
         $topicos = $data['topicos'] ?? [];
         if (is_array($topicos)) {
             foreach ($topicos as $topico) {
-                $ordem = $topico['ordem'] ?? '';
+                $topicNumber = $this->nextTopicNumber;
                 $titulo = $topico['titulo'] ?? 'TÓPICO';
 
                 $section->addText(
-                    mb_strtoupper("{$ordem} – {$titulo}."),
+                    $this->nextTopicHeading($titulo),
                     $this->styles['boldUpper'],
                     $this->styles['topicTitle']
                 );
@@ -350,8 +354,8 @@ class PetitionDocxGenerator
                     $this->addHtmlContent($section, $topico['conteudo_html']);
                 }
 
-                foreach ($topico['subtopicos'] ?? [] as $subtopico) {
-                    $subOrdem = $subtopico['ordem'] ?? '';
+                foreach (array_values($topico['subtopicos'] ?? []) as $subIndex => $subtopico) {
+                    $subOrdem = $topicNumber.'.'.($subIndex + 1).' –';
                     $subTitulo = $subtopico['titulo'] ?? 'Subtópico';
 
                     $section->addText(
@@ -369,9 +373,8 @@ class PetitionDocxGenerator
 
         // Honorários
         if (! empty($data['incluir_honorarios'])) {
-            $ordem = $data['honorarios_ordem'] ?? '06';
             $section->addText(
-                mb_strtoupper("{$ordem} – DOS HONORÁRIOS ADVOCATÍCIOS."),
+                $this->nextTopicHeading('DOS HONORÁRIOS ADVOCATÍCIOS'),
                 $this->styles['boldUpper'],
                 $this->styles['topicTitle']
             );
@@ -386,9 +389,8 @@ class PetitionDocxGenerator
     /** @param  array<string, mixed>  $data */
     protected function addPedidos(Section $section, array $data): void
     {
-        $ordem = $data['pedidos_ordem'] ?? '07';
         $section->addText(
-            mb_strtoupper("{$ordem} – DOS PEDIDOS."),
+            $this->nextTopicHeading('DOS PEDIDOS'),
             $this->styles['boldUpper'],
             $this->styles['topicTitle']
         );
@@ -680,24 +682,15 @@ class PetitionDocxGenerator
         ];
     }
 
-    protected function toRoman(int $number): string
+    /**
+     * Build a numbered merit heading ("02 – TITLE.") and advance the counter.
+     */
+    protected function nextTopicHeading(string $title): string
     {
-        $map = [
-            1000 => 'M', 900 => 'CM', 500 => 'D', 400 => 'CD',
-            100 => 'C', 90 => 'XC', 50 => 'L', 40 => 'XL',
-            10 => 'X', 9 => 'IX', 5 => 'V', 4 => 'IV', 1 => 'I',
-        ];
+        $number = str_pad((string) $this->nextTopicNumber++, 2, '0', STR_PAD_LEFT);
+        $title = preg_replace('/^\s*\d+(\.\d+)*\s*[–-]\s*/u', '', $title);
 
-        $result = '';
-
-        foreach ($map as $value => $symbol) {
-            while ($number >= $value) {
-                $result .= $symbol;
-                $number -= $value;
-            }
-        }
-
-        return $result;
+        return mb_strtoupper("{$number} – ".rtrim(trim($title), '.').'.');
     }
 
     protected function save(): string
