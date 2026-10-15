@@ -61,14 +61,19 @@ class PetitionCreatePageTest extends TestCase
         );
     }
 
-    public function test_preliminares_are_listed_as_the_first_group_and_submitted_separately(): void
+    public function test_preliminares_are_listed_as_the_first_group_and_mirrored_in_the_right_panel(): void
     {
         $gratuidade = Topic::query()->where('title', 'DA GRATUIDADE DE JUSTIÇA')->firstOrFail();
 
         $response = $this->actingAs(User::factory()->create())->get(route('petition.create'));
 
-        $response->assertSee('name="preliminares[]" value="'.$gratuidade->id.'"', false);
+        $response->assertSee('class="preliminar-checkbox" data-id="'.$gratuidade->id.'"', false);
+        $response->assertSee('id="preliminares-selected"', false);
         $response->assertDontSee('preliminares-count', false);
+        $this->assertSame(
+            [['id' => $gratuidade->id, 'title' => 'DA GRATUIDADE DE JUSTIÇA']],
+            $response->viewData('preliminares')->all(),
+        );
         $this->assertNotContains('DA GRATUIDADE DE JUSTIÇA', $response->viewData('pedidos')->pluck('title')->all());
     }
 
@@ -135,5 +140,13 @@ class PetitionCreatePageTest extends TestCase
                 && str_contains($caseData, 'DA GRATUIDADE DE JUSTIÇA')
                 && str_contains($caseData, 'PEDIDO A1');
         });
+    }
+
+    public function test_appointment_page_keeps_its_own_preliminares_panel(): void
+    {
+        $response = $this->actingAs(User::factory()->create())->get(route('appointment.create'));
+
+        $response->assertSee('preliminares-count', false);
+        $response->assertDontSee('id="preliminares-selected"', false);
     }
 }

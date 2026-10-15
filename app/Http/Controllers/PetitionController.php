@@ -35,7 +35,11 @@ class PetitionController extends Controller
             ->orderedByGroup()
             ->get(['id', 'title']);
 
-        return view('petitions.create', compact('groups', 'pedidos'));
+        $preliminares = $groups->firstWhere('id', Group::PRELIMINARES_ID)?->topics
+            ->map(fn (Topic $topic): array => ['id' => $topic->id, 'title' => $topic->title])
+            ->values() ?? collect();
+
+        return view('petitions.create', compact('groups', 'preliminares', 'pedidos'));
     }
 
     public function store(Request $request): BinaryFileResponse|JsonResponse

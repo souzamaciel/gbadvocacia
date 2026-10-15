@@ -1,4 +1,4 @@
-@props(['pedidos' => [], 'buttonText' => 'Finalizar atendimento'])
+@props(['pedidos' => [], 'preliminares' => null, 'buttonText' => 'Finalizar atendimento'])
 
 <div class="flex-shrink-0 no-print" style="width: 100%; max-width: 453px;">
 
@@ -38,7 +38,15 @@
             </div>
 
             {{-- Itens selecionados --}}
-            <div id="pedidos-list-container" class="d-flex flex-column flex-grow-1" style="overflow-y: auto; min-height: 0;"></div>
+            <div class="d-flex flex-column flex-grow-1" style="overflow-y: auto; min-height: 0;">
+                @if ($preliminares !== null)
+                    <div id="preliminares-selected" class="d-none mb-3">
+                        <small class="fw-semibold text-uppercase text-secondary" style="font-size: 11px; letter-spacing: .05em;">Preliminares</small>
+                        <div id="preliminares-list-container" class="d-flex flex-column"></div>
+                    </div>
+                @endif
+                <div id="pedidos-list-container" class="d-flex flex-column"></div>
+            </div>
 
             {{-- Botão --}}
             <button type="submit"
@@ -58,6 +66,43 @@
     const allPedidos = @json($pedidos);
     let selectedPedidos = [];
     let dragSrcIndex = null;
+
+    const allPreliminares = @json($preliminares ?? []);
+    let selectedPreliminares = [];
+
+    function togglePreliminar(id, checked) {
+        selectedPreliminares = checked
+            ? [...new Set([...selectedPreliminares, id])]
+            : selectedPreliminares.filter(selectedId => selectedId !== id);
+        renderPreliminares();
+    }
+
+    function removePreliminar(id) {
+        const checkbox = document.querySelector(`.preliminar-checkbox[data-id="${id}"]`);
+        if (checkbox) { checkbox.checked = false; }
+        togglePreliminar(id, false);
+    }
+
+    function renderPreliminares() {
+        const block = document.getElementById('preliminares-selected');
+        if (!block) { return; }
+
+        const chosen = allPreliminares.filter(p => selectedPreliminares.includes(p.id));
+        block.classList.toggle('d-none', chosen.length === 0);
+        document.getElementById('preliminares-list-container').innerHTML = chosen.map(p => `
+            <div class="d-flex align-items-center gap-2 py-2 border-bottom preliminar-item">
+                <span class="flex-shrink-0" style="width: 20px;"></span>
+                <div class="d-flex gap-2 flex-grow-1 align-items-start">
+                    <span class="fw-bold flex-shrink-0" style="color: var(--gb-gold); font-size: 16px;">&bull;</span>
+                    <span style="color: var(--gb-text); font-size: 15px; font-weight: 500; line-height: 1.5;">${p.title}</span>
+                </div>
+                <i class="fa-solid fa-xmark flex-shrink-0"
+                   onclick="removePreliminar(${p.id})"
+                   style="color: #C0392B; font-size: 16px; width: 20px; text-align: center; cursor: pointer;"></i>
+                <input type="hidden" name="preliminares[]" value="${p.id}">
+            </div>
+        `).join('');
+    }
 
     function onPedidoSearch(query) {
         const q = query.trim().toLowerCase();
@@ -100,7 +145,9 @@
     }
 
     function removePedido(index) {
-        selectedPedidos.splice(index, 1);
+        const [removed] = selectedPedidos.splice(index, 1);
+        const checkbox = document.querySelector(`.pedido-checkbox[data-id="${removed.id}"]`);
+        if (checkbox) { checkbox.checked = false; }
         renderPedidos();
     }
 
