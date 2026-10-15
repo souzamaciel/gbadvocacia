@@ -45,12 +45,13 @@ class ReorganizePetitionGroupsMigrationTest extends TestCase
             'ESTABILIDADES',
             'VERBAS RESCISÓRIAS',
             'COMISSÕES E REMUNERAÇÃO',
+            'MULTAS E TRINTÍDIO',
             'DANOS MORAIS',
             'BENEFÍCIOS E OUTROS',
             'HONORÁRIOS E OUTROS',
         ], Group::query()->orderBy('sort_order')->pluck('name')->all());
 
-        $this->assertSame(58, Topic::query()->count());
+        $this->assertSame(61, Topic::query()->count());
     }
 
     public function test_it_moves_existing_topics_keeping_their_content(): void
@@ -77,7 +78,7 @@ class ReorganizePetitionGroupsMigrationTest extends TestCase
 
         $this->migration->up();
 
-        $this->assertSame($before, Topic::query()->orderBy('id')->get(['id', 'title', 'content', 'active'])->toArray());
+        $this->assertSame($before, Topic::query()->whereKey(range(1, 58))->orderBy('id')->get(['id', 'title', 'content', 'active'])->toArray());
     }
 
     public function test_every_topic_ends_up_in_exactly_one_position(): void
@@ -87,7 +88,23 @@ class ReorganizePetitionGroupsMigrationTest extends TestCase
         $this->migration->up();
 
         $positions = Topic::query()->get()->map(fn (Topic $topic): string => $topic->group_id.'-'.$topic->sort_order);
-        $this->assertSame(58, $positions->unique()->count());
+        $this->assertSame(61, $positions->unique()->count());
+    }
+
+    public function test_it_creates_the_multas_group_with_its_three_topics(): void
+    {
+        $this->createProductionSnapshot();
+
+        $this->migration->up();
+
+        $multas = Group::query()->where('name', 'MULTAS E TRINTÍDIO')->firstOrFail();
+        $this->assertSame(10, $multas->sort_order);
+        $this->assertSame(
+            ['MULTA DO ART. 477, § 8º DA CLT', 'MULTA DO ARTIGO 467 DA CLT', 'TRINTÍDIO QUE ANTECEDE A DATA BASE'],
+            $multas->topics->pluck('title')->all(),
+        );
+        $this->assertTrue($multas->topics->every(fn (Topic $topic): bool => $topic->active && $topic->content !== ''));
+        $this->assertStringStartsWith('O pagamento das verbas rescisórias', $multas->topics->first()->content);
     }
 
     public function test_it_deletes_the_empty_x_group(): void
@@ -116,8 +133,8 @@ class ReorganizePetitionGroupsMigrationTest extends TestCase
         $this->migration->up();
         $this->migration->up();
 
-        $this->assertSame(12, Group::query()->count());
-        $this->assertSame(58, Topic::query()->count());
+        $this->assertSame(13, Group::query()->count());
+        $this->assertSame(61, Topic::query()->count());
     }
 
     /**
