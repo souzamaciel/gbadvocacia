@@ -24,16 +24,10 @@ class PetitionController extends Controller
     {
         $groups = Group::query()
             ->where('active', true)
-            ->where('id', '!=', Group::PRELIMINARES_ID)
+            ->orderByRaw('id = ? desc', [Group::PRELIMINARES_ID])
             ->orderBy('sort_order')
             ->with(['topics' => fn ($q) => $q->where('active', true)])
             ->get();
-
-        $preliminares = Topic::query()
-            ->where('active', true)
-            ->where('group_id', Group::PRELIMINARES_ID)
-            ->orderBy('sort_order')
-            ->get(['id', 'title']);
 
         $pedidos = Topic::query()
             ->where('active', true)
@@ -41,7 +35,7 @@ class PetitionController extends Controller
             ->orderedByGroup()
             ->get(['id', 'title']);
 
-        return view('petitions.create', compact('groups', 'preliminares', 'pedidos'));
+        return view('petitions.create', compact('groups', 'pedidos'));
     }
 
     public function store(Request $request): BinaryFileResponse|JsonResponse

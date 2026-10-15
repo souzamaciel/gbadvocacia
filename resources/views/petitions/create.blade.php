@@ -75,9 +75,13 @@
                     <div class="section-body">
                         @foreach ($group->topics as $topic)
                         <label class="check-item">
+                            @if ($group->id === \App\Models\Group::PRELIMINARES_ID)
+                            <input type="checkbox" class="preliminar-checkbox" name="preliminares[]" value="{{ $topic->id }}">
+                            @else
                             <input type="checkbox" class="pedido-checkbox"
                                    data-topico="{{ json_encode(['id' => $topic->id, 'title' => $topic->title]) }}"
                                    onchange="onPedidoCheck(this)">
+                            @endif
                             {{ $topic->title }}
                         </label>
                         @endforeach
@@ -88,9 +92,8 @@
 
         </div>
 
-        {{-- RIGHT: Preliminares + Pedidos --}}
+        {{-- RIGHT: Pedidos --}}
         <div class="d-flex flex-column gap-3 flex-shrink-0 w-100" style="max-width: 453px;">
-            <x-preliminares-panel :preliminares="$preliminares" />
             <x-orders-panel :pedidos="$pedidos" buttonText="Gerar Petição Inicial" />
         </div>
 

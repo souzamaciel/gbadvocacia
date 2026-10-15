@@ -6,6 +6,8 @@ use App\Models\Group;
 use App\Models\Topic;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Client\Request;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class PetitionCreatePageTest extends TestCase
@@ -42,9 +44,9 @@ class PetitionCreatePageTest extends TestCase
         $response = $this->actingAs(User::factory()->create())->get(route('petition.create'));
 
         $response->assertOk();
-        $response->assertSeeInOrder(['GRUPO PRIMEIRO', 'PEDIDO A1', 'PEDIDO A2', 'GRUPO SEGUNDO', 'PEDIDO B1']);
+        $response->assertSeeInOrder(['PRELIMINARES', 'DA GRATUIDADE DE JUSTIÇA', 'GRUPO PRIMEIRO', 'PEDIDO A1', 'PEDIDO A2', 'GRUPO SEGUNDO', 'PEDIDO B1']);
         $this->assertSame(
-            ['GRUPO PRIMEIRO', 'GRUPO SEGUNDO'],
+            ['PRELIMINARES', 'GRUPO PRIMEIRO', 'GRUPO SEGUNDO'],
             $response->viewData('groups')->pluck('name')->all(),
         );
     }
@@ -59,12 +61,24 @@ class PetitionCreatePageTest extends TestCase
         );
     }
 
-    public function test_preliminares_are_not_mixed_with_pedidos(): void
+    public function test_preliminares_are_listed_as_the_first_group_and_submitted_separately(): void
     {
+        $gratuidade = Topic::query()->where('title', 'DA GRATUIDADE DE JUSTIÇA')->firstOrFail();
+
         $response = $this->actingAs(User::factory()->create())->get(route('petition.create'));
 
-        $this->assertSame(['DA GRATUIDADE DE JUSTIÇA'], $response->viewData('preliminares')->pluck('title')->all());
+        $response->assertSee('name="preliminares[]" value="'.$gratuidade->id.'"', false);
+        $response->assertDontSee('preliminares-count', false);
         $this->assertNotContains('DA GRATUIDADE DE JUSTIÇA', $response->viewData('pedidos')->pluck('title')->all());
+    }
+
+    public function test_preliminares_stay_first_even_if_another_group_has_a_lower_position(): void
+    {
+        $this->firstGroup->update(['sort_order' => 0]);
+
+        $response = $this->actingAs(User::factory()->create())->get(route('petition.create'));
+
+        $this->assertSame('PRELIMINARES', $response->viewData('groups')->first()->name);
     }
 
     public function test_appointment_page_uses_the_same_pedidos_order(): void
@@ -76,5 +90,50 @@ class PetitionCreatePageTest extends TestCase
             ['PEDIDO A1', 'PEDIDO A2', 'PEDIDO B1'],
             $response->viewData('pedidos')->pluck('title')->all(),
         );
+    }
+
+    public function test_checked_preliminares_are_sent_to_the_ai_as_preliminares(): void
+    {
+        Http::fake(['*/responses' => Http::response([
+            'id' => 'resp_test',
+            'output' => [[
+                'type' => 'message',
+                'content' => [[
+                    'type' => 'output_text',
+                    'text' => json_encode([
+                        'titulo_acao' => 'RECLAMAÇÃO TRABALHISTA',
+                        'preliminares' => [['titulo' => 'DA GRATUIDADE DE JUSTIÇA', 'conteudo_html' => '<p>Gratuidade.</p>']],
+                        'contrato_trabalho_html' => '<p>Contrato.</p>',
+                        'topicos' => [],
+                        'incluir_honorarios' => false,
+                        'honorarios_ordem' => '06',
+                        'honorarios_html' => '',
+                        'pedidos_ordem' => '07',
+                        'pedidos' => [],
+                        'requerimentos_finais_html' => '<p>Requerimentos.</p>',
+                        'valor_causa' => 'R$ 1.000,00',
+                        'valor_causa_extenso' => 'mil reais',
+                        'pendencias' => [],
+                    ]),
+                ]],
+            ]],
+        ])]);
+
+        $gratuidade = Topic::query()->where('title', 'DA GRATUIDADE DE JUSTIÇA')->firstOrFail();
+        $pedido = Topic::query()->where('title', 'PEDIDO A1')->firstOrFail();
+
+        $response = $this->actingAs(User::factory()->create())->post(route('petition.store'), [
+            'topics' => [$pedido->id],
+            'preliminares' => [$gratuidade->id],
+        ]);
+
+        $response->assertOk();
+        Http::assertSent(function (Request $request): bool {
+            $caseData = $request['input'][0]['content'][0]['text'];
+
+            return str_contains($caseData, '"preliminares_selecionadas"')
+                && str_contains($caseData, 'DA GRATUIDADE DE JUSTIÇA')
+                && str_contains($caseData, 'PEDIDO A1');
+        });
     }
 }
