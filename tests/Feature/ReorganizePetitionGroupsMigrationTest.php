@@ -105,6 +105,9 @@ class ReorganizePetitionGroupsMigrationTest extends TestCase
         );
         $this->assertTrue($multas->topics->every(fn (Topic $topic): bool => $topic->active && $topic->content !== ''));
         $this->assertStringStartsWith('O pagamento das verbas rescisórias', $multas->topics->first()->content);
+        $this->assertStringContainsString('[data da dispensa]', $multas->topics->last()->content);
+        $this->assertStringContainsString('requer a condenação', $multas->topics->get(1)->content);
+        $this->assertDoesNotMatchRegularExpression('/\d{2}[\/.]\d{2}[\/.]\d{4}/', $multas->topics->pluck('content')->implode(' '));
     }
 
     public function test_it_deletes_the_empty_x_group(): void

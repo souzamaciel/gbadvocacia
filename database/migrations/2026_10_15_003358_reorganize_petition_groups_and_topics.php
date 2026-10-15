@@ -106,7 +106,7 @@ return new class extends Migration
     {
         return [
             'MULTA DO ART. 477, § 8º DA CLT' => <<<'TEXT'
-            O pagamento das verbas rescisórias e as guias rescisórias se deram em 20/05/2026, qual seja, 13 dias depois do desligamento. Registre-se que, para as rescisões ocorridas a partir de 11/11/17, passou a ser necessária a realização de dois atos no prazo de 10 dias: (I) o pagamento das verbas rescisórias; e (II) a entrega ao empregado dos documentos comprobatórios da comunicação da extinção contratual aos órgãos competentes, o que não foi observado pela Ré.
+            O pagamento das verbas rescisórias e as guias rescisórias se deram em [data do pagamento das verbas rescisórias], qual seja, [quantidade de dias] dias depois do desligamento. Registre-se que, para as rescisões ocorridas a partir de 11/11/17, passou a ser necessária a realização de dois atos no prazo de 10 dias: (I) o pagamento das verbas rescisórias; e (II) a entrega ao empregado dos documentos comprobatórios da comunicação da extinção contratual aos órgãos competentes, o que não foi observado pela Ré.
 
             Descumprido qualquer um desses requisitos, passou a ser aplicável a multa do § 8º do mesmo dispositivo, cuja redação permaneceu intocada.
 
@@ -114,9 +114,11 @@ return new class extends Migration
             TEXT,
             'MULTA DO ARTIGO 467 DA CLT' => <<<'TEXT'
             O art. 467 da CLT estabelece que: "em caso de rescisão de contrato de trabalho, motivada pelo empregador ou pelo empregado, havendo controvérsia sobre o montante das verbas rescisórias, o empregador é obrigado a pagar ao trabalhador, na data do comparecimento à Justiça do Trabalho, a parte incontroversa dessas verbas, sob pena de pagá-las acrescidas de 50% (cinquenta por cento)".
+
+            Assim, requer a condenação da Reclamada ao pagamento das verbas rescisórias incontroversas acrescidas de 50% (cinquenta por cento), caso não sejam quitadas na data do comparecimento à Justiça do Trabalho.
             TEXT,
             'TRINTÍDIO QUE ANTECEDE A DATA BASE' => <<<'TEXT'
-            MMº Juiz, a data base da categoria foi em 01 de janeiro de 2025, e tendo autor sido dispensado sem justa causa em 19.12.2024, tem-se que a empresa não obedeceu a indenização adicional. Para fins de incidência do art. 9º da Lei 7.238/84, considera-se a projeção do aviso prévio, sendo devido o pagamento da indenização adicional quando a rescisão contratual ocorre nos 30 dias que antecedem a data-base da categoria, o que desde já requer.
+            MMº Juiz, a data base da categoria foi em [data-base da categoria], e tendo autor sido dispensado sem justa causa em [data da dispensa], tem-se que a empresa não obedeceu a indenização adicional. Para fins de incidência do art. 9º da Lei 7.238/84, considera-se a projeção do aviso prévio, sendo devido o pagamento da indenização adicional quando a rescisão contratual ocorre nos 30 dias que antecedem a data-base da categoria, o que desde já requer.
             TEXT,
         ];
     }
