@@ -67,7 +67,7 @@ class PetitionCreatePageTest extends TestCase
 
         $response = $this->actingAs(User::factory()->create())->get(route('petition.create'));
 
-        $response->assertSee('class="preliminar-checkbox" data-id="'.$gratuidade->id.'"', false);
+        $response->assertSee('class="preliminar-checkbox" data-id="'.$gratuidade->id.'" checked', false);
         $response->assertSee('id="preliminares-selected"', false);
         $response->assertDontSee('preliminares-count', false);
         $this->assertSame(
@@ -147,6 +147,8 @@ class PetitionCreatePageTest extends TestCase
         $response = $this->actingAs(User::factory()->create())->get(route('appointment.create'));
 
         $response->assertSee('preliminares-count', false);
+        $response->assertSee('1 preliminar selecionada');
+        $response->assertSeeInOrder(['class="preliminar-checkbox"', 'checked'], false);
         $response->assertDontSee('id="preliminares-selected"', false);
     }
 }

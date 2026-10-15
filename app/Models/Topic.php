@@ -13,6 +13,10 @@ class Topic extends Model
     /** @use HasFactory<TopicFactory> */
     use HasFactory;
 
+    public const JUIZO_100_DIGITAL_ID = 1;
+
+    public const GRATUIDADE_JUSTICA_ID = 2;
+
     protected $fillable = [
         'group_id',
         'title',

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Topic;
 use PhpOffice\PhpWord\Element\Section;
 use PhpOffice\PhpWord\Element\TextRun;
 use PhpOffice\PhpWord\IOFactory;
@@ -435,19 +436,25 @@ class PetitionDocxGenerator
             $this->styles['indent']
         );
 
-        $section->addText(
-            'A tramitação do processo no Juízo 100% digital, bem como sejam intimadas as partes requeridas para '
-            .'manifestarem sobre a petição no prazo de 5 dias, sob pena do silêncio entender-se como concordância tácita.',
-            $this->styles['normal'],
-            $this->styles['indent']
-        );
+        $selectedPreliminares = $data['preliminares_selecionadas_ids'] ?? [];
 
-        $section->addText(
-            'Os benefícios da Assistência Judiciária Gratuita, nos termos da Lei nº 1.060/50 e suas alterações, '
-            .'por ser a reclamante pessoa pobre no sentido legal.',
-            $this->styles['normal'],
-            $this->styles['indent']
-        );
+        if (in_array(Topic::JUIZO_100_DIGITAL_ID, $selectedPreliminares, true)) {
+            $section->addText(
+                'A tramitação do processo no Juízo 100% digital, bem como sejam intimadas as partes requeridas para '
+                .'manifestarem sobre a petição no prazo de 5 dias, sob pena do silêncio entender-se como concordância tácita.',
+                $this->styles['normal'],
+                $this->styles['indent']
+            );
+        }
+
+        if (in_array(Topic::GRATUIDADE_JUSTICA_ID, $selectedPreliminares, true)) {
+            $section->addText(
+                'Os benefícios da Assistência Judiciária Gratuita, nos termos da Lei nº 1.060/50 e suas alterações, '
+                .'por ser a reclamante pessoa pobre no sentido legal.',
+                $this->styles['normal'],
+                $this->styles['indent']
+            );
+        }
 
         if (! empty($data['requerimentos_finais_html'])) {
             $this->addHtmlContent($section, $data['requerimentos_finais_html']);

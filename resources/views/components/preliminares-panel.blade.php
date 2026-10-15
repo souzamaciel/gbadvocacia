@@ -7,7 +7,7 @@
         {{-- Header --}}
         <div>
             <h5 class="fw-bold mb-1" style="color: #1E293B;">Preliminares</h5>
-            <small id="preliminares-count" class="text-secondary">0 preliminares selecionadas</small>
+            <small id="preliminares-count" class="text-secondary">{{ count($preliminares) }} {{ count($preliminares) === 1 ? 'preliminar selecionada' : 'preliminares selecionadas' }}</small>
         </div>
 
         {{-- Lista de checkboxes --}}
@@ -19,6 +19,7 @@
                            name="preliminares[]"
                            value="{{ $preliminar->id }}"
                            class="preliminar-checkbox"
+                           checked
                            onchange="onPreliminarChange()"
                            style="width: 15px; height: 15px; accent-color: var(--gb-navy);">
                     {{ $preliminar->title }}

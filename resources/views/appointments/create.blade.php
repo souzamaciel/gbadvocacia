@@ -1717,11 +1717,9 @@
         (prefill.pedidos || []).forEach(p => addPedido(p));
 
         // Preliminares panel
-        (prefill.preliminares || []).forEach(p => {
-            const cb = document.querySelector(`.preliminar-checkbox[value="${p.id}"]`);
-            if (cb) {
-                cb.checked = true;
-            }
+        const prefillPreliminarIds = (prefill.preliminares || []).map(p => String(p.id));
+        document.querySelectorAll('.preliminar-checkbox').forEach(cb => {
+            cb.checked = prefillPreliminarIds.includes(cb.value);
         });
         if (typeof onPreliminarChange === 'function') { onPreliminarChange(); }
 

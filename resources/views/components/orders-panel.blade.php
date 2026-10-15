@@ -77,6 +77,12 @@
         renderPreliminares();
     }
 
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.preliminar-checkbox[data-id]').forEach(checkbox => {
+            if (checkbox.checked) { togglePreliminar(Number(checkbox.dataset.id), true); }
+        });
+    });
+
     function removePreliminar(id) {
         const checkbox = document.querySelector(`.preliminar-checkbox[data-id="${id}"]`);
         if (checkbox) { checkbox.checked = false; }

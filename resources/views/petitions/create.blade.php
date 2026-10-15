@@ -76,7 +76,7 @@
                         @foreach ($group->topics as $topic)
                         <label class="check-item">
                             @if ($group->id === \App\Models\Group::PRELIMINARES_ID)
-                            <input type="checkbox" class="preliminar-checkbox" data-id="{{ $topic->id }}"
+                            <input type="checkbox" class="preliminar-checkbox" data-id="{{ $topic->id }}" checked
                                    onchange="togglePreliminar({{ $topic->id }}, this.checked)">
                             @else
                             <input type="checkbox" class="pedido-checkbox" data-id="{{ $topic->id }}"

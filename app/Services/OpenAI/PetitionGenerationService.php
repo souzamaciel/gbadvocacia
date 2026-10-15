@@ -325,6 +325,7 @@ TEXT;
 
             // blocos variáveis gerados pela IA
             'preliminares' => $structured['preliminares'] ?? [],
+            'preliminares_selecionadas_ids' => array_map('intval', array_column($dadosOriginais['preliminares_selecionadas'] ?? [], 'topic_id')),
             'contrato_trabalho_html' => $structured['contrato_trabalho_html'] ?? '',
             'topicos' => $structured['topicos'] ?? [],
             'incluir_honorarios' => $structured['incluir_honorarios'] ?? false,
