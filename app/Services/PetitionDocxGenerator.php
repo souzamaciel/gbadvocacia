@@ -71,28 +71,40 @@ class PetitionDocxGenerator
         return $this->save();
     }
 
+    /**
+     * Header and footer copied from the office's petition template (PETIÇÃO.doc).
+     */
     protected function addHeaderAndFooter(Section $section): void
     {
         $header = $section->addHeader();
         $header->addImage(
-            public_path('images/logo_marca_dagua.png'),
+            public_path('images/logo_peticao.png'),
             [
-                'width' => Converter::cmToPoint(3.5),
-                'height' => Converter::cmToPoint(2.8),
-                'alignment' => Jc::CENTER,
+                'width' => Converter::cmToPoint(6.59),
+                'height' => Converter::cmToPoint(3.53),
+                'positioning' => 'relative',
+                'posHorizontal' => 'absolute',
+                'posHorizontalRel' => 'column',
+                'marginLeft' => Converter::cmToPoint(5.25),
+                'posVertical' => 'absolute',
+                'posVerticalRel' => 'line',
+                'marginTop' => Converter::cmToPoint(-0.89),
+                'wrappingStyle' => 'topAndBottom',
             ]
         );
-        $header->addTextBreak(1, ['size' => 6]);
 
         $footer = $section->addFooter();
+        $footer->addPreserveText('{PAGE}', null, ['alignment' => Jc::END, 'spaceAfter' => 0]);
+
+        $footerFont = ['name' => 'Verdana', 'size' => 10, 'color' => 'D7AA2D'];
         $footer->addText(
             'Rua Jaspe, nº 290, Bairro: Iguaçu – Cidade: Ipatinga/MG – CEP: 35.162-077.',
-            ['size' => 10, 'color' => 'D7AA2D'],
+            $footerFont,
             ['alignment' => Jc::CENTER, 'spaceAfter' => 0]
         );
         $footer->addText(
             '(31) 3616-2247 (31) 98768-2247. Email: atendimento@advocaciagb.com',
-            ['size' => 10, 'color' => 'D7AA2D'],
+            $footerFont,
             ['alignment' => Jc::CENTER, 'spaceAfter' => 0]
         );
     }
@@ -112,10 +124,14 @@ class PetitionDocxGenerator
     {
         $this->styles = [
             'section' => [
-                'marginTop' => Converter::cmToTwip(3),
-                'marginBottom' => Converter::cmToTwip(2),
-                'marginLeft' => Converter::cmToTwip(3),
-                'marginRight' => Converter::cmToTwip(2),
+                'pageSizeW' => 11906,
+                'pageSizeH' => 16838,
+                'marginTop' => 2269,
+                'marginBottom' => 1418,
+                'marginLeft' => 1276,
+                'marginRight' => 1133,
+                'headerHeight' => 737,
+                'footerHeight' => 352,
             ],
             'center' => [
                 'alignment' => Jc::CENTER,
