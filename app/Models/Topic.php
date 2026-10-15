@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Database\Factories\TopicFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -32,5 +33,17 @@ class Topic extends Model
     public function group(): BelongsTo
     {
         return $this->belongsTo(Group::class);
+    }
+
+    /**
+     * Order topics by their group's position first, then by their own position.
+     *
+     * @param  Builder<Topic>  $query
+     */
+    public function scopeOrderedByGroup(Builder $query): void
+    {
+        $query
+            ->orderBy(Group::query()->select('sort_order')->whereColumn('groups.id', 'topics.group_id'))
+            ->orderBy('sort_order');
     }
 }

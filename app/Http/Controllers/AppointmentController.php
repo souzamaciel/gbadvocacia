@@ -32,7 +32,7 @@ class AppointmentController extends Controller
         $pedidos = Topic::query()
             ->where('active', true)
             ->where('group_id', '!=', Group::PRELIMINARES_ID)
-            ->orderBy('sort_order')
+            ->orderedByGroup()
             ->get(['id', 'title']);
 
         $prefill = $request->boolean('test') ? $this->testPrefillData() : null;
