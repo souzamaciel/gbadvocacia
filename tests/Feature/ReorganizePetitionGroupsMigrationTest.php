@@ -45,13 +45,12 @@ class ReorganizePetitionGroupsMigrationTest extends TestCase
             'ESTABILIDADES',
             'VERBAS RESCISÓRIAS',
             'COMISSÕES E REMUNERAÇÃO',
-            'MULTAS E TRINTÍDIO',
             'DANOS MORAIS',
             'BENEFÍCIOS E OUTROS',
             'HONORÁRIOS E OUTROS',
         ], Group::query()->orderBy('sort_order')->pluck('name')->all());
 
-        $this->assertSame(79, Topic::query()->count());
+        $this->assertSame(58, Topic::query()->count());
     }
 
     public function test_it_moves_existing_topics_keeping_their_content(): void
@@ -62,27 +61,33 @@ class ReorganizePetitionGroupsMigrationTest extends TestCase
         $this->migration->up();
 
         $this->assertSame([1, 2], $this->topicIdsOf('PRELIMINARES'));
-        $this->assertSame([3, 4, 5], array_slice($this->topicIdsOf('RESPONSABILIDADE E PRESCRIÇÃO'), 0, 3));
+        $this->assertSame([3, 4, 5], $this->topicIdsOf('RESPONSABILIDADE E PRESCRIÇÃO'));
         $this->assertSame([54, 23], $this->topicIdsOf('HONORÁRIOS E OUTROS'));
 
         $inadimplemento = Topic::query()->find(52);
         $this->assertSame('DOENÇA OCUPACIONAL E ACIDENTE DE TRABALHO', $inadimplemento->group->name);
-        $this->assertSame(6, $inadimplemento->sort_order);
+        $this->assertSame(4, $inadimplemento->sort_order);
         $this->assertSame($originalContent, $inadimplemento->content);
     }
 
-    public function test_it_creates_missing_topics_with_their_content(): void
+    public function test_it_never_changes_titles_or_texts(): void
+    {
+        $this->createProductionSnapshot();
+        $before = Topic::query()->orderBy('id')->get(['id', 'title', 'content', 'active'])->toArray();
+
+        $this->migration->up();
+
+        $this->assertSame($before, Topic::query()->orderBy('id')->get(['id', 'title', 'content', 'active'])->toArray());
+    }
+
+    public function test_every_topic_ends_up_in_exactly_one_position(): void
     {
         $this->createProductionSnapshot();
 
         $this->migration->up();
 
-        $multas = Group::query()->where('name', 'MULTAS E TRINTÍDIO')->firstOrFail();
-        $this->assertSame(
-            ['MULTA DO ART. 477, § 8º DA CLT', 'MULTA DO ARTIGO 467 DA CLT', 'TRINTÍDIO QUE ANTECEDE A DATA BASE'],
-            $multas->topics->pluck('title')->all(),
-        );
-        $this->assertTrue($multas->topics->every(fn (Topic $topic): bool => $topic->active && $topic->content !== ''));
+        $positions = Topic::query()->get()->map(fn (Topic $topic): string => $topic->group_id.'-'.$topic->sort_order);
+        $this->assertSame(58, $positions->unique()->count());
     }
 
     public function test_it_deletes_the_empty_x_group(): void
@@ -111,8 +116,8 @@ class ReorganizePetitionGroupsMigrationTest extends TestCase
         $this->migration->up();
         $this->migration->up();
 
-        $this->assertSame(13, Group::query()->count());
-        $this->assertSame(79, Topic::query()->count());
+        $this->assertSame(12, Group::query()->count());
+        $this->assertSame(58, Topic::query()->count());
     }
 
     /**
