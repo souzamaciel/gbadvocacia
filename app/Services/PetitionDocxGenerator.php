@@ -9,6 +9,7 @@ use PhpOffice\PhpWord\IOFactory;
 use PhpOffice\PhpWord\PhpWord;
 use PhpOffice\PhpWord\Shared\Converter;
 use PhpOffice\PhpWord\SimpleType\Jc;
+use PhpOffice\PhpWord\Style\Tab;
 
 class PetitionDocxGenerator
 {
@@ -92,30 +93,35 @@ class PetitionDocxGenerator
                 'wrappingStyle' => 'topAndBottom',
             ]
         );
+        $header->addText('', null, ['spaceAfter' => 0]);
 
         $footer = $section->addFooter();
-        $footer->addPreserveText('{PAGE}', null, ['alignment' => Jc::END, 'spaceAfter' => 0]);
-
         $footerFont = ['name' => 'Verdana', 'size' => 10, 'color' => 'D7AA2D'];
-        $footer->addText(
-            'Rua Jaspe, nº 290, Bairro: Iguaçu – Cidade: Ipatinga/MG – CEP: 35.162-077.',
-            $footerFont,
-            ['alignment' => Jc::CENTER, 'spaceAfter' => 0]
-        );
+        $bodyWidth = 11906 - 1276 - 1133;
+
+        $addressLine = $footer->addTextRun([
+            'alignment' => Jc::LEFT,
+            'spaceAfter' => 0,
+            'lineHeight' => 1.0,
+            'tabs' => [new Tab('center', intdiv($bodyWidth, 2)), new Tab('right', $bodyWidth)],
+        ]);
+        $addressLine->addText("\t".'Rua Jaspe, nº 290, Bairro: Iguaçu – Cidade: Ipatinga/MG – CEP: 35.162-077.'."\t", $footerFont);
+        $addressLine->addField('PAGE');
+
         $footer->addText(
             '(31) 3616-2247 (31) 98768-2247. Email: atendimento@advocaciagb.com',
             $footerFont,
-            ['alignment' => Jc::CENTER, 'spaceAfter' => 0]
+            ['alignment' => Jc::CENTER, 'spaceAfter' => 0, 'lineHeight' => 1.0]
         );
     }
 
     protected function configureDefaults(): void
     {
-        $this->word->setDefaultFontName('Times New Roman');
+        $this->word->setDefaultFontName('Calibri');
         $this->word->setDefaultFontSize(12);
         $this->word->setDefaultParagraphStyle([
             'alignment' => Jc::BOTH,
-            'spaceAfter' => Converter::pointToTwip(6),
+            'spaceAfter' => Converter::pointToTwip(18),
             'lineHeight' => 1.5,
         ]);
     }
@@ -126,7 +132,7 @@ class PetitionDocxGenerator
             'section' => [
                 'pageSizeW' => 11906,
                 'pageSizeH' => 16838,
-                'marginTop' => 2269,
+                'marginTop' => 2835,
                 'marginBottom' => 1418,
                 'marginLeft' => 1276,
                 'marginRight' => 1133,
@@ -135,35 +141,46 @@ class PetitionDocxGenerator
             ],
             'center' => [
                 'alignment' => Jc::CENTER,
-                'spaceAfter' => Converter::pointToTwip(6),
+                'spaceAfter' => Converter::pointToTwip(18),
                 'lineHeight' => 1.5,
             ],
             'indent' => [
                 'alignment' => Jc::BOTH,
-                'spaceAfter' => Converter::pointToTwip(6),
+                'spaceAfter' => Converter::pointToTwip(18),
+                'lineHeight' => 1.5,
+            ],
+            'tight' => [
+                'alignment' => Jc::BOTH,
+                'spaceAfter' => 0,
                 'lineHeight' => 1.5,
             ],
             'sectionTitle' => [
                 'alignment' => Jc::BOTH,
-                'spaceBefore' => Converter::pointToTwip(18),
-                'spaceAfter' => Converter::pointToTwip(8),
+                'keepNext' => true,
+                'spaceBefore' => 0,
+                'spaceAfter' => 0,
                 'lineHeight' => 1.5,
             ],
             'topicTitle' => [
                 'alignment' => Jc::BOTH,
-                'spaceBefore' => Converter::pointToTwip(16),
-                'spaceAfter' => Converter::pointToTwip(6),
+                'keepNext' => true,
+                'spaceBefore' => 0,
+                'spaceAfter' => Converter::pointToTwip(18),
                 'lineHeight' => 1.5,
+                'borderSize' => 4,
+                'borderColor' => '000000',
             ],
             'subtopicTitle' => [
                 'alignment' => Jc::BOTH,
-                'spaceBefore' => Converter::pointToTwip(12),
-                'spaceAfter' => Converter::pointToTwip(4),
+                'keepNext' => true,
+                'spaceBefore' => 0,
+                'spaceAfter' => Converter::pointToTwip(18),
                 'lineHeight' => 1.5,
             ],
             'spacer' => [
-                'spaceAfter' => Converter::pointToTwip(24),
+                'spaceAfter' => Converter::pointToTwip(54),
             ],
+            'sectionLabel' => ['bold' => true, 'underline' => 'single', 'allCaps' => true],
             'bold' => ['bold' => true],
             'boldUpper' => ['bold' => true, 'allCaps' => true],
             'normal' => [],
@@ -177,15 +194,14 @@ class PetitionDocxGenerator
         $section->addText(
             mb_strtoupper("AO DOUTO JUÍZO DA {$vara}"),
             $this->styles['boldUpper'],
-            $this->styles['center']
+            array_merge($this->styles['indent'], $this->styles['spacer'])
         );
-        $section->addTextBreak(1, null, $this->styles['spacer']);
     }
 
     /** @param  array<string, mixed>  $data */
     protected function addQualificacaoReclamante(Section $section, array $data): void
     {
-        $textRun = $section->addTextRun($this->styles['indent']);
+        $textRun = $section->addTextRun($this->styles['tight']);
 
         $textRun->addText(
             mb_strtoupper($data['cliente_nome'] ?? 'NOME DA PARTE AUTORA'),
@@ -268,14 +284,9 @@ class PetitionDocxGenerator
     /** @param  array<string, mixed>  $data */
     protected function addTituloAcao(Section $section, array $data): void
     {
-        $section->addText(
-            'AÇÃO TRABALHISTA, em face de:',
-            ['bold' => true, 'size' => 13],
-            array_merge($this->styles['center'], [
-                'spaceBefore' => Converter::pointToTwip(20),
-                'spaceAfter' => Converter::pointToTwip(14),
-            ])
-        );
+        $textRun = $section->addTextRun($this->styles['center']);
+        $textRun->addText('AÇÃO TRABALHISTA', $this->styles['bold']);
+        $textRun->addText(', em face de:');
     }
 
     /** @param  array<string, mixed>  $data */
@@ -321,7 +332,7 @@ class PetitionDocxGenerator
         // Preliminares
         $preliminares = $data['preliminares'] ?? [];
         if (is_array($preliminares) && $preliminares !== []) {
-            $section->addText('PRELIMINARES', $this->styles['boldUpper'], $this->styles['sectionTitle']);
+            $section->addText('PRELIMINARES', $this->styles['sectionLabel'], $this->styles['sectionTitle']);
 
             foreach (array_values($preliminares) as $preliminar) {
                 $titulo = $preliminar['titulo'] ?? '';
@@ -340,7 +351,7 @@ class PetitionDocxGenerator
         }
 
         // Mérito
-        $section->addText('MÉRITO', $this->styles['boldUpper'], $this->styles['sectionTitle']);
+        $section->addText('MÉRITO', $this->styles['sectionLabel'], $this->styles['sectionTitle']);
 
         // Contrato de trabalho
         $section->addText(
@@ -420,9 +431,9 @@ class PetitionDocxGenerator
             $this->styles['indent']
         );
 
-        $pedidos = $data['pedidos'] ?? [];
+        $pedidos = array_values($data['pedidos'] ?? []);
 
-        foreach (array_values($pedidos) as $index => $pedido) {
+        foreach ($pedidos as $index => $pedido) {
             $descricao = is_array($pedido) ? ($pedido['descricao'] ?? '') : $pedido;
             $letter = chr(ord('a') + ($index % 26));
 
@@ -431,7 +442,7 @@ class PetitionDocxGenerator
                 $this->styles['normal'],
                 [
                     'alignment' => Jc::BOTH,
-                    'spaceAfter' => Converter::pointToTwip(4),
+                    'spaceAfter' => Converter::pointToTwip($index === count($pedidos) - 1 ? 18 : 4),
                     'indentation' => [
                         'left' => Converter::cmToTwip(0.8),
                         'hanging' => Converter::cmToTwip(0.8),
@@ -506,18 +517,12 @@ class PetitionDocxGenerator
     /** @param  array<string, mixed>  $data */
     protected function addFecho(Section $section, array $data): void
     {
-        $section->addTextBreak(1);
+        $section->addText('Nesses termos,', null, $this->styles['tight']);
+        $section->addText('Pede deferimento.', null, $this->styles['tight']);
 
-        $section->addText('Nesses termos,');
-        $section->addText('Pede deferimento.');
-
-        $section->addTextBreak(1);
-
-        $cidade = $data['cidade_assinatura'] ?? ($data['cliente_cidade'] ?? 'Ipatinga');
-        $dataAssinatura = $data['data_assinatura'] ?? now()->format('d/m/Y');
-        $section->addText("{$cidade}, {$dataAssinatura}");
-
-        $section->addTextBreak(2);
+        $cidade = $data['cidade_assinatura'] ?? 'Ipatinga';
+        $dataAssinatura = $data['data_assinatura'] ?? now()->locale('pt_BR')->translatedFormat('j \\d\\e F \\d\\e Y');
+        $section->addText("{$cidade}, {$dataAssinatura}", null, $this->styles['indent']);
 
         $advogados = $this->getAdvogados($data);
 
@@ -527,10 +532,9 @@ class PetitionDocxGenerator
             'alignment' => Jc::CENTER,
         ]);
 
-        foreach (array_chunk($advogados, 2) as $rowIndex => $pair) {
+        foreach (array_chunk($advogados, 2) as $pair) {
             $table->addRow();
             $isLoneLawyer = count($pair) === 1;
-            $spaceBefore = $rowIndex === 0 ? 36 : 72;
 
             foreach ($pair as $adv) {
                 $cellStyle = ['alignment' => Jc::CENTER];
@@ -539,21 +543,8 @@ class PetitionDocxGenerator
                 }
 
                 $cell = $table->addCell(5000, $cellStyle);
-                $cell->addText(
-                    '______________________________',
-                    ['size' => 10],
-                    ['alignment' => Jc::CENTER, 'spaceBefore' => Converter::pointToTwip($spaceBefore)]
-                );
-                $cell->addText(
-                    $adv['nome'] ?? '',
-                    ['bold' => true, 'size' => 10],
-                    ['alignment' => Jc::CENTER]
-                );
-                $cell->addText(
-                    $adv['oab'] ?? '',
-                    ['size' => 10],
-                    ['alignment' => Jc::CENTER]
-                );
+                $cell->addText($adv['nome'] ?? '', null, ['alignment' => Jc::CENTER, 'spaceBefore' => Converter::pointToTwip(18), 'spaceAfter' => 0]);
+                $cell->addText($adv['oab'] ?? '', null, ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
             }
         }
     }

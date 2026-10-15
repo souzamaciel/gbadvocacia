@@ -338,8 +338,8 @@ TEXT;
             // fechamento
             'valor_causa' => $structured['valor_causa'] ?? ($dadosOriginais['valor_causa'] ?? 'R$ 0,00'),
             'valor_causa_extenso' => $structured['valor_causa_extenso'] ?? ($dadosOriginais['valor_causa_extenso'] ?? ''),
-            'cidade_assinatura' => $dadosOriginais['cidade_assinatura'] ?? ($dadosOriginais['cliente_cidade'] ?? 'Cidade'),
-            'data_assinatura' => $dadosOriginais['data_assinatura'] ?? now()->format('d/m/Y'),
+            'cidade_assinatura' => $dadosOriginais['cidade_assinatura'] ?? null,
+            'data_assinatura' => $dadosOriginais['data_assinatura'] ?? null,
             'advogados' => $dadosOriginais['advogados'] ?? [],
             'pendencias' => $structured['pendencias'] ?? [],
         ];

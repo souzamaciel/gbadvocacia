@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Services\PetitionDocxGenerator;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 use ZipArchive;
 
@@ -70,6 +71,17 @@ class PetitionDocxNumberingTest extends TestCase
         $this->assertContains('JUÍZO 100% DIGITAL', $paragraphs);
         $this->assertContains('DA GRATUIDADE DE JUSTIÇA', $paragraphs);
         $this->assertEmpty(array_filter($paragraphs, fn (string $text): bool => preg_match('/^[IVX]+ - /', $text) === 1));
+    }
+
+    public function test_closing_uses_office_city_and_long_date(): void
+    {
+        Carbon::setTestNow('2026-03-14 10:00:00');
+
+        $paragraphs = $this->generateMeritParagraphs(['cliente_cidade' => 'Belo Horizonte']);
+
+        $this->assertContains('Ipatinga, 14 de março de 2026', $paragraphs);
+        $this->assertContains('Nesses termos,', $paragraphs);
+        $this->assertContains('Pede deferimento.', $paragraphs);
     }
 
     /**
