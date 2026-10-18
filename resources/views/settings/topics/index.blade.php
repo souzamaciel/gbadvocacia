@@ -6,11 +6,13 @@
     <x-page-header title="Biblioteca de tópicos"
                    description="Organize os textos usados na montagem das petições."
                    :breadcrumbs="['Modelos do escritório']">
-        <x-slot:actions>
-            <button type="button" class="btn btn-primary js-new-topic">
-                <i data-lucide="plus"></i> Novo tópico
-            </button>
-        </x-slot:actions>
+        @can('topics.edit')
+            <x-slot:actions>
+                <button type="button" class="btn btn-primary js-new-topic">
+                    <i data-lucide="plus"></i> Novo tópico
+                </button>
+            </x-slot:actions>
+        @endcan
     </x-page-header>
 @endsection
 
@@ -32,9 +34,11 @@
                         <h2 id="groups-title" class="card-title">Grupos</h2>
                         <p class="card-description">{{ $groups->count() }} grupos de tópicos</p>
                     </div>
-                    <button type="button" class="gb-icon-action js-new-group" aria-label="Novo grupo">
-                        <i data-lucide="plus"></i>
-                    </button>
+                    @can('groups.manage')
+                        <button type="button" class="gb-icon-action js-new-group" aria-label="Novo grupo">
+                            <i data-lucide="plus"></i>
+                        </button>
+                    @endcan
                 </div>
 
                 <ul class="gb-group-list" role="list">
@@ -50,6 +54,7 @@
                                 <span class="gb-group-name">{{ $group->name }}</span>
                                 <span class="gb-badge gb-badge-neutral">{{ $group->topics_count }}</span>
                             </button>
+                            @can('groups.manage')
                             <span class="gb-group-actions">
                                 <button type="button" class="gb-icon-action js-edit-group"
                                         data-id="{{ $group->id }}" data-name="{{ $group->name }}"
@@ -64,6 +69,7 @@
                                     </button>
                                 @endif
                             </span>
+                            @endcan
                         </li>
                     @endforeach
                 </ul>
@@ -126,12 +132,16 @@
                                 <button type="button" class="btn btn-white btn-sm js-preview-topic me-1">
                                     <i data-lucide="eye"></i> Ver conteúdo
                                 </button>
-                                <button type="button" class="gb-icon-action js-edit-topic" aria-label="Editar {{ $topic->title }}">
-                                    <i data-lucide="pencil"></i>
-                                </button>
-                                <button type="button" class="gb-icon-action gb-icon-action-danger js-delete-topic" aria-label="Excluir {{ $topic->title }}">
-                                    <i data-lucide="trash-2"></i>
-                                </button>
+                                @can('topics.edit')
+                                    <button type="button" class="gb-icon-action js-edit-topic" aria-label="Editar {{ $topic->title }}">
+                                        <i data-lucide="pencil"></i>
+                                    </button>
+                                @endcan
+                                @can('topics.delete')
+                                    <button type="button" class="gb-icon-action gb-icon-action-danger js-delete-topic" aria-label="Excluir {{ $topic->title }}">
+                                        <i data-lucide="trash-2"></i>
+                                    </button>
+                                @endcan
                             </div>
                         </li>
                     @endforeach
@@ -203,7 +213,11 @@
                                 <span class="gb-icon-tile gb-icon-tile-sm"><i data-lucide="sparkles"></i></span>
                                 <div>
                                     <p class="gb-petition-title">Transforme um texto de petição em modelo</p>
-                                    <p class="gb-petition-meta">Cole o texto original. A IA identifica nomes, empresas, datas, valores e jornadas e sugere variáveis. Você confere cada sugestão antes de salvar.</p>
+                                    @can('topics.ai')
+                                        <p class="gb-petition-meta">Cole o texto original. A IA identifica nomes, empresas, datas, valores e jornadas e sugere variáveis. Você confere cada sugestão antes de salvar.</p>
+                                    @else
+                                        <p class="gb-petition-meta">Cole o texto original e selecione os trechos que mudam a cada cliente para criar as variáveis.</p>
+                                    @endcan
                                 </div>
                             </div>
                         </div>
@@ -221,7 +235,7 @@
                                 Use [colchetes] para os dados que o advogado completa no documento, ex.: [NOME DA 1ª RECLAMADA].
                             </p>
                             <div class="d-flex flex-wrap align-items-center gap-2 mt-3">
-                                <button type="button" class="btn btn-primary" id="ai-identify"><i data-lucide="sparkles"></i> Identificar variáveis com IA</button>
+                                <button type="button" class="btn btn-primary" id="ai-identify" @cannot('topics.ai') hidden @endcannot><i data-lucide="sparkles"></i> Identificar variáveis com IA</button>
                                 <button type="button" class="btn btn-white" id="manual-variable-step1"><i data-lucide="braces"></i> Criar variável manualmente</button>
                                 <span class="gb-field-hint ms-md-auto m-0" id="variables-count" aria-live="polite"></span>
                             </div>
@@ -330,7 +344,9 @@
                 <div class="modal-footer">
                     <p class="gb-field-hint me-auto my-0">Os trechos entre [colchetes] são completados no documento.</p>
                     <button type="button" class="btn btn-white" data-bs-dismiss="modal">Fechar</button>
-                    <button type="button" class="btn btn-primary" id="preview-modal-edit"><i data-lucide="pencil"></i> Editar modelo</button>
+                    @can('topics.edit')
+                        <button type="button" class="btn btn-primary" id="preview-modal-edit"><i data-lucide="pencil"></i> Editar modelo</button>
+                    @endcan
                 </div>
             </div>
         </div>
@@ -397,6 +413,7 @@
                 editor: topicEditor,
                 suggestUrl: '{{ route('settings.topics.suggest-variables') }}',
                 csrfToken,
+                canUseAi: @json(auth()->user()->can('topics.ai')),
             });
             const previewModal = new bootstrap.Modal('#preview-modal');
             const groupModal = new bootstrap.Modal('#group-modal');
@@ -493,7 +510,7 @@
                 previewModal.show();
             }
 
-            document.getElementById('preview-modal-edit').addEventListener('click', () => {
+            document.getElementById('preview-modal-edit')?.addEventListener('click', () => {
                 previewModal.hide();
                 openTopicForm(topics.get(previewTopicId));
             });
@@ -561,7 +578,7 @@
             document.getElementById('group-name').addEventListener('input', refreshGroupButton);
 
             document.getElementById('group-modal').addEventListener('shown.bs.modal', () => document.getElementById('group-name').focus());
-            document.querySelector('.js-new-group').addEventListener('click', () => openGroupForm());
+            document.querySelector('.js-new-group')?.addEventListener('click', () => openGroupForm());
             document.querySelectorAll('.js-edit-group').forEach(button => {
                 button.addEventListener('click', () => openGroupForm(Number(button.dataset.id), button.dataset.name));
             });
@@ -624,8 +641,10 @@
             @if ($errors->any())
                 openTopicForm(topics.get(Number(document.getElementById('topic-form-id').value)) || null, true);
             @else
+                @can('topics.edit')
                 if (params.has('novo')) { openTopicForm(null); }
                 if (params.has('editar') && topics.has(Number(params.get('editar')))) { openTopicForm(topics.get(Number(params.get('editar')))); }
+                @endcan
             @endif
         })();
     </script>

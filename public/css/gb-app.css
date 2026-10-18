@@ -2333,3 +2333,74 @@ div.gb-library-empty [data-lucide] {
   color: #375623;
   text-align: left;
 }
+
+/* ---------- Usuários e perfis ---------- */
+.gb-permission-summary {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gb-permission-summary li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font: 400 13px/18px var(--df-font);
+  color: var(--df-text-02);
+}
+
+.gb-permission-summary li svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: var(--df-success);
+}
+
+.gb-permission-summary li.is-empty {
+  color: var(--df-text-03);
+}
+
+.gb-permission-summary + .gb-list-label,
+.gb-permission-summary ~ .gb-list-label {
+  padding-top: 8px;
+}
+
+.gb-permission-group {
+  border-top: 1px solid var(--df-border);
+  padding: 0 20px 12px;
+  margin: 0;
+}
+
+.gb-permission-group:first-child {
+  border-top: 0;
+}
+
+.gb-permission-group > .gb-list-label {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.gb-permission-item {
+  display: flex;
+  gap: 10px;
+  padding: 8px 0 8px 0;
+  margin: 0;
+  min-height: 0;
+}
+
+.gb-permission-item.is-child {
+  padding-left: 26px;
+}
+
+.gb-permission-item .form-check-input {
+  float: none;
+  margin: 2px 0 0;
+  flex-shrink: 0;
+}
+
+.gb-permission-item .gb-petition-title {
+  font-size: 13px;
+}

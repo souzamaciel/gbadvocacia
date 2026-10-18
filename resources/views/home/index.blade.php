@@ -10,6 +10,7 @@
 
 @section('content')
     <div class="row g-3">
+        @can('appointments.create')
         <div class="col-12 col-md-6">
             <div class="card h-100">
                 <div class="card-body d-flex flex-column align-items-start gap-3 p-4">
@@ -24,6 +25,8 @@
                 </div>
             </div>
         </div>
+        @endcan
+        @can('petitions.edit')
         <div class="col-12 col-md-6">
             <div class="card h-100">
                 <div class="card-body d-flex flex-column align-items-start gap-3 p-4">
@@ -38,5 +41,19 @@
                 </div>
             </div>
         </div>
+        @endcan
+        @cannot('appointments.create')
+            @cannot('petitions.edit')
+                <div class="col-12">
+                    <div class="card">
+                        <div class="gb-library-empty">
+                            <i data-lucide="lock"></i>
+                            <p class="gb-hint-title">Seu perfil ainda não tem acesso a atendimentos e petições</p>
+                            <p class="m-0">Use o menu acima ou fale com o administrador do sistema.</p>
+                        </div>
+                    </div>
+                </div>
+            @endcannot
+        @endcannot
     </div>
 @endsection

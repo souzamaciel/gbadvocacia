@@ -20,7 +20,7 @@ class UpdatePasswordRequest extends FormRequest
     {
         return [
             'current_password' => ['required', 'string', 'current_password'],
-            'password' => ['required', 'string', Password::min(8), 'confirmed'],
+            'password' => ['required', 'string', Password::min(8), 'confirmed', 'different:current_password'],
         ];
     }
 
@@ -35,6 +35,7 @@ class UpdatePasswordRequest extends FormRequest
             'password.required' => 'Informe a nova senha.',
             'password.min' => 'A nova senha deve ter pelo menos 8 caracteres.',
             'password.confirmed' => 'A confirmação da nova senha não confere.',
+            'password.different' => 'A nova senha precisa ser diferente da atual.',
         ];
     }
 }

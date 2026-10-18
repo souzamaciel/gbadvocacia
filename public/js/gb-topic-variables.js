@@ -63,7 +63,7 @@ window.gbTopicVariables = (function () {
         return fragment;
     }
 
-    function init({ editor, suggestUrl, csrfToken }) {
+    function init({ editor, suggestUrl, csrfToken, canUseAi = true }) {
         const state = { step: 1, original: '', suggestions: [], selection: '', busy: false, editorRange: null, touched: new Set() };
         const identity = $('topic-identity');
         const notesBlock = $('topic-notes-block');
@@ -88,7 +88,7 @@ window.gbTopicVariables = (function () {
             const hasGroup = $('topic-group').value !== '';
             const hasSelection = !!(state.editorRange && state.editorRange.length > 0 && editor.getText(state.editorRange.index, state.editorRange.length).trim());
 
-            $('ai-identify').disabled = state.busy || !hasText;
+            $('ai-identify').disabled = state.busy || !hasText || !canUseAi;
             $('manual-variable-step1').disabled = state.busy || !hasText || !hasSelection;
             $('topic-save').disabled = state.busy || !hasTitle || !hasGroup || !hasText;
 
@@ -98,7 +98,7 @@ window.gbTopicVariables = (function () {
                 !hasText && { field: 'topic-editor', label: 'conteúdo do modelo' },
             ].filter(Boolean);
             $('step1-hint').textContent = !hasText
-                ? 'Cole ou digite o texto para pedir sugestões à IA.'
+                ? (canUseAi ? 'Cole ou digite o texto para pedir sugestões à IA.' : 'Cole ou digite o texto do modelo.')
                 : (!hasSelection ? 'Para criar uma variável manualmente, selecione um trecho no texto.' : '');
 
             const footer = $('topic-footer-hint');
@@ -109,7 +109,7 @@ window.gbTopicVariables = (function () {
                     const list = links.length > 1 ? `${links.slice(0, -1).join(', ')} e ${links[links.length - 1]}` : links[0];
                     footer.innerHTML = `<i data-lucide="circle-alert"></i><span>Para salvar, preencha ${list}.</span>`;
                 } else {
-                    footer.innerHTML = `<i data-lucide="circle-check"></i><span>${state.step === 1 ? 'Pronto para salvar. Você também pode pedir sugestões de variáveis à IA.' : 'Pronto para salvar. O modelo fica disponível para novas petições.'}</span>`;
+                    footer.innerHTML = `<i data-lucide="circle-check"></i><span>${state.step === 1 ? (canUseAi ? 'Pronto para salvar. Você também pode pedir sugestões de variáveis à IA.' : 'Pronto para salvar.') : 'Pronto para salvar. O modelo fica disponível para novas petições.'}</span>`;
                 }
                 lucide.createIcons();
             }

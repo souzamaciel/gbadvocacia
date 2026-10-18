@@ -114,9 +114,11 @@
         </div>
         <div class="gb-page-actions">
             <button type="button" class="btn btn-white" data-bs-toggle="modal" data-bs-target="#full-petition"><i data-lucide="file-text"></i> Ver petição completa</button>
-            <a href="{{ route('petition.generate.show', $petition) }}" class="btn btn-primary" id="go-generate" aria-disabled="true">
-                Gerar documento <i data-lucide="arrow-right"></i>
-            </a>
+            @can('petitions.generate')
+                <a href="{{ route('petition.generate.show', $petition) }}" class="btn btn-primary" id="go-generate" aria-disabled="true">
+                    Gerar documento <i data-lucide="arrow-right"></i>
+                </a>
+            @endcan
         </div>
     </section>
 
@@ -223,12 +225,14 @@
                 const pending = items.reduce((total, item) => total + item.pending.length, 0);
                 const done = reviewed === items.length;
                 document.getElementById('summary-title').textContent = `${reviewed} de ${items.length} tópicos revisados`;
-                document.getElementById('summary-text').textContent = done
-                    ? 'Tudo revisado. Você já pode gerar o documento.'
-                    : (pending ? `${pending} ${pending === 1 ? 'informação ainda precisa' : 'informações ainda precisam'} ser preenchida${pending === 1 ? '' : 's'}.` : 'Marque cada tópico como conferido para gerar o documento.');
                 const link = document.getElementById('go-generate');
-                link.classList.toggle('disabled', !done);
-                link.setAttribute('aria-disabled', String(!done));
+                document.getElementById('summary-text').textContent = done
+                    ? (link ? 'Tudo revisado. Você já pode gerar o documento.' : 'Tudo revisado. A geração do documento fica com quem tem essa permissão no perfil.')
+                    : (pending ? `${pending} ${pending === 1 ? 'informação ainda precisa' : 'informações ainda precisam'} ser preenchida${pending === 1 ? '' : 's'}.` : 'Marque cada tópico como conferido para gerar o documento.');
+                if (link) {
+                    link.classList.toggle('disabled', !done);
+                    link.setAttribute('aria-disabled', String(!done));
+                }
             }
 
             function render() {
@@ -364,7 +368,7 @@
                 const link = event.target.closest('[data-index]');
                 if (link) { goTo(Number(link.dataset.index)); }
             });
-            document.getElementById('go-generate').addEventListener('click', event => {
+            document.getElementById('go-generate')?.addEventListener('click', event => {
                 if (event.currentTarget.classList.contains('disabled')) { event.preventDefault(); }
             });
 

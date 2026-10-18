@@ -8,13 +8,14 @@
      *
      * @return array{0: string, 1: string}
      */
-    $stage = function (\App\Models\Petition $petition): array {
+    $canGenerate = auth()->user()->can('petitions.generate');
+    $stage = function (\App\Models\Petition $petition) use ($canGenerate): array {
         if ($petition->isGenerated()) {
-            return [route('petition.generate.show', $petition), 'Último Word gerado em '.$petition->generated_at?->format('d/m/Y')];
+            return [$canGenerate ? route('petition.generate.show', $petition) : route('petition.review', $petition), 'Último Word gerado em '.$petition->generated_at?->format('d/m/Y')];
         }
 
         if ($petition->items_count > 0 && $petition->reviewed_items_count === $petition->items_count) {
-            return [route('petition.generate.show', $petition), 'Pronta para gerar'];
+            return [$canGenerate ? route('petition.generate.show', $petition) : route('petition.review', $petition), 'Pronta para gerar'];
         }
 
         if ($petition->reviewed_items_count > 0) {
@@ -119,11 +120,13 @@
                             <td>
                                 <div class="d-flex justify-content-md-end align-items-center gap-1">
                                     <a href="{{ $url }}" class="btn btn-white btn-sm">Continuar <i data-lucide="arrow-right"></i></a>
-                                    <form method="POST" action="{{ route('petition.destroy', $petition) }}" class="js-delete-petition" data-name="{{ $petition->name }}">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="gb-icon-action gb-icon-action-danger" aria-label="Excluir {{ $petition->name }}"><i data-lucide="trash-2"></i></button>
-                                    </form>
+                                    @can('petitions.delete')
+                                        <form method="POST" action="{{ route('petition.destroy', $petition) }}" class="js-delete-petition" data-name="{{ $petition->name }}">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="gb-icon-action gb-icon-action-danger" aria-label="Excluir {{ $petition->name }}"><i data-lucide="trash-2"></i></button>
+                                        </form>
+                                    @endcan
                                 </div>
                             </td>
                         </tr>

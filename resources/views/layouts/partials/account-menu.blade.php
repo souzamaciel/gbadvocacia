@@ -1,5 +1,10 @@
 <li>
-    <a class="dropdown-item" href="{{ route('password.edit') }}">
+    <a class="dropdown-item" href="{{ route('profile.edit') }}">
+        <i data-lucide="user-round"></i> Meu perfil
+    </a>
+</li>
+<li>
+    <a class="dropdown-item" href="{{ route('profile.edit') }}#senha">
         <i data-lucide="key-round"></i> Alterar senha
     </a>
 </li>

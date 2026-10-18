@@ -1,9 +1,13 @@
 @php
-    $navigation = [
-        ['label' => 'Atendimentos', 'route' => 'appointment.create', 'active' => 'appointment.*'],
-        ['label' => 'Petições', 'route' => 'petition.index', 'active' => 'petition.*'],
-        ['label' => 'Biblioteca de tópicos', 'route' => 'settings.topics.index', 'active' => 'settings.*'],
-    ];
+    $user = auth()->user();
+    $navigation = array_values(array_filter([
+        $user->can('appointments.create') ? ['label' => 'Atendimentos', 'route' => 'appointment.create', 'active' => 'appointment.*'] : null,
+        $user->can('petitions.edit') ? ['label' => 'Petições', 'route' => 'petition.index', 'active' => 'petition.*'] : null,
+        $user->can('library.view') ? ['label' => 'Biblioteca de tópicos', 'route' => 'settings.topics.index', 'active' => 'settings.*'] : null,
+        $user->can('users.manage')
+            ? ['label' => 'Usuários', 'route' => 'admin.users.index', 'active' => 'admin.*']
+            : ($user->can('roles.manage') ? ['label' => 'Perfis de permissão', 'route' => 'admin.roles.index', 'active' => 'admin.*'] : null),
+    ]));
 @endphp
 
 <header class="gb-header">

@@ -27,7 +27,16 @@ class LoginController extends Controller
         ]);
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
+            if (! $request->user()->is_active) {
+                Auth::logout();
+
+                return back()->withErrors([
+                    'email' => 'Seu acesso está desativado. Fale com o administrador do sistema.',
+                ])->onlyInput('email');
+            }
+
             $request->session()->regenerate();
+            $request->user()->forceFill(['last_login_at' => now()])->save();
 
             return redirect()->intended(route('home'));
         }
