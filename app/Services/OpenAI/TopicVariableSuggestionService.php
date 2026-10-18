@@ -106,14 +106,24 @@ Você ajuda um escritório de advocacia trabalhista a transformar o texto de uma
 Tarefa: identifique no texto os trechos que são ESPECÍFICOS DO CASO e devem virar variáveis, como nomes de pessoas, empresas, CNPJ/CPF, datas, períodos, valores em dinheiro, jornadas e horários, funções/cargos, cidades e endereços, números de processos ou documentos.
 
 Regras:
+- Sugira SOMENTE dados concretos que mudam de um caso para outro: nomes próprios de pessoas e empresas, CPF/CNPJ, datas, períodos, valores em dinheiro, horários e jornadas efetivamente cumpridas, frequências e durações de fatos do caso (ex.: "duas vezes por mês", "15 minutos" de intervalo), funções/cargos, cidades, endereços e números de processos ou documentos.
 - "trecho" deve ser copiado EXATAMENTE como aparece no texto, caractere por caractere (mesmas maiúsculas, acentos, pontuação e espaços), sem aspas extras.
-- Sugira o menor trecho que contenha a informação do caso (ex.: "março de 2022 a julho de 2025", não a frase inteira).
+- O trecho deve conter SOMENTE o dado, sem palavras ao redor: nunca inclua no trecho expressões como "cerca de", "apenas", "aproximadamente", "intervalo de", "pausa de", "salário de" (ex.: "15 minutos", não "intervalo de apenas 15 minutos"; "duas vezes por mês", não "cerca de duas vezes por mês"; "março de 2022 a julho de 2025", não a frase inteira).
+- Quando o mesmo dado aparece mais de uma vez no texto, sugira-o UMA única vez com esse trecho mínimo; ele será substituído em todas as ocorrências.
 - "nome" é um nome curto e claro da variável em português, com a primeira letra maiúscula (ex.: "Período trabalhado", "Nome da parte autora", "Empresa reclamada", "Salário").
 - "categoria" deve ser uma destas: {$categories}.
-- NÃO sugira leis, artigos, súmulas, orientações jurisprudenciais, nomes de tribunais ou textos jurídicos que valem para todos os casos.
-- Se um trecho parecer do caso mas puder ser uma referência legal ou um padrão que deve permanecer no modelo (ex.: "44 horas semanais", "50%"), sugira mesmo assim com "atencao": true e explique em "motivo" por que recomenda manter o texto original. Nos demais, "atencao": false e "motivo" vazio.
+
+NUNCA sugira (nem mesmo com "atencao"):
+- Expressões genéricas que designam as partes, sem nome próprio: "reclamante", "parte reclamante", "parte autora", "parte obreira", "obreiro", "empregado", "reclamada", "empresa", "empregadora", "ré".
+- Referências a outras partes da petição: "tópico 01", "item 3.1", "conforme acima".
+- Títulos de tópicos e numeração (ex.: "3.1 – DO INTERVALO INTRAJORNADA").
+- Limites, percentuais e parâmetros fixados em lei ou jurisprudência: "08ª diária", "44ª semanal", "adicional legal", "50%", "divisor 220", "1/3", "40%", "13° salários".
+- Leis, artigos, súmulas, orientações jurisprudenciais, nomes de tribunais e expressões jurídicas que valem para todos os casos.
+
+Use "atencao": true SOMENTE quando o trecho for um dado concreto do caso que TAMBÉM pode ser uma referência legal ou um padrão que normalmente permanece no modelo (ex.: "44 horas semanais" citado junto ao art. 7º da Constituição). Nesse caso, "motivo" explica em uma frase por que recomenda manter o texto original. Nos demais, "atencao": false e "motivo" vazio.
 - Ignore trechos que já estão entre colchetes, como [NOME DA RECLAMADA].
 - Não repita o mesmo trecho.
+- Se o texto não tiver nenhum dado concreto do caso, retorne a lista vazia.
 - Retorne somente JSON válido conforme o schema.
 TEXT;
 
