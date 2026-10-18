@@ -6,6 +6,7 @@ use App\Models\Group;
 use App\Models\PetitionLog;
 use App\Models\Topic;
 use App\Services\AppointmentFormDocxGenerator;
+use App\Services\InternalNotes;
 use App\Services\OpenAI\PetitionGenerationService;
 use App\Services\PetitionDocxGenerator;
 use App\Services\PetitionFormSerializer;
@@ -60,6 +61,8 @@ class AppointmentController extends Controller
             ->map(fn ($t, $i) => ['sort_order' => $i + 1, 'topic_id' => $t->id, 'title' => $t->title, 'content' => $t->content])
             ->all();
 
+        $notesByTopicId = Topic::whereIn('id', [...$topicIds, ...$preliminarIds])->pluck('notes', 'id')->all();
+
         $normalized = PetitionFormSerializer::normalizeFormData($request->all(), $topics, $preliminares);
 
         try {
@@ -72,7 +75,10 @@ class AppointmentController extends Controller
             ]);
 
             $generator = new PetitionDocxGenerator;
-            $filePath = $generator->generateFull($resultado['blade_data']);
+            $filePath = $generator->generateFull(InternalNotes::attach($resultado['blade_data'], $notesByTopicId, [
+                'preliminares' => array_column($preliminares, 'topic_id'),
+                'topicos' => array_column($topics, 'topic_id'),
+            ]));
 
             $clientName = $normalized['cliente_nome'] ?? 'peticao';
             $filename = 'peticao-inicial-'.str()->slug($clientName).'.docx';

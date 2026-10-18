@@ -6,7 +6,6 @@ use App\Models\Petition;
 use App\Models\PetitionItem;
 use App\Models\PetitionLog;
 use App\Services\OpenAI\PetitionGenerationService;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -42,7 +41,16 @@ class PetitionDocumentService
             'response_payload' => $resultado['raw_response'],
         ]);
 
-        $temporaryPath = (new PetitionDocxGenerator)->generateMerit($this->withInternalNotes($resultado['blade_data'], $items));
+        $data = InternalNotes::attach(
+            $resultado['blade_data'],
+            $items->mapWithKeys(fn (PetitionItem $item): array => [(int) $item->topic_id => $item->topic?->notes])->all(),
+            [
+                'preliminares' => array_map('intval', array_column($preliminares, 'topic_id')),
+                'topicos' => array_map('intval', array_column($topics, 'topic_id')),
+            ],
+        );
+
+        $temporaryPath = (new PetitionDocxGenerator)->generateMerit($data);
 
         $baseName = Str::slug($fileName ?: $petition->name) ?: 'peticao-inicial';
         $storedPath = "petitions/{$petition->id}/{$baseName}.docx";
@@ -62,34 +70,5 @@ class PetitionDocumentService
         ]);
 
         return $petition;
-    }
-
-    /**
-     * Attach each topic's internal guidance (kept in the library) to the matching block of the document.
-     *
-     * @param  array<string, mixed>  $data
-     * @param  Collection<int, PetitionItem>  $items
-     * @return array<string, mixed>
-     */
-    private function withInternalNotes(array $data, Collection $items): array
-    {
-        $notes = $items->mapWithKeys(fn (PetitionItem $item): array => [(int) $item->topic_id => trim((string) $item->topic?->notes)]);
-
-        foreach (['preliminares' => PetitionItem::KIND_PRELIMINAR, 'topicos' => PetitionItem::KIND_PEDIDO] as $key => $kind) {
-            $blocks = $data[$key] ?? [];
-            $sameKind = $items->where('kind', $kind)->values();
-            $useOrder = count($blocks) === $sameKind->count();
-
-            foreach ($blocks as $index => $block) {
-                $topicId = (int) ($block['topic_id'] ?? 0);
-                if (! $notes->has($topicId) && $useOrder) {
-                    $topicId = (int) $sameKind[$index]->topic_id;
-                }
-
-                $data[$key][$index]['orientacao'] = $notes->get($topicId) ?: null;
-            }
-        }
-
-        return $data;
     }
 }
