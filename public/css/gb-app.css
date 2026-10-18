@@ -2212,3 +2212,11 @@ div.gb-library-empty [data-lucide] {
   color: var(--df-accent-text);
   font-weight: 600;
 }
+
+/* Botões desabilitados ficam claramente apagados */
+.btn-white:disabled,
+.btn-white.disabled {
+  opacity: 0.5;
+  background: var(--df-ui-01);
+  color: var(--df-text-03);
+}

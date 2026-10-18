@@ -33,6 +33,7 @@
                                    value="{{ $petition->file_name ? \Illuminate\Support\Str::beforeLast($petition->file_name, '.docx') : \Illuminate\Support\Str::slug($petition->name) }}">
                             <span class="input-group-text">.docx</span>
                         </div>
+                        <div class="invalid-feedback d-block" id="file-name-error" hidden>Informe o nome do arquivo para gerar o documento.</div>
                         <p class="gb-field-hint">Você poderá renomear o arquivo depois de baixar.</p>
                     </div>
 
@@ -160,10 +161,25 @@
             const form = document.getElementById('generate-form');
             const buttons = [document.getElementById('generate-button'), document.getElementById('regenerate-button')];
             const show = (id, visible) => { document.getElementById(id).hidden = !visible; };
+            const fileName = document.getElementById('file-name');
+            let generating = false;
+            const refreshButtons = () => {
+                const empty = fileName.value.trim() === '';
+                buttons.forEach(button => {
+                    button.disabled = generating || empty;
+                    button.title = empty ? 'Informe o nome do arquivo' : '';
+                });
+                fileName.classList.toggle('is-invalid', empty);
+                document.getElementById('file-name-error').hidden = !empty;
+            };
+            fileName.addEventListener('input', refreshButtons);
+            refreshButtons();
 
             form.addEventListener('submit', event => {
                 event.preventDefault();
                 const labels = buttons.map(button => button.innerHTML);
+                if (fileName.value.trim() === '') { return; }
+                generating = true;
                 form.setAttribute('aria-busy', 'true');
                 buttons.forEach(button => {
                     button.disabled = true;
@@ -193,7 +209,9 @@
                 .catch(error => Swal.fire({ icon: 'error', title: 'Não foi possível gerar', text: error.message, confirmButtonColor: 'var(--df-brand-01)' }))
                 .finally(() => {
                     form.removeAttribute('aria-busy');
-                    buttons.forEach((button, index) => { button.disabled = false; button.innerHTML = labels[index]; });
+                    generating = false;
+                    buttons.forEach((button, index) => { button.innerHTML = labels[index]; });
+                    refreshButtons();
                     lucide.createIcons();
                 });
             });

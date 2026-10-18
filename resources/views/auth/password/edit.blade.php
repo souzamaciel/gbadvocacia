@@ -55,9 +55,10 @@
                 @endforeach
             </div>
 
-            <div class="card-footer d-flex flex-wrap justify-content-end gap-2 bg-white">
+            <div class="card-footer d-flex flex-wrap align-items-center justify-content-end gap-2 bg-white">
+                <span class="gb-field-hint me-auto m-0" id="password-hint" aria-live="polite"></span>
                 <a href="{{ route('home') }}" class="btn btn-white">Cancelar</a>
-                <button type="submit" class="btn btn-primary"><i data-lucide="check"></i> Salvar nova senha</button>
+                <button type="submit" class="btn btn-primary" id="password-submit" disabled><i data-lucide="check"></i> Salvar nova senha</button>
             </div>
         </form>
     </div>
@@ -65,6 +66,22 @@
 
 @section('scripts')
     <script>
+        (function () {
+            const current = document.getElementById('current_password');
+            const password = document.getElementById('password');
+            const confirmation = document.getElementById('password_confirmation');
+            const refresh = () => {
+                let hint = '';
+                if (!current.value) { hint = 'Informe a senha atual.'; }
+                else if (password.value.length < 8) { hint = 'A nova senha precisa ter pelo menos 8 caracteres.'; }
+                else if (confirmation.value !== password.value) { hint = 'A confirmação precisa ser igual à nova senha.'; }
+                document.getElementById('password-submit').disabled = hint !== '';
+                document.getElementById('password-hint').textContent = hint;
+            };
+            [current, password, confirmation].forEach(field => field.addEventListener('input', refresh));
+            refresh();
+        })();
+
         document.querySelectorAll('.js-toggle-password').forEach(button => {
             button.addEventListener('click', () => {
                 const input = document.getElementById(button.dataset.target);

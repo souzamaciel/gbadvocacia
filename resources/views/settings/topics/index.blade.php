@@ -221,6 +221,7 @@
                                 <button type="button" class="btn btn-white" id="manual-variable-step1"><i data-lucide="braces"></i> Criar variável manualmente</button>
                                 <span class="gb-field-hint ms-md-auto m-0" id="variables-count" aria-live="polite"></span>
                             </div>
+                            <p class="gb-field-hint" id="step1-hint" aria-live="polite"></p>
                         </div>
                         <div class="col-12">
                             <label for="topic-notes" class="form-label">Orientação interna · opcional</label>
@@ -256,7 +257,6 @@
                                     <p class="gb-ai-quote" id="ai-popover-text"></p>
                                     <label for="ai-popover-name" class="form-label">Nome da variável</label>
                                     <input type="text" id="ai-popover-name" class="form-control" maxlength="80" placeholder="Ex.: Salário">
-                                    <div class="invalid-feedback" id="ai-popover-error"></div>
                                     <div class="d-flex justify-content-end gap-2 mt-3">
                                         <button type="button" class="btn btn-white btn-sm" id="ai-popover-cancel">Cancelar</button>
                                         <button type="button" class="btn btn-primary btn-sm" id="ai-popover-create"><i data-lucide="braces"></i> Criar variável</button>
@@ -266,7 +266,7 @@
                             <div class="col-12 col-lg-5">
                                 <p class="form-label d-flex align-items-center gap-2">Sugestões da IA <span class="gb-badge gb-badge-neutral" id="ai-count">0</span></p>
                                 <ol class="gb-ai-suggestions" id="ai-suggestions"></ol>
-                                <button type="button" class="btn btn-white w-100" id="manual-variable-step2"><i data-lucide="plus"></i> Criar variável manualmente</button>
+                                <button type="button" class="btn btn-white w-100" id="manual-variable-step2" disabled><i data-lucide="plus"></i> Criar variável manualmente</button>
                                 <p class="gb-field-hint" id="ai-text-hint">Selecione um trecho no texto para criar uma variável que a IA não identificou.</p>
                             </div>
                         </div>
@@ -527,8 +527,21 @@
             });
 
             /* ---------- Grupos ---------- */
+            let editingGroupName = '';
+
+            function refreshGroupButton() {
+                const input = document.getElementById('group-name');
+                const name = input.value.trim();
+                const duplicate = name !== '' && Array.from(groupNames.entries())
+                    .some(([id, existing]) => id !== editingGroupId && existing.toLowerCase() === name.toLowerCase());
+                input.classList.toggle('is-invalid', duplicate);
+                document.getElementById('group-name-error').textContent = duplicate ? 'Já existe um grupo com esse nome.' : '';
+                document.getElementById('group-form-submit').disabled = name === '' || duplicate || name === editingGroupName;
+            }
+
             function openGroupForm(id = null, name = '') {
                 editingGroupId = id;
+                editingGroupName = name;
                 const input = document.getElementById('group-name');
                 input.value = name;
                 input.classList.remove('is-invalid');
@@ -537,8 +550,11 @@
                     ? '<i data-lucide="check"></i> Salvar grupo'
                     : '<i data-lucide="plus"></i> Criar grupo';
                 lucide.createIcons();
+                refreshGroupButton();
                 groupModal.show();
             }
+
+            document.getElementById('group-name').addEventListener('input', refreshGroupButton);
 
             document.getElementById('group-modal').addEventListener('shown.bs.modal', () => document.getElementById('group-name').focus());
             document.querySelector('.js-new-group').addEventListener('click', () => openGroupForm());

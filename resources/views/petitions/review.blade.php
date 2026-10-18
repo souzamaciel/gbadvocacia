@@ -76,7 +76,7 @@
                         </p>
                         <div class="d-flex justify-content-end gap-2 mt-2">
                             <button type="button" class="btn btn-white" id="cancel-edit">Cancelar edição</button>
-                            <button type="button" class="btn btn-primary" id="apply-edit">Aplicar texto</button>
+                            <button type="button" class="btn btn-primary" id="apply-edit" disabled>Aplicar texto</button>
                         </div>
                     </div>
                 </div>
@@ -147,6 +147,12 @@
             const escape = text => { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; };
             const decode = html => { const area = document.createElement('textarea'); area.innerHTML = html; return area.value; };
             const itemEditor = gbEditor.create('#item-editor', { label: 'Texto do tópico' });
+            let editorStartHtml = '';
+            const refreshApply = () => {
+                const html = gbEditor.getHtml(itemEditor);
+                document.getElementById('apply-edit').disabled = !html || html === editorStartHtml;
+            };
+            itemEditor.on('text-change', refreshApply);
 
             function renderText(item) {
                 return item.content.replace(/\[([^\[\]<>]+)\]/g, (match, name) => {
@@ -310,6 +316,8 @@
             document.getElementById('edit-text').addEventListener('click', () => {
                 editing = true;
                 gbEditor.setHtml(itemEditor, items[current].content);
+                editorStartHtml = gbEditor.getHtml(itemEditor);
+                refreshApply();
                 render();
                 itemEditor.focus();
             });

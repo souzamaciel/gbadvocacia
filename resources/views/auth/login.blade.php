@@ -56,7 +56,7 @@
                 <label class="form-check-label" for="remember">Lembrar-me</label>
             </div>
 
-            <button type="submit" class="btn btn-primary w-100">Entrar</button>
+            <button type="submit" class="btn btn-primary w-100" id="login-submit" disabled>Entrar</button>
 
             <p class="gb-login-note">
                 <i data-lucide="info"></i>
@@ -70,6 +70,20 @@
     <script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
     <script>
         lucide.createIcons();
+
+        (function () {
+            const fields = ['email', 'password'].map(id => document.getElementById(id));
+            const filled = field => field.value.trim() !== '' || field.matches(':-webkit-autofill');
+            const refresh = () => { document.getElementById('login-submit').disabled = !fields.every(filled); };
+            fields.forEach(field => {
+                field.addEventListener('input', refresh);
+                field.addEventListener('change', refresh);
+            });
+            refresh();
+            // O preenchimento automático do navegador nem sempre dispara eventos.
+            let checks = 0;
+            const timer = setInterval(() => { refresh(); if (++checks > 12) { clearInterval(timer); } }, 250);
+        })();
 
         document.getElementById('toggle-password').addEventListener('click', function () {
             const input = document.getElementById('password');

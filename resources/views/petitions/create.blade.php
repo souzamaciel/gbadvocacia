@@ -7,7 +7,7 @@
                    description="Escolha os tópicos e organize a sequência do documento."
                    :breadcrumbs="['Petições' => route('petition.index'), $petition?->name ?? 'Nova petição']">
         <x-slot:actions>
-            <button type="submit" form="petition-form" name="action" value="save" class="btn btn-white">
+            <button type="submit" form="petition-form" name="action" value="save" class="btn btn-white js-save-button" disabled>
                 <i data-lucide="save"></i> Salvar
             </button>
             <button type="submit" form="petition-form" name="action" value="review" class="btn btn-primary js-review-button d-none d-lg-inline-flex" disabled>
@@ -165,6 +165,8 @@
             const items = Array.from(document.querySelectorAll('.gb-library-item'));
             const itemsById = new Map(items.map(item => [Number(item.dataset.id), item]));
             const reviewButtons = document.querySelectorAll('.js-review-button');
+            const saveButton = document.querySelector('.js-save-button');
+            const isSavedDraft = {{ $petition ? 'true' : 'false' }};
 
             const savedSelection = {{ Js::from($selection) }};
             const state = {
@@ -173,6 +175,18 @@
                     : items.filter(item => item.dataset.kind === 'preliminar').map(item => Number(item.dataset.id)),
                 pedidos: savedSelection ? savedSelection.pedidos.filter(id => itemsById.has(id)) : [],
             };
+            const nameInput = document.getElementById('petition-name');
+            const snapshot = () => JSON.stringify([state.preliminares, state.pedidos, nameInput.value.trim()]);
+            const savedSnapshot = snapshot();
+
+            function refreshSave() {
+                const hasItems = state.preliminares.length + state.pedidos.length > 0;
+                const changed = !isSavedDraft || snapshot() !== savedSnapshot;
+                saveButton.disabled = !hasItems || !changed;
+                saveButton.title = !hasItems ? 'Adicione ao menos um tópico' : (!changed ? 'Nenhuma alteração para salvar' : '');
+            }
+
+            nameInput.addEventListener('input', refreshSave);
 
             function topicTitle(id) {
                 return itemsById.get(id).querySelector('.gb-library-item-title').textContent.trim();
@@ -271,6 +285,7 @@
                     button.title = state.pedidos.length === 0 ? 'Adicione ao menos um pedido' : '';
                 });
 
+                refreshSave();
                 lucide.createIcons();
             }
 

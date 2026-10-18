@@ -64,7 +64,7 @@ window.gbTopicVariables = (function () {
     }
 
     function init({ editor, suggestUrl, csrfToken }) {
-        const state = { step: 1, original: '', suggestions: [], selection: '' };
+        const state = { step: 1, original: '', suggestions: [], selection: '', busy: false, editorRange: null };
         const dialog = document.querySelector('#topic-modal .modal-dialog');
 
         /* ---------- Etapa 1 ---------- */
@@ -75,15 +75,38 @@ window.gbTopicVariables = (function () {
                 : `${names.size} ${names.size === 1 ? 'variável' : 'variáveis'} no modelo`;
         }
 
-        editor.on('text-change', () => { if (state.step === 1) { updateCount(); } });
+        /* Botões só ficam habilitados quando a ação pode ser executada. */
+        function refreshButtons() {
+            const hasText = editor.getText().trim() !== '';
+            const hasTitle = $('topic-title').value.trim() !== '';
+            const hasGroup = $('topic-group').value !== '';
+            const hasSelection = !!(state.editorRange && state.editorRange.length > 0 && editor.getText(state.editorRange.index, state.editorRange.length).trim());
+
+            $('ai-identify').disabled = state.busy || !hasText;
+            $('manual-variable-step1').disabled = state.busy || !hasText || !hasSelection;
+            $('topic-save').disabled = state.busy || !hasTitle || !hasGroup || !hasText;
+
+            const missing = [!hasTitle && 'título', !hasGroup && 'grupo', !hasText && 'conteúdo'].filter(Boolean);
+            $('step1-hint').textContent = !hasText
+                ? 'Cole ou digite o texto para pedir sugestões à IA.'
+                : (!hasSelection ? 'Para criar uma variável manualmente, selecione um trecho no texto.' : '');
+
+            if (state.step !== 2) {
+                $('topic-footer-hint').textContent = missing.length
+                    ? `Preencha ${missing.join(', ').replace(/, ([^,]*)$/, ' e $1')} para salvar.`
+                    : (state.step === 1 ? 'Você pode salvar sem variáveis ou pedir sugestões à IA.' : 'O modelo fica disponível para novas petições assim que for salvo.');
+            }
+        }
+
+        editor.on('text-change', () => { if (state.step === 1) { updateCount(); } refreshButtons(); });
+        editor.on('selection-change', range => { state.editorRange = range; refreshButtons(); });
+        $('topic-title').addEventListener('input', refreshButtons);
+        $('topic-group').addEventListener('change', refreshButtons);
 
         $('manual-variable-step1').addEventListener('mousedown', event => event.preventDefault());
         $('manual-variable-step1').addEventListener('click', () => {
-            const range = editor.getSelection();
-            if (!range || range.length === 0) {
-                Swal.fire({ icon: 'info', title: 'Selecione um trecho', text: 'Selecione no texto o trecho que vai virar variável e clique de novo em “Criar variável manualmente”.', confirmButtonColor: 'var(--df-brand-01)' });
-                return;
-            }
+            const range = editor.getSelection() || state.editorRange;
+            if (!range || range.length === 0) { return; }
             const passage = editor.getText(range.index, range.length).trim();
             Swal.fire({
                 title: 'Criar variável',
@@ -105,18 +128,15 @@ window.gbTopicVariables = (function () {
 
         $('ai-identify').addEventListener('click', () => {
             const html = gbEditor.getHtml(editor);
-            if (!html) {
-                Swal.fire({ icon: 'info', title: 'Cole o texto primeiro', text: 'Cole o texto da petição no conteúdo do modelo para a IA analisar.', confirmButtonColor: 'var(--df-brand-01)' });
-                return;
-            }
+            if (!html) { return; }
 
             const button = $('ai-identify');
             const label = button.innerHTML;
-            button.disabled = true;
+            state.busy = true;
+            refreshButtons();
             button.innerHTML = '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span> Analisando o texto…';
             $('topic-step-1').setAttribute('aria-busy', 'true');
             editor.enable(false);
-            $('topic-save').disabled = true;
 
             fetch(suggestUrl, {
                 method: 'POST',
@@ -138,11 +158,11 @@ window.gbTopicVariables = (function () {
             })
             .catch(error => Swal.fire({ icon: 'error', title: 'Não foi possível analisar', text: error.message, confirmButtonColor: 'var(--df-brand-01)' }))
             .finally(() => {
-                button.disabled = false;
+                state.busy = false;
                 button.innerHTML = label;
                 $('topic-step-1').removeAttribute('aria-busy');
                 editor.enable(true);
-                $('topic-save').disabled = false;
+                refreshButtons();
                 lucide.createIcons();
             });
         });
@@ -184,11 +204,11 @@ window.gbTopicVariables = (function () {
                     body += `<p class="gb-ai-warning"><i data-lucide="triangle-alert"></i> ${escapeHtml(item.motivo || 'Pode ser uma referência jurídica. Recomendamos manter o texto original.')}</p>
                         <div class="d-flex gap-2 mt-2">
                             <button type="button" class="btn btn-primary btn-sm flex-fill" data-action="keep" data-id="${item.id}">Manter original</button>
-                            <button type="button" class="btn btn-white btn-sm flex-fill" data-action="accept" data-id="${item.id}"><i data-lucide="braces"></i> Usar variável</button>
+                            <button type="button" class="btn btn-white btn-sm flex-fill" data-action="accept" data-id="${item.id}" ${cleanName(item.name) ? '' : 'disabled'}><i data-lucide="braces"></i> Usar variável</button>
                         </div>`;
                 } else {
                     body += `<div class="d-flex gap-2 mt-2">
-                            <button type="button" class="btn btn-primary btn-sm flex-fill" data-action="accept" data-id="${item.id}"><i data-lucide="check"></i> Aceitar</button>
+                            <button type="button" class="btn btn-primary btn-sm flex-fill" data-action="accept" data-id="${item.id}" ${cleanName(item.name) ? '' : 'disabled'}><i data-lucide="check"></i> Aceitar</button>
                             <button type="button" class="btn btn-white btn-sm flex-fill" data-action="keep" data-id="${item.id}">Manter original</button>
                         </div>`;
                 }
@@ -233,7 +253,10 @@ window.gbTopicVariables = (function () {
 
         $('ai-suggestions').addEventListener('input', event => {
             const input = event.target.closest('.js-ai-name');
-            if (input) { state.suggestions.find(item => item.id === Number(input.dataset.id)).name = input.value; }
+            if (!input) { return; }
+            state.suggestions.find(item => item.id === Number(input.dataset.id)).name = input.value;
+            const accept = $('ai-suggestions').querySelector(`[data-action="accept"][data-id="${input.dataset.id}"]`);
+            if (accept) { accept.disabled = !cleanName(input.value); }
         });
 
         $('ai-suggestions').addEventListener('click', event => {
@@ -242,12 +265,7 @@ window.gbTopicVariables = (function () {
             const item = state.suggestions.find(entry => entry.id === Number(button.dataset.id));
 
             if (button.dataset.action === 'accept') {
-                if (!cleanName(item.name)) {
-                    const input = $(`ai-name-${item.id}`);
-                    input.classList.add('is-invalid');
-                    input.focus();
-                    return;
-                }
+                if (!cleanName(item.name)) { return; }
                 item.name = cleanName(item.name);
                 item.status = 'accepted';
             }
@@ -272,7 +290,7 @@ window.gbTopicVariables = (function () {
             state.selection = passage;
             $('ai-popover-text').textContent = `“${passage}”`;
             $('ai-popover-name').value = '';
-            $('ai-popover-name').classList.remove('is-invalid');
+            $('ai-popover-create').disabled = true;
             $('ai-popover').hidden = false;
             $('ai-popover-name').focus();
             lucide.createIcons();
@@ -286,26 +304,29 @@ window.gbTopicVariables = (function () {
             openPopover(passage);
         });
 
-        $('manual-variable-step2').addEventListener('click', () => {
+        function selectedPassage() {
             const selection = window.getSelection();
             const passage = selection ? selection.toString().trim() : '';
-            if (passage && $('ai-text').contains(selection.anchorNode)) {
-                openPopover(passage);
-            } else {
-                $('ai-text-hint').classList.add('gb-text-highlight');
-                $('ai-text').focus();
-                setTimeout(() => $('ai-text-hint').classList.remove('gb-text-highlight'), 1500);
-            }
+            if (!passage || !$('ai-text').contains(selection.anchorNode) || state.suggestions.some(item => item.trecho === passage)) { return ''; }
+            return passage;
+        }
+
+        document.addEventListener('selectionchange', () => {
+            if (state.step === 2) { $('manual-variable-step2').disabled = selectedPassage() === ''; }
+        });
+        $('manual-variable-step2').addEventListener('mousedown', event => event.preventDefault());
+        $('manual-variable-step2').addEventListener('click', () => {
+            const passage = selectedPassage();
+            if (passage) { openPopover(passage); }
         });
 
         $('ai-popover-cancel').addEventListener('click', hidePopover);
+        $('ai-popover-name').addEventListener('input', () => {
+            $('ai-popover-create').disabled = cleanName($('ai-popover-name').value) === '';
+        });
         $('ai-popover-create').addEventListener('click', () => {
             const name = cleanName($('ai-popover-name').value);
-            if (!name) {
-                $('ai-popover-name').classList.add('is-invalid');
-                $('ai-popover-error').textContent = 'Informe o nome da variável.';
-                return;
-            }
+            if (!name) { return; }
             const nextId = state.suggestions.reduce((max, item) => Math.max(max, item.id), 0) + 1;
             state.suggestions.push({ id: nextId, trecho: state.selection, name, categoria: 'MANUAL', atencao: false, motivo: '', status: 'accepted', manual: true });
             state.suggestions.sort((a, b) => state.original.indexOf(escapeHtml(a.trecho)) - state.original.indexOf(escapeHtml(b.trecho)));
@@ -313,7 +334,7 @@ window.gbTopicVariables = (function () {
             renderSuggestions();
         });
         $('ai-popover-name').addEventListener('keydown', event => {
-            if (event.key === 'Enter') { event.preventDefault(); $('ai-popover-create').click(); }
+            if (event.key === 'Enter') { event.preventDefault(); if (!$('ai-popover-create').disabled) { $('ai-popover-create').click(); } }
             if (event.key === 'Escape') { event.stopPropagation(); hidePopover(); }
         });
 
@@ -361,17 +382,16 @@ window.gbTopicVariables = (function () {
             $('topic-next').hidden = state.step !== 2;
             $('topic-save').hidden = state.step === 2;
 
-            if (state.step === 1) {
-                hint.textContent = 'Você pode salvar sem variáveis ou pedir sugestões à IA.';
-            } else if (state.step === 2) {
+            if (state.step === 2) {
+                $('manual-variable-step2').disabled = selectedPassage() === '';
                 const left = pending().length;
                 $('topic-next').disabled = left > 0;
                 hint.textContent = left > 0
                     ? `Revise ${left === 1 ? 'a sugestão pendente' : `as ${left} sugestões pendentes`} para continuar.`
                     : 'Tudo revisado. Continue para ver o modelo.';
-            } else {
-                hint.textContent = 'O modelo fica disponível para novas petições assim que for salvo.';
             }
+
+            refreshButtons();
         }
 
         function goTo(step, { keepEditor = false } = {}) {

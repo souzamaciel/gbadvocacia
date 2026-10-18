@@ -1650,13 +1650,13 @@
     <div class="gb-form-actions no-print">
         <p class="gb-field-hint m-0">
             <i data-lucide="info"></i>
-            Os dados são enviados só quando você conclui o atendimento.
+            <span id="submit-hint">Confira os pedidos no passo 9 para concluir o atendimento.</span>
         </p>
         <div class="gb-page-actions">
             <button type="button" id="btn-print-form" class="btn btn-white">
                 <i data-lucide="printer"></i> Imprimir formulário
             </button>
-            <button type="submit" id="btn-submit-appointment" class="btn btn-primary">
+            <button type="submit" id="btn-submit-appointment" class="btn btn-primary" disabled>
                 Concluir atendimento <i data-lucide="check"></i>
             </button>
         </div>
@@ -1677,6 +1677,10 @@
         function show(step, focus = true) {
             current = Math.min(Math.max(step, 1), total);
             visitedLast = visitedLast || current === total;
+            document.getElementById('btn-submit-appointment').disabled = !visitedLast;
+            document.getElementById('submit-hint').textContent = visitedLast
+                ? 'Os dados são enviados só quando você conclui o atendimento.'
+                : 'Confira os pedidos no passo 9 para concluir o atendimento.';
             panels.forEach(panel => { panel.hidden = Number(panel.dataset.step) !== current; });
             links.forEach(link => {
                 const active = Number(link.dataset.stepTarget) === current;
