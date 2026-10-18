@@ -148,7 +148,7 @@ class PetitionCreatePageTest extends TestCase
 
         $response->assertSee('preliminares-count', false);
         $response->assertSee('1 preliminar selecionada');
-        $response->assertSeeInOrder(['class="preliminar-checkbox"', 'checked'], false);
+        $response->assertSeeInOrder(['preliminar-checkbox', 'checked'], false);
         $response->assertDontSee('id="preliminares-selected"', false);
     }
 }

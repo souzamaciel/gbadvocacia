@@ -1,34 +1,26 @@
 @props(['preliminares' => []])
 
-<div class="card shadow-lg border-0 rounded-4 overflow-hidden no-print"
-     style="font-family: 'Inter', sans-serif;">
-    <div class="card-body p-4 d-flex flex-column gap-3">
-
-        {{-- Header --}}
-        <div>
-            <h5 class="fw-bold mb-1" style="color: #1E293B;">Preliminares</h5>
-            <small id="preliminares-count" class="text-secondary">{{ count($preliminares) }} {{ count($preliminares) === 1 ? 'preliminar selecionada' : 'preliminares selecionadas' }}</small>
-        </div>
-
-        {{-- Lista de checkboxes --}}
-        <div class="d-flex flex-column gap-2">
-            @foreach ($preliminares as $preliminar)
-                <label class="d-flex align-items-center gap-2 m-0"
-                       style="cursor: pointer; font-size: 13px; color: #314158; font-weight: 500;">
-                    <input type="checkbox"
-                           name="preliminares[]"
-                           value="{{ $preliminar->id }}"
-                           class="preliminar-checkbox"
-                           checked
-                           onchange="onPreliminarChange()"
-                           style="width: 15px; height: 15px; accent-color: var(--gb-navy);">
-                    {{ $preliminar->title }}
-                </label>
-            @endforeach
-        </div>
-
+<section class="card h-100 no-print" aria-labelledby="preliminares-title">
+    <div class="card-header">
+        <h3 id="preliminares-title" class="card-title">Preliminares</h3>
+        <p id="preliminares-count" class="card-description">{{ count($preliminares) }} {{ count($preliminares) === 1 ? 'preliminar selecionada' : 'preliminares selecionadas' }}</p>
     </div>
-</div>
+
+    <div class="card-body d-flex flex-column gap-2">
+        @foreach ($preliminares as $preliminar)
+            <div class="form-check">
+                <input type="checkbox"
+                       name="preliminares[]"
+                       value="{{ $preliminar->id }}"
+                       id="preliminar-{{ $preliminar->id }}"
+                       class="form-check-input preliminar-checkbox"
+                       checked
+                       onchange="onPreliminarChange()">
+                <label class="form-check-label" for="preliminar-{{ $preliminar->id }}">{{ $preliminar->title }}</label>
+            </div>
+        @endforeach
+    </div>
+</section>
 
 <script>
     function onPreliminarChange() {

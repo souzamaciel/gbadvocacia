@@ -1051,3 +1051,226 @@ div.gb-library-empty [data-lucide] {
   font: 400 13px/20px var(--df-font);
   color: var(--df-text-02);
 }
+
+/* ---------- Atendimento ---------- */
+.gb-steps-header {
+  padding: 16px;
+  border-bottom: 1px solid var(--df-border);
+}
+
+.gb-steps-count {
+  font: 400 12px/14px var(--df-font);
+  color: var(--df-text-03);
+}
+
+.gb-progress {
+  height: 4px;
+  margin-top: 10px;
+  border-radius: 2px;
+  background: var(--df-ui-02);
+  overflow: hidden;
+}
+
+.gb-progress span {
+  display: block;
+  height: 100%;
+  background: var(--df-brand-01);
+  transition: width 0.2s ease;
+}
+
+.gb-steps-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.gb-steps-list li {
+  border-bottom: 1px solid var(--df-border);
+}
+
+.gb-step-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  background: none;
+  border: 0;
+  border-left: 2px solid transparent;
+  padding: 10px 16px 10px 14px;
+  text-align: left;
+  font: 400 14px/20px var(--df-font);
+  color: var(--df-text-02);
+}
+
+.gb-step-link:hover {
+  background: var(--df-ui-01);
+}
+
+.gb-step-link.is-active {
+  background: var(--df-ui-01);
+  border-left-color: var(--df-brand-01);
+  color: var(--df-text-01);
+  font-weight: 500;
+}
+
+.gb-step-number {
+  flex: 0 0 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid var(--df-ui-03);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font: 500 10px/1 var(--df-font);
+  color: var(--df-text-03);
+}
+
+.gb-step-link.is-active .gb-step-number {
+  background: var(--df-brand-01);
+  border-color: var(--df-brand-01);
+  color: var(--df-white);
+}
+
+.gb-steps-select {
+  display: none;
+  padding: 12px 16px;
+}
+
+@media (max-width: 991.98px) {
+  .gb-steps-list,
+  .gb-steps .gb-groups-hint {
+    display: none;
+  }
+
+  .gb-steps-select {
+    display: block;
+  }
+}
+
+.gb-step-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.gb-step-eyebrow {
+  font: 600 10px/14px var(--df-font);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--df-accent-text);
+  margin: 0 0 4px;
+}
+
+.gb-step-body .section-card {
+  padding: 20px;
+  border-bottom: 1px solid var(--df-border);
+}
+
+.gb-step-body .section-card:last-child {
+  border-bottom: 0;
+}
+
+.gb-step-body .section-header {
+  margin-bottom: 14px;
+}
+
+.gb-step-body .section-badge {
+  display: none;
+}
+
+.gb-step-body .section-title {
+  font: 600 10px/14px var(--df-font);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--df-text-03);
+  margin: 0;
+}
+
+.gb-step-body .section-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.gb-step-body .form-control-sm,
+.gb-step-body .form-select-sm {
+  min-height: var(--df-control-h);
+  font-size: 14px;
+  border-radius: var(--df-radius);
+}
+
+.gb-step-body > .row {
+  padding: 20px;
+}
+
+.gb-step-note {
+  margin: 0;
+  padding: 12px 20px;
+  background: var(--df-ui-01);
+  border-top: 1px solid var(--df-border);
+  font: 400 12px/18px var(--df-font);
+  color: var(--df-text-03);
+  border-radius: 0 0 var(--df-radius) var(--df-radius);
+}
+
+.gb-step-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.gb-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--df-border);
+}
+
+@media (max-width: 575.98px) {
+  .gb-form-actions .gb-page-actions {
+    flex-direction: column-reverse;
+  }
+}
+
+.gb-suggestions {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 50;
+  max-height: 240px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+  background: var(--df-white);
+  border: 1px solid var(--df-border);
+  border-radius: var(--df-radius);
+  box-shadow: 0 8px 24px rgba(15, 21, 32, 0.12);
+}
+
+.gb-suggestions li {
+  padding: 8px 12px;
+  font: 400 13px/18px var(--df-font);
+  color: var(--df-text-02);
+  cursor: pointer;
+}
+
+.gb-suggestions li:hover {
+  background: var(--df-ui-01);
+}
+
+.form-check-input:checked {
+  background-color: var(--df-brand-01);
+  border-color: var(--df-brand-01);
+}
+
+.form-check-label {
+  font-size: 13px;
+  color: var(--df-text-02);
+}
