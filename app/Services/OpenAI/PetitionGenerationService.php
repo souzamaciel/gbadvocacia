@@ -100,8 +100,8 @@ Regras obrigatórias:
 - TODOS os itens listados em "topicos_selecionados" e em "preliminares_selecionadas" devem ser gerados, sem exceção, sem omitir, unir ou descartar nenhum — independentemente de você considerá-los aplicáveis ou não ao caso.
 - Se faltar dado necessário, registre em "pendencias".
 - Retorne somente JSON válido conforme o schema informado.
-- Os campos *_html (e o "conteudo_html" das preliminares e tópicos) devem conter HTML simples e seguro, preferindo apenas: <p>, <strong>, <em>, <u>, <br>, <ol>, <ul>, <li>.
-- Quando o "content" de um tópico ou preliminar vier em HTML, preserve no "conteudo_html" exatamente a mesma formatação (negrito, itálico, sublinhado, listas e parágrafos).
+- Os campos *_html (e o "conteudo_html" das preliminares e tópicos) devem conter HTML simples e seguro, usando apenas: <p>, <br>, <strong>, <em>, <u>, <s>, <sub>, <sup>, <h1>, <h2>, <blockquote>, <pre>, <ol>, <ul>, <li>, <a href> e <span>.
+- Quando o "content" de um tópico ou preliminar vier em HTML, copie para o "conteudo_html" exatamente a mesma marcação: as mesmas tags, os atributos class (ql-align-*, ql-indent-*, ql-size-*), os atributos style de cor (color e background-color) e os links (href). Não remova, não troque e não acrescente formatação.
 
 Regras sobre variáveis no texto-base (content):
 {$variableInstruction}

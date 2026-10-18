@@ -4,12 +4,10 @@ namespace App\Services;
 
 use App\Models\Topic;
 use PhpOffice\PhpWord\Element\Section;
-use PhpOffice\PhpWord\Element\TextRun;
 use PhpOffice\PhpWord\IOFactory;
 use PhpOffice\PhpWord\PhpWord;
 use PhpOffice\PhpWord\Shared\Converter;
 use PhpOffice\PhpWord\SimpleType\Jc;
-use PhpOffice\PhpWord\Style\Font;
 use PhpOffice\PhpWord\Style\Tab;
 
 class PetitionDocxGenerator
@@ -551,126 +549,11 @@ class PetitionDocxGenerator
     }
 
     /**
-     * Parse simple HTML content and add it as Word paragraphs.
+     * Add the HTML written by the AI (or the editor) as Word paragraphs.
      */
     protected function addHtmlContent(Section $section, string $html): void
     {
-        $html = strip_tags($html, '<p><strong><b><br><ol><ul><li><em><i><u>');
-        $html = trim($html);
-
-        if (empty($html)) {
-            return;
-        }
-
-        // Split by paragraphs
-        $blocks = preg_split('/<\/?p[^>]*>/i', $html);
-
-        foreach ($blocks as $block) {
-            $block = trim($block);
-            if (empty($block)) {
-                continue;
-            }
-
-            // Check for list blocks
-            if (preg_match('/<[ou]l/i', $block)) {
-                $this->addListFromHtml($section, $block);
-
-                continue;
-            }
-
-            $textRun = $section->addTextRun($this->styles['indent']);
-            $this->addFormattedText($textRun, $block);
-        }
-
-        // Handle any standalone lists not inside <p>
-        if (preg_match_all('/<(ol|ul)>(.*?)<\/\1>/si', $html, $matches, PREG_SET_ORDER)) {
-            // Already handled in block loop above if inside <p>
-        }
-    }
-
-    protected function addListFromHtml(Section $section, string $html): void
-    {
-        preg_match_all('/<(ol|ul)[^>]*>(.*?)<\/\1>/si', $html, $lists, PREG_SET_ORDER);
-
-        foreach ($lists as [, $type, $body]) {
-            preg_match_all('/<li[^>]*>(.*?)<\/li>/si', $body, $items);
-
-            foreach ($items[1] as $index => $item) {
-                $textRun = $section->addTextRun($this->styles['indent']);
-                $textRun->addText(strtolower($type) === 'ol' ? ($index + 1).'. ' : '• ');
-                $this->addFormattedText($textRun, $item);
-            }
-        }
-    }
-
-    /**
-     * Parse inline HTML (bold, italic, br) and add to a TextRun.
-     */
-    protected function addFormattedText(TextRun $textRun, string $html): void
-    {
-        $html = str_replace(['<br>', '<br/>', '<br />'], "\n", $html);
-
-        $parts = preg_split('/(<\/?(?:strong|b|em|i|u)>)/i', $html, -1, PREG_SPLIT_DELIM_CAPTURE);
-
-        $bold = false;
-        $italic = false;
-        $underline = false;
-
-        foreach ($parts as $part) {
-            $lower = strtolower($part);
-
-            if ($lower === '<strong>' || $lower === '<b>') {
-                $bold = true;
-
-                continue;
-            }
-            if ($lower === '</strong>' || $lower === '</b>') {
-                $bold = false;
-
-                continue;
-            }
-            if ($lower === '<em>' || $lower === '<i>') {
-                $italic = true;
-
-                continue;
-            }
-            if ($lower === '</em>' || $lower === '</i>') {
-                $italic = false;
-
-                continue;
-            }
-            if ($lower === '<u>' || $lower === '</u>') {
-                $underline = $lower === '<u>';
-
-                continue;
-            }
-
-            $text = html_entity_decode(strip_tags($part), ENT_QUOTES, 'UTF-8');
-            if ($text === '') {
-                continue;
-            }
-
-            $fontStyle = [];
-            if ($bold) {
-                $fontStyle['bold'] = true;
-            }
-            if ($italic) {
-                $fontStyle['italic'] = true;
-            }
-            if ($underline) {
-                $fontStyle['underline'] = Font::UNDERLINE_SINGLE;
-            }
-
-            $lines = explode("\n", $text);
-            foreach ($lines as $i => $line) {
-                if ($i > 0) {
-                    $textRun->addTextBreak();
-                }
-                if ($line !== '') {
-                    $textRun->addText($line, $fontStyle);
-                }
-            }
-        }
+        (new WordHtmlRenderer($this->styles['indent']))->render($section, $html);
     }
 
     /**
