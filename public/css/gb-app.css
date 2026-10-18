@@ -2263,3 +2263,21 @@ div.gb-library-empty [data-lucide] {
 .gb-hint-link:hover {
   color: var(--df-brand-01);
 }
+
+.gb-ai-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: var(--df-brand-01-tint);
+  color: var(--df-accent-text);
+  font: 500 10px/14px var(--df-font);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.gb-ai-chip [data-lucide] {
+  width: 11px;
+  height: 11px;
+}

@@ -82,10 +82,10 @@ class TopicController extends Controller
      */
     public function suggestVariables(SuggestTopicVariablesRequest $request, TopicVariableSuggestionService $suggestions): JsonResponse
     {
+        $groups = Group::query()->orderBy('sort_order')->pluck('name', 'id');
+
         try {
-            return response()->json([
-                'suggestions' => $suggestions->suggest($request->string('content')->toString()),
-            ]);
+            $result = $suggestions->suggest($request->string('content')->toString(), $groups->values()->all());
         } catch (Throwable $e) {
             report($e);
 
@@ -93,6 +93,12 @@ class TopicController extends Controller
                 'message' => 'Não foi possível analisar o texto agora. Tente novamente ou crie as variáveis manualmente.',
             ], 502);
         }
+
+        return response()->json([
+            'suggestions' => $result['suggestions'],
+            'title' => $result['title'],
+            'group_id' => $result['group'] === null ? null : $groups->search($result['group']),
+        ]);
     }
 
     public function destroy(Topic $topic): JsonResponse

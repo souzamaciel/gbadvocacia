@@ -23,12 +23,15 @@ class TopicVariableSuggestionService
     ) {}
 
     /**
-     * @return array<int, array{trecho: string, nome: string, categoria: string, atencao: bool, motivo: string}>
+     * Suggested variables plus a suggested title and group for the topic.
+     *
+     * @param  array<int, string>  $groupNames  groups the topic can belong to
+     * @return array{suggestions: array<int, array{trecho: string, nome: string, categoria: string, atencao: bool, motivo: string}>, title: string, group: ?string}
      */
-    public function suggest(string $content): array
+    public function suggest(string $content, array $groupNames = []): array
     {
         $text = RichText::toPlainText($content);
-        $payload = $this->buildPayload($text);
+        $payload = $this->buildPayload($text, array_values($groupNames));
 
         $response = $this->http
             ->baseUrl(config('services.openai.base_url'))
@@ -55,7 +58,14 @@ class TopicVariableSuggestionService
             'response_payload' => $json,
         ]);
 
-        return $this->validSuggestions($this->extractStructuredOutput($json)['sugestoes'] ?? [], $text);
+        $output = $this->extractStructuredOutput($json);
+        $group = trim((string) ($output['grupo'] ?? ''));
+
+        return [
+            'suggestions' => $this->validSuggestions($output['sugestoes'] ?? [], $text),
+            'title' => mb_substr(trim((string) ($output['titulo'] ?? '')), 0, 255),
+            'group' => in_array($group, $groupNames, true) ? $group : null,
+        ];
     }
 
     /**
@@ -96,9 +106,13 @@ class TopicVariableSuggestionService
     /**
      * @return array<string, mixed>
      */
-    private function buildPayload(string $text): array
+    /**
+     * @param  array<int, string>  $groupNames
+     */
+    private function buildPayload(string $text, array $groupNames): array
     {
         $categories = implode(', ', self::CATEGORIES);
+        $groups = $groupNames === [] ? '(nenhum)' : implode('; ', $groupNames);
 
         $instructions = <<<TEXT
 Você ajuda um escritório de advocacia trabalhista a transformar o texto de uma petição já usada em um modelo reutilizável.
@@ -124,6 +138,10 @@ Use "atencao": true SOMENTE quando o trecho for um dado concreto do caso que TAM
 - Ignore trechos que já estão entre colchetes, como [NOME DA RECLAMADA].
 - Não repita o mesmo trecho.
 - Se o texto não tiver nenhum dado concreto do caso, retorne a lista vazia.
+
+Título e grupo do tópico:
+- "titulo": título curto do tópico em MAIÚSCULAS, no estilo da biblioteca do escritório (ex.: "DAS HORAS EXTRAS ALÉM DA 08ª DIÁRIA E 44ª SEMANAL", "DA SUPRESSÃO DO INTERVALO INTRAJORNADA"). Se o texto já tiver um título de tópico, use-o sem a numeração.
+- "grupo": o nome EXATO de um destes grupos que melhor corresponde ao tema: {$groups}. Se nenhum servir, retorne string vazia.
 - Retorne somente JSON válido conforme o schema.
 TEXT;
 
@@ -146,8 +164,10 @@ TEXT;
                     'schema' => [
                         'type' => 'object',
                         'additionalProperties' => false,
-                        'required' => ['sugestoes'],
+                        'required' => ['sugestoes', 'titulo', 'grupo'],
                         'properties' => [
+                            'titulo' => ['type' => 'string'],
+                            'grupo' => ['type' => 'string'],
                             'sugestoes' => [
                                 'type' => 'array',
                                 'items' => [

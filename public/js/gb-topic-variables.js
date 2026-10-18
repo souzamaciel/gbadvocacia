@@ -66,6 +66,11 @@ window.gbTopicVariables = (function () {
     function init({ editor, suggestUrl, csrfToken }) {
         const state = { step: 1, original: '', suggestions: [], selection: '', busy: false, editorRange: null, touched: new Set() };
         const identity = $('topic-identity');
+        const notesBlock = $('topic-notes-block');
+
+        function setAiChip(field, visible) {
+            $(`${field}-ai-chip`).hidden = !visible;
+        }
         const dialog = document.querySelector('#topic-modal .modal-dialog');
 
         /* ---------- Etapa 1 ---------- */
@@ -116,8 +121,8 @@ window.gbTopicVariables = (function () {
 
         editor.on('text-change', () => { if (state.step === 1) { updateCount(); } refreshButtons(); });
         editor.on('selection-change', range => { state.editorRange = range; refreshButtons(); });
-        $('topic-title').addEventListener('input', refreshButtons);
-        $('topic-group').addEventListener('change', refreshButtons);
+        $('topic-title').addEventListener('input', () => { setAiChip('title', false); refreshButtons(); });
+        $('topic-group').addEventListener('change', () => { setAiChip('group', false); refreshButtons(); });
         ['topic-title', 'topic-group'].forEach(id => $(id).addEventListener('blur', () => { state.touched.add(id); refreshButtons(); }));
 
         $('topic-footer-hint').addEventListener('click', event => {
@@ -179,6 +184,14 @@ window.gbTopicVariables = (function () {
             .then(({ ok, data }) => {
                 if (!ok) { throw new Error(data.message || 'Não foi possível analisar o texto.'); }
                 state.original = html;
+                if (!$('topic-title').value.trim() && data.title) {
+                    $('topic-title').value = data.title;
+                    setAiChip('title', true);
+                }
+                if (!$('topic-group').value && data.group_id) {
+                    $('topic-group').value = String(data.group_id);
+                    setAiChip('group', true);
+                }
                 state.suggestions = data.suggestions.map((suggestion, index) => ({
                     ...suggestion,
                     id: index + 1,
@@ -393,7 +406,8 @@ window.gbTopicVariables = (function () {
             });
 
             const names = [...new Set((editor.getText().match(PLACEHOLDER) || []).map(name => name.slice(1, -1)))];
-            $('ai-ready').innerHTML = `<i data-lucide="circle-check"></i><span>Modelo pronto. ${accepted.length} ${accepted.length === 1 ? 'variável aprovada' : 'variáveis aprovadas'}${kept.length ? ` e ${kept.length} ${kept.length === 1 ? 'trecho mantido' : 'trechos mantidos'} como texto original` : ''}.</span>`;
+            const aiFilled = !$('title-ai-chip').hidden || !$('group-ai-chip').hidden;
+            $('ai-ready').innerHTML = `<i data-lucide="circle-check"></i><span>Modelo pronto. ${accepted.length} ${accepted.length === 1 ? 'variável aprovada' : 'variáveis aprovadas'}${kept.length ? ` e ${kept.length} ${kept.length === 1 ? 'trecho mantido' : 'trechos mantidos'} como texto original` : ''}. ${aiFilled ? 'Confira os dados do tópico abaixo antes de salvar.' : 'Confira os dados do tópico antes de salvar.'}</span>`;
             $('ai-final-count').textContent = names.length;
             $('ai-final-variables').innerHTML = accepted.length
                 ? accepted.map(item => `<li><i data-lucide="braces"></i><div><p class="gb-petition-title">${escapeHtml(item.name)}</p><p class="gb-petition-meta">${escapeHtml(item.manual ? 'MANUAL' : item.categoria)} · ex.: ${escapeHtml(item.trecho)}</p></div></li>`).join('')
@@ -434,11 +448,14 @@ window.gbTopicVariables = (function () {
             state.step = step;
             hidePopover();
             if (step === 3) {
-                $('ai-ready').after(identity);
+                $('ai-ready').after(identity, notesBlock);
                 identity.classList.add('mb-3');
+                notesBlock.classList.add('mb-3');
             } else if (identity.parentElement !== $('topic-step-1')) {
                 $('topic-step-1').prepend(identity);
+                $('topic-step-1').append(notesBlock);
                 identity.classList.remove('mb-3');
+                notesBlock.classList.remove('mb-3');
             }
             [1, 2, 3].forEach(number => { $(`topic-step-${number}`).hidden = number !== step; });
             document.querySelectorAll('#topic-steps li').forEach(item => {
@@ -469,6 +486,8 @@ window.gbTopicVariables = (function () {
                 state.step = 1;
                 state.original = '';
                 state.touched.clear();
+                setAiChip('title', false);
+                setAiChip('group', false);
                 goTo(1, { keepEditor: true });
             },
         };

@@ -175,7 +175,7 @@
                         <div class="col-12" id="topic-identity">
                             <div class="row g-3">
                             <div class="col-12 col-md-8">
-                                <label for="topic-title" class="form-label">Título</label>
+                                <label for="topic-title" class="form-label d-flex align-items-center gap-2">Título <span class="gb-ai-chip" id="title-ai-chip" hidden><i data-lucide="sparkles"></i> Sugerido pela IA</span></label>
                                 <input type="text" id="topic-title" name="title" maxlength="255" placeholder="Ex.: Horas extras habituais"
                                        class="form-control @error('title') is-invalid @enderror" value="{{ old('title') }}"
                                        @error('title') aria-describedby="topic-title-error" @enderror>
@@ -184,7 +184,7 @@
                                 @enderror
                             </div>
                             <div class="col-12 col-md-4">
-                                <label for="topic-group" class="form-label">Grupo</label>
+                                <label for="topic-group" class="form-label d-flex align-items-center gap-2">Grupo <span class="gb-ai-chip" id="group-ai-chip" hidden><i data-lucide="sparkles"></i> Sugerido pela IA</span></label>
                                 <select id="topic-group" name="group_id" class="form-select @error('group_id') is-invalid @enderror"
                                         @error('group_id') aria-describedby="topic-group-error" @enderror>
                                     <option value="">Selecione</option>
@@ -227,7 +227,7 @@
                             </div>
                             <p class="gb-field-hint" id="step1-hint" aria-live="polite"></p>
                         </div>
-                        <div class="col-12">
+                        <div class="col-12" id="topic-notes-block">
                             <label for="topic-notes" class="form-label">Orientação interna · opcional</label>
                             <textarea id="topic-notes" name="notes" rows="3" maxlength="2000" placeholder="Instruções para quem prepara a petição"
                                       class="form-control @error('notes') is-invalid @enderror"
