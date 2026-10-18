@@ -6,19 +6,13 @@ use App\Http\Requests\StoreGroupRequest;
 use App\Http\Requests\UpdateGroupRequest;
 use App\Models\Group;
 use Illuminate\Http\JsonResponse;
-use Illuminate\View\View;
+use Illuminate\Http\RedirectResponse;
 
 class GroupController extends Controller
 {
-    public function index(): View
+    public function index(): RedirectResponse
     {
-        $groups = Group::query()
-            ->withCount('topics')
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->get();
-
-        return view('settings.groups.index', compact('groups'));
+        return redirect()->route('settings.topics.index');
     }
 
     public function store(StoreGroupRequest $request): JsonResponse

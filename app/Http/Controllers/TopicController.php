@@ -16,22 +16,24 @@ class TopicController extends Controller
     {
         $topics = Topic::query()
             ->with('group')
-            ->orderBy('group_id')
-            ->orderBy('sort_order')
+            ->orderByRaw('group_id = ? desc', [Group::PRELIMINARES_ID])
+            ->orderedByGroup()
             ->orderBy('title')
             ->get();
 
-        return view('settings.topics.index', compact('topics'));
+        $groups = Group::query()
+            ->withCount('topics')
+            ->orderByRaw('id = ? desc', [Group::PRELIMINARES_ID])
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
+
+        return view('settings.topics.index', compact('topics', 'groups'));
     }
 
-    public function create(): View
+    public function create(): RedirectResponse
     {
-        $groups = Group::query()->orderBy('name')->get();
-
-        return view('settings.topics.form', [
-            'topic' => null,
-            'groups' => $groups,
-        ]);
+        return redirect()->route('settings.topics.index', ['novo' => 1]);
     }
 
     public function store(StoreTopicRequest $request): RedirectResponse
@@ -52,11 +54,9 @@ class TopicController extends Controller
             ->with('status', 'Tópico criado com sucesso!');
     }
 
-    public function edit(Topic $topic): View
+    public function edit(Topic $topic): RedirectResponse
     {
-        $groups = Group::query()->orderBy('name')->get();
-
-        return view('settings.topics.form', compact('topic', 'groups'));
+        return redirect()->route('settings.topics.index', ['editar' => $topic->id]);
     }
 
     public function update(UpdateTopicRequest $request, Topic $topic): RedirectResponse

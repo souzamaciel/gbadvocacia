@@ -806,3 +806,248 @@ body {
   flex-direction: column;
   text-decoration: none;
 }
+
+/* ---------- Modais ---------- */
+.modal-backdrop.show {
+  background: var(--df-backdrop);
+  opacity: 1;
+}
+
+.modal-content {
+  border: 1px solid var(--df-modal-border);
+  border-radius: var(--df-radius);
+}
+
+.modal-header {
+  align-items: flex-start;
+  padding: 16px 20px;
+  border-bottom-color: var(--df-border);
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.modal-footer {
+  padding: 12px 20px;
+  border-top-color: var(--df-border);
+  gap: 8px;
+}
+
+.modal-footer > * {
+  margin: 0;
+}
+
+@media (max-width: 575.98px) {
+  .modal-dialog {
+    margin: 8px;
+  }
+
+  .modal-footer {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .modal-footer .btn {
+    width: 100%;
+  }
+}
+
+.gb-field-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font: 400 12px/18px var(--df-font);
+  color: var(--df-text-03);
+  margin: 8px 0 0;
+}
+
+.gb-field-hint [data-lucide] {
+  width: 14px;
+  height: 14px;
+}
+
+.gb-icon-tile-sm {
+  width: 36px;
+  height: 36px;
+}
+
+.gb-icon-tile-sm [data-lucide] {
+  width: 18px;
+  height: 18px;
+}
+
+/* ---------- Biblioteca de tópicos ---------- */
+.gb-group-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.gb-group-list > li {
+  position: relative;
+  border-bottom: 1px solid var(--df-border);
+}
+
+.gb-group-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  background: none;
+  border: 0;
+  border-left: 2px solid transparent;
+  padding: 10px 16px 10px 14px;
+  text-align: left;
+  font: 400 13px/20px var(--df-font);
+  color: var(--df-text-02);
+}
+
+.gb-group-filter:hover {
+  background: var(--df-ui-01);
+}
+
+.gb-group-filter.is-active {
+  background: var(--df-ui-01);
+  border-left-color: var(--df-brand-01);
+  color: var(--df-text-01);
+  font-weight: 500;
+}
+
+.gb-group-name {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.gb-group-actions {
+  position: absolute;
+  right: 44px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: none;
+  background: var(--df-ui-01);
+}
+
+.gb-group-row:hover .gb-group-actions,
+.gb-group-row:focus-within .gb-group-actions {
+  display: flex;
+}
+
+.gb-groups-hint {
+  display: flex;
+  gap: 8px;
+  margin: 0;
+  padding: 12px 16px;
+  background: var(--df-ui-01);
+  font: 400 12px/18px var(--df-font);
+  color: var(--df-text-03);
+}
+
+.gb-groups-hint [data-lucide] {
+  width: 14px;
+  height: 14px;
+  margin-top: 2px;
+}
+
+@media (max-width: 991.98px) {
+  .gb-groups-card .gb-group-list {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 12px 16px;
+  }
+
+  .gb-groups-card .gb-group-list > li {
+    border: 0;
+    flex: 0 0 auto;
+  }
+
+  .gb-groups-card .gb-group-filter {
+    border: 1px solid var(--df-ui-03);
+    border-radius: var(--df-radius);
+    padding: 6px 10px;
+    white-space: nowrap;
+  }
+
+  .gb-groups-card .gb-group-filter.is-active {
+    background: var(--df-brand-01-tint);
+    border-color: var(--df-brand-01);
+  }
+
+  .gb-groups-card .gb-group-actions,
+  .gb-groups-hint {
+    display: none !important;
+  }
+}
+
+.gb-list-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 20px;
+  background: var(--df-ui-01);
+  border-bottom: 1px solid var(--df-border);
+  font: 500 13px/20px var(--df-font);
+  color: var(--df-text-01);
+}
+
+.gb-list-summary-footer {
+  border-top: 1px solid var(--df-border);
+  border-bottom: 0;
+  background: var(--df-white);
+  font-weight: 400;
+  font-size: 12px;
+  color: var(--df-text-03);
+  border-radius: 0 0 var(--df-radius) var(--df-radius);
+}
+
+.gb-library-item-summary {
+  font: 400 13px/20px var(--df-font);
+  color: var(--df-text-02);
+  margin: 0;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gb-library-item-meta {
+  font: 400 12px/18px var(--df-font);
+  color: var(--df-text-03);
+  margin: 0;
+}
+
+.gb-library-item-action {
+  align-items: center;
+}
+
+div.gb-library-empty [data-lucide] {
+  width: 32px;
+  height: 32px;
+  margin-bottom: 8px;
+}
+
+.gb-preview-text {
+  border: 1px solid var(--df-border);
+  border-radius: var(--df-radius);
+  padding: 16px;
+  font: 400 14px/22px var(--df-font);
+  color: var(--df-text-02);
+  white-space: pre-line;
+}
+
+.gb-preview-text mark {
+  background: var(--df-warning-bg);
+  color: var(--df-accent-text);
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+.gb-preview-note {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  background: var(--df-ui-01);
+  border-radius: var(--df-radius);
+  font: 400 13px/20px var(--df-font);
+  color: var(--df-text-02);
+}

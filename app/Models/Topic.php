@@ -50,4 +50,14 @@ class Topic extends Model
             ->orderBy(Group::query()->select('sort_order')->whereColumn('groups.id', 'topics.group_id'))
             ->orderBy('sort_order');
     }
+
+    /**
+     * Number of distinct [placeholders] the lawyer completes in the generated document.
+     */
+    public function placeholderCount(): int
+    {
+        preg_match_all('/\[[^\]]+\]/u', (string) $this->content, $matches);
+
+        return count(array_unique($matches[0]));
+    }
 }

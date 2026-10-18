@@ -1,9 +1,4 @@
 <li>
-    <a class="dropdown-item" href="{{ route('settings.groups.index') }}">
-        <i data-lucide="layers"></i> Grupos
-    </a>
-</li>
-<li>
     <a class="dropdown-item" href="{{ route('password.edit') }}">
         <i data-lucide="key-round"></i> Alterar senha
     </a>
