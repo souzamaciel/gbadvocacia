@@ -3,12 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreTopicRequest;
+use App\Http\Requests\SuggestTopicVariablesRequest;
 use App\Http\Requests\UpdateTopicRequest;
 use App\Models\Group;
 use App\Models\Topic;
+use App\Services\OpenAI\TopicVariableSuggestionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
+use Throwable;
 
 class TopicController extends Controller
 {
@@ -72,6 +75,24 @@ class TopicController extends Controller
         return redirect()
             ->route('settings.topics.index')
             ->with('status', 'Tópico atualizado com sucesso!');
+    }
+
+    /**
+     * Ask the AI which passages of a pasted text should become variables. Nothing is saved.
+     */
+    public function suggestVariables(SuggestTopicVariablesRequest $request, TopicVariableSuggestionService $suggestions): JsonResponse
+    {
+        try {
+            return response()->json([
+                'suggestions' => $suggestions->suggest($request->string('content')->toString()),
+            ]);
+        } catch (Throwable $e) {
+            report($e);
+
+            return response()->json([
+                'message' => 'Não foi possível analisar o texto agora. Tente novamente ou crie as variáveis manualmente.',
+            ], 502);
+        }
     }
 
     public function destroy(Topic $topic): JsonResponse

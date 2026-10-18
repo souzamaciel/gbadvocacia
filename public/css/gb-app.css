@@ -1895,3 +1895,320 @@ div.gb-library-empty [data-lucide] {
   color: var(--df-brand-01);
   text-decoration: underline;
 }
+
+/* ---------- Novo tópico com IA ---------- */
+.gb-modal-steps {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 28px;
+  margin: 0;
+  padding: 12px 20px;
+  list-style: none;
+  background: var(--df-ui-01);
+  border-bottom: 1px solid var(--df-border);
+  font: 400 13px/20px var(--df-font);
+  color: var(--df-text-03);
+}
+
+.gb-modal-steps li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gb-modal-step-number {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid var(--df-ui-03);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font: 500 11px/1 var(--df-font);
+}
+
+.gb-modal-step-number [data-lucide] {
+  width: 12px;
+  height: 12px;
+}
+
+.gb-modal-steps .is-active {
+  color: var(--df-text-01);
+  font-weight: 500;
+}
+
+.gb-modal-steps .is-active .gb-modal-step-number {
+  background: var(--df-brand-01);
+  border-color: var(--df-brand-01);
+  color: var(--df-white);
+}
+
+.gb-modal-steps .is-complete .gb-modal-step-number {
+  background: var(--df-success);
+  border-color: var(--df-success);
+  color: var(--df-white);
+}
+
+.gb-ai-intro {
+  display: flex;
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--df-ui-01);
+  border-radius: var(--df-radius);
+}
+
+.gb-ai-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  background: var(--df-ui-01);
+  border-radius: var(--df-radius);
+  font: 400 13px/20px var(--df-font);
+  color: var(--df-text-02);
+}
+
+.gb-ai-banner > [data-lucide] {
+  color: var(--df-accent-text);
+}
+
+.gb-ai-banner.is-done {
+  background: var(--df-success-bg);
+}
+
+.gb-ai-banner.is-done > [data-lucide],
+.gb-ai-banner.is-done .gb-list-label {
+  color: var(--df-success);
+}
+
+.gb-ai-text {
+  line-height: 30px;
+}
+
+.gb-ai-mark {
+  background: none;
+  padding: 0;
+  font-weight: 600;
+  color: var(--df-accent-text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.gb-ai-mark.is-accepted {
+  color: var(--df-success);
+  text-decoration: none;
+}
+
+.gb-ai-mark.is-kept {
+  color: var(--df-text-03);
+  font-weight: 400;
+  text-decoration: none;
+}
+
+.gb-ai-mark.is-manual {
+  color: var(--df-text-01);
+}
+
+.gb-ai-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-left: 3px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  font: 500 9px/1 var(--df-font);
+  vertical-align: middle;
+  text-decoration: none;
+}
+
+.gb-ai-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  font: 400 12px/18px var(--df-font);
+  color: var(--df-text-03);
+}
+
+.gb-ai-legend span {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  margin-right: 4px;
+}
+
+.gb-ai-legend .is-accepted { background: var(--df-success); }
+.gb-ai-legend .is-pending { background: var(--df-accent-text); }
+.gb-ai-legend .is-kept { background: var(--df-text-03); }
+.gb-ai-legend .is-manual { background: var(--df-text-01); }
+
+.gb-ai-popover {
+  margin-top: 12px;
+  padding: 16px;
+  box-shadow: 0 8px 24px rgba(15, 21, 32, 0.12);
+}
+
+.gb-ai-quote {
+  margin: 0 0 10px;
+  padding-left: 10px;
+  border-left: 2px solid var(--df-ui-03);
+  font: 400 13px/20px var(--df-font);
+  color: var(--df-text-02);
+}
+
+.gb-ai-suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.gb-ai-card {
+  padding: 14px;
+  border: 1px solid var(--df-border);
+  border-radius: var(--df-radius);
+  background: var(--df-white);
+}
+
+.gb-ai-card.is-accepted {
+  border-color: var(--df-success);
+}
+
+.gb-ai-card.is-kept {
+  background: var(--df-ui-01);
+}
+
+.gb-ai-card.is-attention {
+  border-color: var(--df-warning);
+  background: var(--df-warning-bg);
+}
+
+.gb-ai-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font: 400 12px/18px var(--df-font);
+}
+
+.gb-ai-card-header [data-lucide] {
+  width: 14px;
+  height: 14px;
+}
+
+.gb-ai-number {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--df-brand-01);
+  color: var(--df-white);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font: 500 11px/1 var(--df-font);
+}
+
+.is-accepted .gb-ai-number {
+  background: var(--df-success);
+}
+
+.is-kept .gb-ai-number {
+  background: var(--df-text-04);
+}
+
+.is-attention .gb-ai-number {
+  background: var(--df-warning);
+}
+
+.gb-ai-attention {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--df-accent-text);
+}
+
+.gb-ai-warning {
+  display: flex;
+  gap: 6px;
+  margin: 10px 0 0;
+  font: 400 12px/18px var(--df-font);
+  color: var(--df-accent-text);
+}
+
+.gb-ai-warning [data-lucide] {
+  width: 14px;
+  height: 14px;
+  margin-top: 2px;
+}
+
+.gb-ai-variable {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 10px;
+  font: 500 14px/20px var(--df-font);
+  color: var(--df-accent-text);
+}
+
+.gb-ai-var {
+  background: var(--df-warning-bg);
+  color: var(--df-accent-text);
+  font-weight: 600;
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+.gb-ai-variables {
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--df-border);
+  border-radius: var(--df-radius);
+}
+
+.gb-ai-variables li {
+  display: flex;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--df-border);
+}
+
+.gb-ai-variables li:last-child {
+  border-bottom: 0;
+}
+
+.gb-ai-variables [data-lucide] {
+  color: var(--df-accent-text);
+  margin-top: 2px;
+}
+
+.gb-ai-chips-box {
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px solid var(--df-border);
+  border-radius: var(--df-radius);
+}
+
+.gb-badge.text-none {
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.gb-text-highlight {
+  color: var(--df-accent-text);
+  font-weight: 600;
+}

@@ -165,8 +165,13 @@
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
                 </div>
+                <ol class="gb-modal-steps" id="topic-steps" aria-label="Etapas do novo tópico">
+                    <li class="is-active" data-step="1"><span class="gb-modal-step-number">1</span> Colar o texto</li>
+                    <li data-step="2"><span class="gb-modal-step-number">2</span> Revisar variáveis</li>
+                    <li data-step="3"><span class="gb-modal-step-number">3</span> Salvar modelo</li>
+                </ol>
                 <div class="modal-body">
-                    <div class="row g-3">
+                    <div class="row g-3 gb-topic-step" id="topic-step-1">
                         <div class="col-12 col-md-8">
                             <label for="topic-title" class="form-label">Título</label>
                             <input type="text" id="topic-title" name="title" maxlength="255" placeholder="Ex.: Horas extras habituais"
@@ -190,6 +195,15 @@
                             @enderror
                         </div>
                         <div class="col-12">
+                            <div class="gb-ai-intro">
+                                <span class="gb-icon-tile gb-icon-tile-sm"><i data-lucide="sparkles"></i></span>
+                                <div>
+                                    <p class="gb-petition-title">Transforme um texto de petição em modelo</p>
+                                    <p class="gb-petition-meta">Cole o texto original. A IA identifica nomes, empresas, datas, valores e jornadas e sugere variáveis. Você confere cada sugestão antes de salvar.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
                             <p class="form-label" id="topic-content-label">Conteúdo do modelo</p>
                             <div class="gb-editor @error('content') is-invalid @enderror">
                                 <div id="topic-editor"></div>
@@ -202,6 +216,11 @@
                                 <i data-lucide="info"></i>
                                 Use [colchetes] para os dados que o advogado completa no documento, ex.: [NOME DA 1ª RECLAMADA].
                             </p>
+                            <div class="d-flex flex-wrap align-items-center gap-2 mt-3">
+                                <button type="button" class="btn btn-primary" id="ai-identify"><i data-lucide="sparkles"></i> Identificar variáveis com IA</button>
+                                <button type="button" class="btn btn-white" id="manual-variable-step1"><i data-lucide="braces"></i> Criar variável manualmente</button>
+                                <span class="gb-field-hint ms-md-auto m-0" id="variables-count" aria-live="polite"></span>
+                            </div>
                         </div>
                         <div class="col-12">
                             <label for="topic-notes" class="form-label">Orientação interna · opcional</label>
@@ -217,11 +236,72 @@
                             </p>
                         </div>
                     </div>
+
+                    {{-- Etapa 2: revisar sugestões --}}
+                    <div class="gb-topic-step" id="topic-step-2" hidden>
+                        <div class="gb-ai-banner" id="ai-banner" role="status"></div>
+                        <div class="row g-3">
+                            <div class="col-12 col-lg-7">
+                                <p class="form-label">Texto com as sugestões</p>
+                                <div class="gb-document-preview gb-rich-text gb-ai-text" id="ai-text" tabindex="0"
+                                     aria-describedby="ai-text-hint"></div>
+                                <ul class="gb-ai-legend" aria-hidden="true">
+                                    <li><span class="is-accepted"></span> Aceita</li>
+                                    <li><span class="is-pending"></span> Pendente / confira</li>
+                                    <li><span class="is-kept"></span> Texto mantido</li>
+                                    <li><span class="is-manual"></span> Seleção manual</li>
+                                </ul>
+                                <div class="gb-ai-popover card" id="ai-popover" hidden>
+                                    <p class="gb-petition-title d-flex align-items-center gap-2"><i data-lucide="text-select"></i> Criar variável a partir da seleção</p>
+                                    <p class="gb-ai-quote" id="ai-popover-text"></p>
+                                    <label for="ai-popover-name" class="form-label">Nome da variável</label>
+                                    <input type="text" id="ai-popover-name" class="form-control" maxlength="80" placeholder="Ex.: Salário">
+                                    <div class="invalid-feedback" id="ai-popover-error"></div>
+                                    <div class="d-flex justify-content-end gap-2 mt-3">
+                                        <button type="button" class="btn btn-white btn-sm" id="ai-popover-cancel">Cancelar</button>
+                                        <button type="button" class="btn btn-primary btn-sm" id="ai-popover-create"><i data-lucide="braces"></i> Criar variável</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 col-lg-5">
+                                <p class="form-label d-flex align-items-center gap-2">Sugestões da IA <span class="gb-badge gb-badge-neutral" id="ai-count">0</span></p>
+                                <ol class="gb-ai-suggestions" id="ai-suggestions"></ol>
+                                <button type="button" class="btn btn-white w-100" id="manual-variable-step2"><i data-lucide="plus"></i> Criar variável manualmente</button>
+                                <p class="gb-field-hint" id="ai-text-hint">Selecione um trecho no texto para criar uma variável que a IA não identificou.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Etapa 3: modelo pronto --}}
+                    <div class="gb-topic-step" id="topic-step-3" hidden>
+                        <div class="gb-ai-banner is-done" id="ai-ready" role="status"></div>
+                        <div class="row g-3">
+                            <div class="col-12 col-lg-7">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <p class="form-label m-0">Modelo com variáveis</p>
+                                    <button type="button" class="btn btn-white btn-sm" id="ai-edit-text"><i data-lucide="braces"></i> Editar texto</button>
+                                </div>
+                                <div class="gb-document-preview gb-rich-text" id="ai-final"></div>
+                            </div>
+                            <div class="col-12 col-lg-5">
+                                <p class="form-label d-flex align-items-center gap-2">Variáveis do modelo <span class="gb-badge gb-badge-neutral" id="ai-final-count">0</span></p>
+                                <ul class="gb-ai-variables" id="ai-final-variables"></ul>
+                                <div id="ai-final-kept"></div>
+                                <div class="gb-ai-chips-box">
+                                    <p class="gb-list-label p-0 mb-2">Na tela Revisar conteúdo</p>
+                                    <p class="gb-petition-meta mb-2">Ao usar este tópico, o advogado preenche estes campos com os dados do novo cliente:</p>
+                                    <div class="d-flex flex-wrap gap-2" id="ai-final-chips"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
-                    <p class="gb-field-hint me-auto my-0">Este modelo ficará disponível para novas petições.</p>
+                    <p class="gb-field-hint me-auto my-0" id="topic-footer-hint">Este modelo ficará disponível para novas petições.</p>
                     <button type="button" class="btn btn-white" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary"><i data-lucide="check"></i> Salvar tópico</button>
+                    <button type="button" class="btn btn-white" id="topic-back" hidden><i data-lucide="arrow-left"></i> Voltar</button>
+                    <button type="button" class="btn btn-primary" id="topic-next" hidden>Continuar <i data-lucide="arrow-right"></i></button>
+                    <button type="submit" class="btn btn-primary" id="topic-save"><i data-lucide="check"></i> Salvar tópico</button>
                 </div>
             </form>
         </div>
@@ -290,6 +370,7 @@
         $groupsData = $groups->map(fn ($group) => $group->only(['id', 'name']))->values();
     @endphp
     <x-editor-assets />
+    <script src="{{ asset('js/gb-topic-variables.js').'?v='.filemtime(public_path('js/gb-topic-variables.js')) }}"></script>
     <script>
         (function () {
             const csrfToken = '{{ csrf_token() }}';
@@ -307,7 +388,12 @@
             const list = document.getElementById('topic-list');
             const items = Array.from(list.querySelectorAll('.gb-library-item'));
             const topicModal = new bootstrap.Modal('#topic-modal');
-            const topicEditor = gbEditor.create('#topic-editor', { placeholder: 'Digite o texto do tópico…', label: 'Conteúdo do modelo' });
+            const topicEditor = gbEditor.create('#topic-editor', { placeholder: 'Digite ou cole o texto do tópico…', label: 'Conteúdo do modelo' });
+            const topicVariables = gbTopicVariables.init({
+                editor: topicEditor,
+                suggestUrl: '{{ route('settings.topics.suggest-variables') }}',
+                csrfToken,
+            });
             const previewModal = new bootstrap.Modal('#preview-modal');
             const groupModal = new bootstrap.Modal('#group-modal');
             let activeGroup = '';
@@ -373,6 +459,7 @@
                 }
 
                 if (keepValues) { gbEditor.setHtml(topicEditor, document.getElementById('topic-content').value); }
+                topicVariables.reset();
 
                 topicModal.show();
             }

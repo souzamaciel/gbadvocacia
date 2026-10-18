@@ -52,6 +52,7 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/topics', [TopicController::class, 'index'])->name('topics.index');
         Route::get('/topics/create', [TopicController::class, 'create'])->name('topics.create');
         Route::post('/topics', [TopicController::class, 'store'])->name('topics.store');
+        Route::post('/topics/suggest-variables', [TopicController::class, 'suggestVariables'])->name('topics.suggest-variables');
         Route::get('/topics/{topic}/edit', [TopicController::class, 'edit'])->name('topics.edit');
         Route::put('/topics/{topic}', [TopicController::class, 'update'])->name('topics.update');
         Route::delete('/topics/{topic}', [TopicController::class, 'destroy'])->name('topics.destroy');

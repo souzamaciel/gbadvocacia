@@ -1,0 +1,182 @@
+<?php
+
+namespace App\Services\OpenAI;
+
+use App\Models\PetitionLog;
+use App\Services\RichText;
+use Illuminate\Http\Client\Factory as HttpFactory;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Log;
+use RuntimeException;
+
+/**
+ * Asks the AI which passages of a pasted petition text are specific to that case
+ * (names, companies, dates, values, schedules…) and should become [variables].
+ * Nothing is applied here: the lawyer approves each suggestion.
+ */
+class TopicVariableSuggestionService
+{
+    public const CATEGORIES = ['PESSOA', 'EMPRESA', 'DATA', 'PERÍODO', 'VALOR', 'JORNADA', 'LOCAL', 'DOCUMENTO', 'CARGO', 'OUTRO'];
+
+    public function __construct(
+        protected HttpFactory $http
+    ) {}
+
+    /**
+     * @return array<int, array{trecho: string, nome: string, categoria: string, atencao: bool, motivo: string}>
+     */
+    public function suggest(string $content): array
+    {
+        $text = RichText::toPlainText($content);
+        $payload = $this->buildPayload($text);
+
+        $response = $this->http
+            ->baseUrl(config('services.openai.base_url'))
+            ->withToken(config('services.openai.api_key'))
+            ->acceptJson()
+            ->asJson()
+            ->timeout(90)
+            ->post('/responses', $payload);
+
+        if (! $response->successful()) {
+            Log::error('Erro ao pedir sugestões de variáveis à OpenAI', [
+                'status' => $response->status(),
+                'body' => $response->json(),
+            ]);
+
+            throw new RuntimeException('Falha na OpenAI API: '.$response->status());
+        }
+
+        $json = $response->json();
+
+        PetitionLog::create([
+            'openai_model' => config('services.openai.model'),
+            'request_payload' => $payload,
+            'response_payload' => $json,
+        ]);
+
+        return $this->validSuggestions($this->extractStructuredOutput($json)['sugestoes'] ?? [], $text);
+    }
+
+    /**
+     * Keep only suggestions whose passage really exists in the text, once each.
+     *
+     * @param  array<int, mixed>  $suggestions
+     * @return array<int, array{trecho: string, nome: string, categoria: string, atencao: bool, motivo: string}>
+     */
+    private function validSuggestions(array $suggestions, string $text): array
+    {
+        $valid = [];
+        $seen = [];
+
+        foreach ($suggestions as $suggestion) {
+            $passage = trim((string) Arr::get($suggestion, 'trecho', ''));
+            $name = trim((string) Arr::get($suggestion, 'nome', ''));
+
+            if ($passage === '' || $name === '' || isset($seen[$passage]) || ! str_contains($text, $passage)
+                || preg_match('/^\[.*\]$/u', $passage)) {
+                continue;
+            }
+
+            $seen[$passage] = true;
+            $valid[] = [
+                'trecho' => $passage,
+                'nome' => str_replace(['[', ']'], '', $name),
+                'categoria' => in_array($suggestion['categoria'] ?? null, self::CATEGORIES, true) ? $suggestion['categoria'] : 'OUTRO',
+                'atencao' => (bool) Arr::get($suggestion, 'atencao', false),
+                'motivo' => trim((string) Arr::get($suggestion, 'motivo', '')),
+            ];
+        }
+
+        usort($valid, fn (array $a, array $b): int => mb_strpos($text, $a['trecho']) <=> mb_strpos($text, $b['trecho']));
+
+        return $valid;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildPayload(string $text): array
+    {
+        $categories = implode(', ', self::CATEGORIES);
+
+        $instructions = <<<TEXT
+Você ajuda um escritório de advocacia trabalhista a transformar o texto de uma petição já usada em um modelo reutilizável.
+
+Tarefa: identifique no texto os trechos que são ESPECÍFICOS DO CASO e devem virar variáveis, como nomes de pessoas, empresas, CNPJ/CPF, datas, períodos, valores em dinheiro, jornadas e horários, funções/cargos, cidades e endereços, números de processos ou documentos.
+
+Regras:
+- "trecho" deve ser copiado EXATAMENTE como aparece no texto, caractere por caractere (mesmas maiúsculas, acentos, pontuação e espaços), sem aspas extras.
+- Sugira o menor trecho que contenha a informação do caso (ex.: "março de 2022 a julho de 2025", não a frase inteira).
+- "nome" é um nome curto e claro da variável em português, com a primeira letra maiúscula (ex.: "Período trabalhado", "Nome da parte autora", "Empresa reclamada", "Salário").
+- "categoria" deve ser uma destas: {$categories}.
+- NÃO sugira leis, artigos, súmulas, orientações jurisprudenciais, nomes de tribunais ou textos jurídicos que valem para todos os casos.
+- Se um trecho parecer do caso mas puder ser uma referência legal ou um padrão que deve permanecer no modelo (ex.: "44 horas semanais", "50%"), sugira mesmo assim com "atencao": true e explique em "motivo" por que recomenda manter o texto original. Nos demais, "atencao": false e "motivo" vazio.
+- Ignore trechos que já estão entre colchetes, como [NOME DA RECLAMADA].
+- Não repita o mesmo trecho.
+- Retorne somente JSON válido conforme o schema.
+TEXT;
+
+        return [
+            'model' => config('services.openai.model'),
+            'instructions' => $instructions,
+            'input' => [[
+                'role' => 'user',
+                'content' => [[
+                    'type' => 'input_text',
+                    'text' => "TEXTO DA PETIÇÃO:\n\n".$text,
+                ]],
+            ]],
+            'text' => [
+                'format' => [
+                    'type' => 'json_schema',
+                    'name' => 'topic_variable_suggestions',
+                    'strict' => true,
+                    'schema' => [
+                        'type' => 'object',
+                        'additionalProperties' => false,
+                        'required' => ['sugestoes'],
+                        'properties' => [
+                            'sugestoes' => [
+                                'type' => 'array',
+                                'items' => [
+                                    'type' => 'object',
+                                    'additionalProperties' => false,
+                                    'required' => ['trecho', 'nome', 'categoria', 'atencao', 'motivo'],
+                                    'properties' => [
+                                        'trecho' => ['type' => 'string'],
+                                        'nome' => ['type' => 'string'],
+                                        'categoria' => ['type' => 'string', 'enum' => self::CATEGORIES],
+                                        'atencao' => ['type' => 'boolean'],
+                                        'motivo' => ['type' => 'string'],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $response
+     * @return array<string, mixed>
+     */
+    private function extractStructuredOutput(array $response): array
+    {
+        foreach (Arr::get($response, 'output', []) as $item) {
+            foreach ($item['content'] ?? [] as $content) {
+                if (($content['type'] ?? null) === 'output_text' && ! empty($content['text'])) {
+                    $decoded = json_decode($content['text'], true);
+
+                    if (is_array($decoded)) {
+                        return $decoded;
+                    }
+                }
+            }
+        }
+
+        throw new RuntimeException('Não foi possível ler as sugestões da IA.');
+    }
+}
