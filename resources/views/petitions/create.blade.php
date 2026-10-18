@@ -1,199 +1,362 @@
 @extends('layouts.app')
 
-@section('title', 'Gerar petição')
-
-@section('fonts')
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
-@endsection
-
-@section('styles')
-<style>
-    .section-card { background:#fff; border:1px solid #e2e8f0; border-radius:.5rem; margin-bottom:1rem; }
-    .section-header { padding:.75rem 1.25rem; border-bottom:1px solid #e2e8f0; display:flex; align-items:center; gap:.75rem; cursor:pointer; user-select:none; }
-    .section-header.collapsed { border-bottom:none; }
-    .section-badge { width:28px;height:28px;min-width:28px; border-radius:4px; background-color:var(--gb-navy); color:white; font-size:11px;font-weight:700; display:flex;align-items:center;justify-content:center; }
-    .section-title { font-size:12px;font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:#1e293b; margin:0; flex-grow:1; }
-    .section-body { padding:1.25rem; display:flex; flex-direction:column; gap:.5rem; }
-    .section-toggle { font-size:11px; color:#94a3b8; transition:transform .2s; }
-    .section-header.collapsed .section-toggle { transform:rotate(-90deg); }
-    .check-item { display:flex; align-items:center; gap:6px; cursor:pointer; margin:0; font-size:13px; font-weight:500; color:#314158; }
-    .check-item input { width:15px; height:15px; accent-color:var(--gb-navy); cursor:pointer; margin:0; flex-shrink:0; }
-    #pedidos-search-content { display: none; }
-</style>
-@endsection
-
-@section('navbar-class', 'bg-dark bg-opacity-10')
-@section('body-font', "'Inter', sans-serif")
+@section('title', 'Monte sua petição')
 
 @section('page-header')
-    {{-- Page Header --}}
-    <div class="container-fluid px-4 px-sm-5 py-4 d-flex align-items-center gap-2">
-        {{-- Ícone back step --}}
-        <div class="flex-shrink-0" style="width:24px;height:24px;display:flex;align-items:center;justify-content:center;">
-            <a href="{{ route('home') }}">
-                <i class="fa-regular fa-circle-left text-white fs-5"></i>
-            </a>
-        </div>
-
-        {{-- Título + Subtítulo --}}
-        <div class="flex-grow-1 d-flex flex-column gap-2">
-            <h1 style="color: var(--gb-gold);font-size:24px;font-family:'Roboto',sans-serif;font-weight:500;line-height:26.15px;margin:0;">
-                Gerador de Petição Inicial
-            </h1>
-            <p style="color:white;font-size:13px;font-family:'Roboto',sans-serif;font-weight:400;line-height:13px;margin:0;">
-                Selecione os pedidos que irão compor a petição inicial e gere o documento automaticamente.
-            </p>
-        </div>
-
-        {{-- Breadcrumbs --}}
-        <nav class="d-none d-sm-flex align-items-center gap-1 flex-shrink-0 ps-4"
-             style="font-size:13px;font-family:'Roboto',sans-serif;font-weight:400;line-height:20px;color:white;">
-            <a href="{{ route('home') }}" class="text-decoration-none" style="color:white;">Home</a>
-            <span class="px-1" style="color:white;">/</span>
-            <span style="color:white;">Gerar petição</span>
-        </nav>
-    </div>
+    <x-page-header title="Monte sua petição inicial"
+                   description="Escolha os tópicos e organize a sequência do documento."
+                   :breadcrumbs="['Petições' => route('petition.create'), 'Nova petição']">
+        <x-slot:actions>
+            <button type="submit" form="petition-form" class="btn btn-primary js-generate-button d-none d-lg-inline-flex" disabled>
+                Gerar petição <i data-lucide="arrow-right"></i>
+            </button>
+        </x-slot:actions>
+    </x-page-header>
 @endsection
 
 @section('content')
     <form id="petition-form" method="POST" action="{{ route('petition.store') }}">
-    @csrf
-    {{-- Content --}}
-    <div class="container-fluid px-4 px-sm-5 pb-5 d-flex flex-column flex-lg-row gap-4 align-items-start">
+        @csrf
 
-        {{-- LEFT: Accordion sections --}}
-        <div class="flex-grow-1 w-100">
+        <div class="row g-3 align-items-start">
+            {{-- Biblioteca de tópicos --}}
+            <div class="col-12 col-lg-7">
+                <section class="card" aria-labelledby="library-title">
+                    <div class="card-header">
+                        <h2 id="library-title" class="card-title">Biblioteca de tópicos</h2>
+                        <p class="card-description">Modelos do escritório disponíveis para esta petição</p>
+                    </div>
 
-            @foreach ($groups as $group)
-            <div class="section-card">
-                <div class="section-header" data-bs-toggle="collapse" data-bs-target="#sec-{{ $group->id }}" aria-expanded="true">
-                    <span class="section-badge">{{ $loop->iteration }}</span>
-                    <h6 class="section-title">{{ $group->name }}</h6>
-                    <i class="fa-solid fa-chevron-down section-toggle"></i>
-                </div>
-                <div id="sec-{{ $group->id }}" class="collapse show">
-                    <div class="section-body">
-                        @foreach ($group->topics as $topic)
-                        <label class="check-item">
-                            @if ($group->id === \App\Models\Group::PRELIMINARES_ID)
-                            <input type="checkbox" class="preliminar-checkbox" data-id="{{ $topic->id }}" checked
-                                   onchange="togglePreliminar({{ $topic->id }}, this.checked)">
-                            @else
-                            <input type="checkbox" class="pedido-checkbox" data-id="{{ $topic->id }}"
-                                   data-topico="{{ json_encode(['id' => $topic->id, 'title' => $topic->title]) }}"
-                                   onchange="onPedidoCheck(this)">
-                            @endif
-                            {{ $topic->title }}
-                        </label>
+                    <div class="gb-library-filters">
+                        <div class="gb-input-icon flex-grow-1">
+                            <i data-lucide="search"></i>
+                            <label for="library-search" class="visually-hidden">Pesquisar tópico</label>
+                            <input type="search" id="library-search" class="form-control" placeholder="Pesquisar tópico…" autocomplete="off">
+                        </div>
+                        <label for="library-group" class="visually-hidden">Filtrar por grupo</label>
+                        <select id="library-group" class="form-select gb-library-group">
+                            <option value="">Todos os grupos</option>
+                            @foreach ($groups as $group)
+                                <option value="{{ $group->id }}">{{ $group->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <ul class="gb-library-list" id="library-list">
+                        @foreach ($groups as $group)
+                            @foreach ($group->topics as $topic)
+                                <li class="gb-library-item"
+                                    data-id="{{ $topic->id }}"
+                                    data-group="{{ $group->id }}"
+                                    data-kind="{{ $group->id === \App\Models\Group::PRELIMINARES_ID ? 'preliminar' : 'pedido' }}"
+                                    data-search="{{ mb_strtolower($topic->title.' '.$group->name) }}">
+                                    <div class="gb-library-item-body">
+                                        <p class="gb-library-item-group">{{ $group->name }}</p>
+                                        <h3 class="gb-library-item-title">{{ $topic->title }}</h3>
+                                        <p class="gb-library-item-content" id="topic-content-{{ $topic->id }}">{{ $topic->content }}</p>
+                                        <button type="button" class="gb-link js-toggle-content"
+                                                aria-expanded="false" aria-controls="topic-content-{{ $topic->id }}">
+                                            Ver conteúdo
+                                        </button>
+                                    </div>
+                                    <div class="gb-library-item-action">
+                                        <button type="button" class="btn btn-white btn-sm js-add">
+                                            <i data-lucide="plus"></i> Adicionar
+                                        </button>
+                                        <div class="gb-library-item-added">
+                                            <span class="gb-text-success">Adicionado</span>
+                                            <button type="button" class="gb-link js-remove">Remover</button>
+                                        </div>
+                                    </div>
+                                </li>
+                            @endforeach
                         @endforeach
+                    </ul>
+
+                    <p class="gb-library-empty" id="library-empty" hidden>
+                        Nenhum tópico encontrado. Tente outro termo ou grupo.
+                    </p>
+                </section>
+            </div>
+
+            {{-- Minha petição --}}
+            <div class="col-12 col-lg-5 gb-sticky-column">
+                <section class="card" aria-labelledby="petition-title">
+                    <div class="card-header d-flex align-items-center gap-3">
+                        <div class="flex-grow-1">
+                            <h2 id="petition-title" class="card-title">Minha petição</h2>
+                            <p class="card-description">A ordem abaixo será a ordem do documento.</p>
+                        </div>
+                        <span class="gb-badge gb-badge-brand" id="selected-count">0 tópicos</span>
+                    </div>
+
+                    <div id="selected-preliminares-block" hidden>
+                        <p class="gb-list-label">Preliminares</p>
+                        <ul class="gb-selected-list" id="selected-preliminares"></ul>
+                    </div>
+
+                    <p class="gb-list-label">Ordem dos pedidos</p>
+                    <ul class="gb-selected-list" id="selected-pedidos" aria-live="polite"></ul>
+                    <p class="gb-selected-empty" id="selected-empty">
+                        Nenhum pedido adicionado. Use “Adicionar” na biblioteca ao lado.
+                    </p>
+
+                    <div id="selected-inputs"></div>
+
+                    <div class="gb-card-footer">
+                        <div>
+                            <p class="gb-list-label p-0 m-0">Total</p>
+                            <p class="gb-total" id="selected-total">0 tópicos na petição</p>
+                        </div>
+                        <button type="submit" class="btn btn-primary js-generate-button" disabled>
+                            Gerar petição <i data-lucide="arrow-right"></i>
+                        </button>
+                    </div>
+                </section>
+
+                <div class="card gb-hint-card">
+                    <i data-lucide="file-text"></i>
+                    <div>
+                        <p class="gb-hint-title">Revise antes de protocolar</p>
+                        <p class="gb-hint-text">O documento é gerado em Word no formato do escritório. Complete o que estiver entre [colchetes] e confira o texto antes de protocolar.</p>
                     </div>
                 </div>
             </div>
-            @endforeach
-
         </div>
 
-        {{-- RIGHT: Pedidos --}}
-        <div class="d-flex flex-column gap-3 flex-shrink-0 w-100" style="max-width: 453px;">
-            <x-orders-panel :pedidos="$pedidos" :preliminares="$preliminares" buttonText="Gerar Petição Inicial" />
+        <div class="gb-mobile-bar d-lg-none">
+            <a href="#petition-title" class="gb-mobile-bar-summary">
+                <span class="gb-list-label p-0">Minha petição</span>
+                <span class="gb-total js-selected-label">0 tópicos</span>
+            </a>
+            <button type="submit" class="btn btn-primary js-generate-button" disabled>
+                Gerar petição <i data-lucide="arrow-right"></i>
+            </button>
         </div>
-
-    </div>
     </form>
 @endsection
 
 @section('scripts')
     <script>
-        function onPedidoCheck(checkbox) {
-            var topico = JSON.parse(checkbox.dataset.topico);
-            if (checkbox.checked) {
-                addPedido(topico);
-            } else {
-                var index = selectedPedidos.findIndex(function (p) { return p.id === topico.id; });
-                if (index !== -1) { removePedido(index); }
+        (function () {
+            const form = document.getElementById('petition-form');
+            const items = Array.from(document.querySelectorAll('.gb-library-item'));
+            const itemsById = new Map(items.map(item => [Number(item.dataset.id), item]));
+            const generateButtons = document.querySelectorAll('.js-generate-button');
+
+            const state = {
+                preliminares: items.filter(item => item.dataset.kind === 'preliminar').map(item => Number(item.dataset.id)),
+                pedidos: [],
+            };
+
+            function topicTitle(id) {
+                return itemsById.get(id).querySelector('.gb-library-item-title').textContent.trim();
             }
-        }
 
-        document.querySelectorAll('.collapse').forEach(function (collapseEl) {
-            var header = document.querySelector('[data-bs-target="#' + collapseEl.id + '"]');
-            if (!header) { return; }
+            function topicGroup(id) {
+                return itemsById.get(id).querySelector('.gb-library-item-group').textContent.trim();
+            }
 
-            collapseEl.addEventListener('hide.bs.collapse', function () {
-                header.classList.add('collapsed');
+            function isSelected(id) {
+                return state.preliminares.includes(id) || state.pedidos.includes(id);
+            }
+
+            function add(id) {
+                const kind = itemsById.get(id).dataset.kind;
+                if (isSelected(id)) { return; }
+                if (kind === 'preliminar') {
+                    state.preliminares = items
+                        .filter(item => item.dataset.kind === 'preliminar')
+                        .map(item => Number(item.dataset.id))
+                        .filter(itemId => itemId === id || state.preliminares.includes(itemId));
+                } else {
+                    state.pedidos.push(id);
+                }
+                render();
+            }
+
+            function remove(id) {
+                state.preliminares = state.preliminares.filter(itemId => itemId !== id);
+                state.pedidos = state.pedidos.filter(itemId => itemId !== id);
+                render();
+            }
+
+            function move(id, offset) {
+                const from = state.pedidos.indexOf(id);
+                const to = from + offset;
+                if (from < 0 || to < 0 || to >= state.pedidos.length) { return; }
+                state.pedidos.splice(to, 0, state.pedidos.splice(from, 1)[0]);
+                render();
+                document.querySelector(`[data-move="${offset}"][data-id="${id}"]`)?.focus();
+            }
+
+            function escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            function selectedRow(id, position, total, reorderable) {
+                const title = escapeHtml(topicTitle(id));
+                const arrows = reorderable ? `
+                    <button type="button" class="gb-icon-action" data-move="-1" data-id="${id}" ${position === 1 ? 'disabled' : ''} aria-label="Subir ${title}">
+                        <i data-lucide="arrow-up"></i>
+                    </button>
+                    <button type="button" class="gb-icon-action" data-move="1" data-id="${id}" ${position === total ? 'disabled' : ''} aria-label="Descer ${title}">
+                        <i data-lucide="arrow-down"></i>
+                    </button>` : '';
+
+                return `
+                    <li class="gb-selected-item">
+                        <span class="gb-order ${reorderable ? '' : 'gb-order-muted'}">${reorderable ? position : '<i data-lucide="check"></i>'}</span>
+                        <div class="gb-selected-text">
+                            <p class="gb-selected-title">${title}</p>
+                            <p class="gb-selected-meta">${escapeHtml(topicGroup(id))}${reorderable ? ` · pedido ${position} de ${total}` : ''}</p>
+                        </div>
+                        <div class="gb-selected-actions">
+                            ${arrows}
+                            <button type="button" class="gb-icon-action gb-icon-action-danger" data-remove="${id}" aria-label="Remover ${title}">
+                                <i data-lucide="trash-2"></i>
+                            </button>
+                        </div>
+                    </li>`;
+            }
+
+            function render() {
+                items.forEach(item => item.classList.toggle('is-added', isSelected(Number(item.dataset.id))));
+
+                document.getElementById('selected-preliminares-block').hidden = state.preliminares.length === 0;
+                document.getElementById('selected-preliminares').innerHTML = state.preliminares
+                    .map(id => selectedRow(id, 0, 0, false)).join('');
+                document.getElementById('selected-pedidos').innerHTML = state.pedidos
+                    .map((id, index) => selectedRow(id, index + 1, state.pedidos.length, true)).join('');
+                document.getElementById('selected-empty').hidden = state.pedidos.length > 0;
+
+                document.getElementById('selected-inputs').innerHTML =
+                    state.preliminares.map(id => `<input type="hidden" name="preliminares[]" value="${id}">`).join('') +
+                    state.pedidos.map(id => `<input type="hidden" name="topics[]" value="${id}">`).join('');
+
+                const total = state.preliminares.length + state.pedidos.length;
+                const label = total + (total === 1 ? ' tópico' : ' tópicos');
+                document.getElementById('selected-count').textContent = label;
+                document.getElementById('selected-total').textContent = label + ' na petição';
+                document.querySelectorAll('.js-selected-label').forEach(element => { element.textContent = label; });
+                generateButtons.forEach(button => {
+                    button.disabled = state.pedidos.length === 0;
+                    button.title = state.pedidos.length === 0 ? 'Adicione ao menos um pedido' : '';
+                });
+
+                lucide.createIcons();
+            }
+
+            function filterLibrary() {
+                const query = document.getElementById('library-search').value.trim().toLowerCase();
+                const group = document.getElementById('library-group').value;
+                let visible = 0;
+
+                items.forEach(item => {
+                    const matches = (!query || item.dataset.search.includes(query)) && (!group || item.dataset.group === group);
+                    item.hidden = !matches;
+                    visible += matches ? 1 : 0;
+                });
+
+                document.getElementById('library-empty').hidden = visible > 0;
+            }
+
+            document.getElementById('library-list').addEventListener('click', event => {
+                const item = event.target.closest('.gb-library-item');
+                if (!item) { return; }
+                const id = Number(item.dataset.id);
+
+                if (event.target.closest('.js-add')) { add(id); }
+                if (event.target.closest('.js-remove')) { remove(id); }
+
+                const toggle = event.target.closest('.js-toggle-content');
+                if (toggle) {
+                    const expanded = item.classList.toggle('is-expanded');
+                    toggle.setAttribute('aria-expanded', String(expanded));
+                    toggle.textContent = expanded ? 'Ocultar conteúdo' : 'Ver conteúdo';
+                }
             });
-            collapseEl.addEventListener('show.bs.collapse', function () {
-                header.classList.remove('collapsed');
+
+            document.querySelector('.gb-sticky-column').addEventListener('click', event => {
+                const moveButton = event.target.closest('[data-move]');
+                if (moveButton) { move(Number(moveButton.dataset.id), Number(moveButton.dataset.move)); }
+
+                const removeButton = event.target.closest('[data-remove]');
+                if (removeButton) { remove(Number(removeButton.dataset.remove)); }
             });
-        });
 
-        document.addEventListener('DOMContentLoaded', function () {
-            var form = document.getElementById('petition-form');
-            if (!form) { return; }
+            document.getElementById('library-search').addEventListener('input', filterLibrary);
+            document.getElementById('library-group').addEventListener('change', filterLibrary);
 
-            form.addEventListener('submit', function (e) {
-                e.preventDefault();
+            form.addEventListener('submit', event => {
+                event.preventDefault();
+                if (state.pedidos.length === 0) { return; }
 
-                var btn = document.getElementById('btn-submit-appointment');
-                var originalText = btn.innerHTML;
+                const originalLabels = Array.from(generateButtons).map(button => button.innerHTML);
+                generateButtons.forEach(button => {
+                    button.disabled = true;
+                    button.innerHTML = '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span> Gerando…';
+                });
 
-                btn.disabled = true;
-                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Carregando...';
+                const restoreButtons = () => generateButtons.forEach((button, index) => {
+                    button.disabled = false;
+                    button.innerHTML = originalLabels[index];
+                });
 
-                var formData = new FormData(form);
+                const formData = new FormData(form);
 
                 fetch(form.action, {
                     method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': formData.get('_token'),
-                    },
+                    headers: { 'X-CSRF-TOKEN': formData.get('_token'), 'Accept': 'application/json' },
                     body: formData,
                 })
-                .then(function (response) {
+                .then(response => {
                     if (!response.ok) {
-                        return response.json().then(function (data) {
-                            throw new Error(data.message || 'Erro ao gerar petição.');
-                        });
+                        return response.json().then(data => { throw new Error(data.message || 'Erro ao gerar petição.'); });
                     }
 
-                    var disposition = response.headers.get('Content-Disposition') || '';
-                    var filenameMatch = disposition.match(/filename="?([^";\s]+)"?/);
-                    var filename = filenameMatch ? filenameMatch[1] : 'peticao-merito.docx';
+                    const disposition = response.headers.get('Content-Disposition') || '';
+                    const filenameMatch = disposition.match(/filename="?([^";\s]+)"?/);
+                    const filename = filenameMatch ? filenameMatch[1] : 'peticao-merito.docx';
 
-                    return response.blob().then(function (blob) {
-                        var url = URL.createObjectURL(blob);
-                        var link = document.createElement('a');
+                    return response.blob().then(blob => {
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
                         link.href = url;
                         link.download = filename;
                         document.body.appendChild(link);
                         link.click();
-                        document.body.removeChild(link);
+                        link.remove();
                         URL.revokeObjectURL(url);
-
-                        btn.disabled = false;
-                        btn.innerHTML = originalText;
+                        restoreButtons();
 
                         Swal.fire({
-                            title: 'Petição gerada com sucesso!',
-                            text: 'Deseja gerar outra petição?',
+                            title: 'Petição gerada!',
+                            text: 'O arquivo Word foi baixado. Deseja montar outra petição?',
                             icon: 'success',
                             showCancelButton: true,
-                            confirmButtonColor: 'var(--gb-navy)',
-                            cancelButtonColor: '#6c757d',
-                            confirmButtonText: 'Sim, gerar outra',
-                            cancelButtonText: 'Não',
-                        }).then(function (result) {
-                            if (result.isConfirmed) {
-                                window.location.href = '{{ route('petition.create') }}';
-                            }
+                            confirmButtonColor: 'var(--df-brand-01)',
+                            confirmButtonText: 'Montar outra',
+                            cancelButtonText: 'Continuar aqui',
+                        }).then(result => {
+                            if (result.isConfirmed) { window.location.href = '{{ route('petition.create') }}'; }
                         });
                     });
                 })
-                .catch(function (err) {
-                    alert(err.message || 'Erro de conexão. Tente novamente.');
-                    btn.disabled = false;
-                    btn.innerHTML = originalText;
+                .catch(error => {
+                    restoreButtons();
+                    Swal.fire({
+                        title: 'Não foi possível gerar',
+                        text: error.message || 'Erro de conexão. Tente novamente.',
+                        icon: 'error',
+                        confirmButtonColor: 'var(--df-brand-01)',
+                    });
                 });
             });
-        });
+
+            render();
+        })();
     </script>
 @endsection

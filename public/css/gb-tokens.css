@@ -70,7 +70,8 @@
 /* Mapeamento Bootstrap/DashForge → marca GB */
 .btn-primary { --bs-btn-bg: var(--df-brand-01); --bs-btn-border-color: var(--df-brand-01);
   --bs-btn-hover-bg: var(--df-brand-01-hover); --bs-btn-hover-border-color: var(--df-brand-01-hover);
-  --bs-btn-active-bg: var(--df-brand-01-active); --bs-btn-active-border-color: var(--df-brand-01-active); }
+  --bs-btn-active-bg: var(--df-brand-01-active); --bs-btn-active-border-color: var(--df-brand-01-active);
+  --bs-btn-disabled-bg: var(--df-brand-01); --bs-btn-disabled-border-color: var(--df-brand-01); --bs-btn-disabled-opacity: 0.45; }
 .btn-group .btn-white.active { background: var(--df-brand-01-tint); color: var(--df-brand-01); border-color: var(--df-ui-03); }
 
 /* Estilos de texto do Figma */
