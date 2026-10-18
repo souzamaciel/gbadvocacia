@@ -61,9 +61,9 @@ class PetitionDocxPreliminaresTest extends TestCase
         $petition = Petition::query()->sole();
         $petition->items()->update(['reviewed_at' => now()]);
 
-        $this->post(route('petition.generate', $petition))->assertOk();
+        $response = $this->post(route('petition.generate', $petition))->assertOk();
 
-        $text = $this->docxText(Storage::disk('local')->path($petition->fresh()->file_path));
+        $text = $this->docxText($response->baseResponse->getFile()->getPathname());
         $this->assertStringNotContainsString(self::JUIZO_DIGITAL_TEXT, $text);
         $this->assertStringContainsString(self::GRATUIDADE_TEXT, $text);
     }

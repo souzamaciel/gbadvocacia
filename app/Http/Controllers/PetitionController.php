@@ -15,7 +15,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
-use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Throwable;
 
 class PetitionController extends Controller
@@ -133,38 +133,29 @@ class PetitionController extends Controller
         return view('petitions.generate', compact('petition'));
     }
 
-    public function generate(GeneratePetitionRequest $request, Petition $petition): JsonResponse
+    /**
+     * Generate and download the Word file. Only the draft stays saved; the file is not kept.
+     */
+    public function generate(GeneratePetitionRequest $request, Petition $petition): BinaryFileResponse|JsonResponse
     {
         if (! $petition->isFullyReviewed()) {
             return response()->json(['message' => 'Revise todos os tópicos antes de gerar o documento.'], 422);
         }
 
         try {
-            $petition = $this->documentService->generate($petition, $request->input('file_name'));
+            $path = $this->documentService->generate($petition, $request->input('file_name'));
         } catch (Throwable $e) {
             report($e);
 
             return response()->json(['message' => 'Erro ao gerar o documento: '.$e->getMessage()], 500);
         }
 
-        return response()->json([
-            'file_name' => $petition->file_name,
-            'generated_at' => $petition->generated_at->locale('pt_BR')->translatedFormat('d/m/Y \à\s H:i'),
-            'download_url' => route('petition.download', $petition),
-        ]);
-    }
-
-    public function download(Petition $petition): StreamedResponse|RedirectResponse
-    {
-        if (! $petition->file_path || ! Storage::disk('local')->exists($petition->file_path)) {
-            return redirect()
-                ->route('petition.index')
-                ->with('status', 'O arquivo desta petição não está disponível. Gere o documento novamente.');
-        }
-
-        return Storage::disk('local')->download($petition->file_path, $petition->file_name, [
-            'Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        ]);
+        return response()
+            ->download($path, $petition->file_name, [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'X-Generated-At' => $petition->generated_at->locale('pt_BR')->translatedFormat('d/m/Y \à\s H:i'),
+            ])
+            ->deleteFileAfterSend();
     }
 
     public function destroy(Petition $petition): RedirectResponse

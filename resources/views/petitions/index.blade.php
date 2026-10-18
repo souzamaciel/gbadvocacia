@@ -10,7 +10,7 @@
      */
     $stage = function (\App\Models\Petition $petition): array {
         if ($petition->isGenerated()) {
-            return [route('petition.generate.show', $petition), 'Word disponível'];
+            return [route('petition.generate.show', $petition), 'Documento gerado'];
         }
 
         if ($petition->items_count > 0 && $petition->reviewed_items_count === $petition->items_count) {
@@ -132,7 +132,7 @@
                             <td>
                                 <div class="d-flex justify-content-md-end align-items-center gap-1">
                                     @if ($petition->isGenerated())
-                                        <a href="{{ route('petition.download', $petition) }}" class="btn btn-white btn-sm"><i data-lucide="download"></i> Baixar Word</a>
+                                        <a href="{{ route('petition.generate.show', $petition) }}" class="btn btn-white btn-sm"><i data-lucide="refresh-cw"></i> Gerar novamente</a>
                                         <a href="{{ route('petition.review', $petition) }}" class="gb-icon-action" aria-label="Revisar {{ $petition->name }}"><i data-lucide="pencil"></i></a>
                                     @else
                                         <a href="{{ $url }}" class="btn btn-white btn-sm">Continuar <i data-lucide="arrow-right"></i></a>
@@ -189,7 +189,7 @@
                 event.preventDefault();
                 Swal.fire({
                     title: 'Excluir petição?',
-                    text: `“${form.dataset.name}” e o arquivo gerado serão excluídos.`,
+                    text: `O rascunho “${form.dataset.name}” será excluído.`,
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: 'var(--df-danger)',

@@ -166,7 +166,7 @@ class PetitionDraftFlowTest extends TestCase
         $this->postJson(route('petition.generate', $petition))->assertUnprocessable();
     }
 
-    public function test_generating_stores_the_word_file_with_the_reviewed_texts(): void
+    public function test_generating_downloads_the_word_file_without_keeping_it(): void
     {
         Storage::fake('local');
         $this->fakeOpenAi();
@@ -178,16 +178,13 @@ class PetitionDraftFlowTest extends TestCase
 
         $response = $this->actingAs($this->user)->postJson(route('petition.generate', $petition), ['file_name' => 'Petição Maria']);
 
-        $response->assertOk()
-            ->assertJsonPath('file_name', 'peticao-maria.docx')
-            ->assertJsonPath('download_url', route('petition.download', $petition));
+        $response->assertOk()->assertDownload('peticao-maria.docx');
         $petition->refresh();
         $this->assertTrue($petition->isGenerated());
-        Storage::disk('local')->assertExists($petition->file_path);
+        $this->assertNull($petition->file_path);
+        $this->assertSame([], Storage::disk('local')->allFiles());
         Http::assertSent(fn ($request): bool => str_contains($request['input'][0]['content'][0]['text'], 'março de 2022 a julho de 2025')
             && ! str_contains($request['input'][0]['content'][0]['text'], '[JORNADA]'));
-
-        $this->get(route('petition.download', $petition))->assertOk()->assertDownload('peticao-maria.docx');
     }
 
     public function test_internal_guidance_goes_in_green_with_the_matching_topic(): void
@@ -201,9 +198,9 @@ class PetitionDraftFlowTest extends TestCase
         $petition = $this->draftWith([$this->horasExtras, $this->multa]);
         $petition->items()->update(['reviewed_at' => now()]);
 
-        $this->actingAs($this->user)->postJson(route('petition.generate', $petition))->assertOk();
+        $response = $this->actingAs($this->user)->postJson(route('petition.generate', $petition))->assertOk();
 
-        $xml = $this->documentXml(Storage::disk('local')->path($petition->fresh()->file_path));
+        $xml = $this->documentXml($response->baseResponse->getFile()->getPathname());
         $this->assertMatchesRegularExpression(
             '/HORAS EXTRAS\.?<\/w:t>(?:(?!<\/w:p>).)*<\/w:p><w:p><w:pPr>(?:(?!<\/w:pPr>).)*<w:shd[^>]*w:fill="E2EFDA"[^>]*\/>.*?Orientação interna: .*?Verificar na CCT o adicional aplicável\..*?Texto das horas/s',
             $xml,

@@ -37,7 +37,6 @@ Route::middleware('auth')->group(function (): void {
         Route::put('/{petition}/items/{item}', 'updateItem')->scopeBindings()->name('items.update');
         Route::get('/{petition}/generate', 'showGenerate')->name('generate.show');
         Route::post('/{petition}/generate', 'generate')->name('generate');
-        Route::get('/{petition}/download', 'download')->name('download');
     });
 
     Route::get('/password', [PasswordController::class, 'edit'])->name('password.edit');

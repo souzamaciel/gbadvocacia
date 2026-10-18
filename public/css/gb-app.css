@@ -1681,7 +1681,7 @@ div.gb-library-empty [data-lucide] {
 
 .gb-download-box {
   border: 1px solid var(--df-success);
-  flex-wrap: wrap;
+  align-items: flex-start;
 }
 
 .input-group-text {

@@ -68,15 +68,15 @@
                     <div class="gb-ready-box gb-download-box" id="download-box" role="status" @unless ($petition->isGenerated()) hidden @endunless>
                         <i data-lucide="circle-check"></i>
                         <div class="flex-grow-1">
-                            <p class="gb-petition-title">Documento pronto para baixar</p>
+                            <p class="gb-petition-title">Documento gerado e baixado</p>
                             <p class="gb-petition-meta" id="download-name">{{ $petition->file_name }}</p>
                             <p class="gb-petition-meta" id="download-date">
                                 @if ($petition->generated_at)
                                     Gerado em {{ $petition->generated_at->locale('pt_BR')->translatedFormat('d/m/Y \à\s H:i') }} · Word (.docx)
                                 @endif
                             </p>
+                            <p class="gb-petition-meta mt-1">O arquivo não fica guardado no sistema. Para baixar de novo, use “Gerar novamente”.</p>
                         </div>
-                        <a href="{{ route('petition.download', $petition) }}" class="btn btn-primary" id="download-link"><i data-lucide="download"></i> Baixar Word</a>
                     </div>
 
                     <button type="submit" class="btn btn-primary w-100" id="generate-button" @if ($petition->isGenerated()) hidden @endif>
@@ -165,6 +165,7 @@
             const buttons = [document.getElementById('generate-button'), document.getElementById('regenerate-button')];
             const show = (id, visible) => { document.getElementById(id).hidden = !visible; };
             const fileName = document.getElementById('file-name');
+            const fileNameInput = () => fileName.value.trim();
             let generating = false;
             const refreshButtons = () => {
                 const empty = fileName.value.trim() === '';
@@ -194,12 +195,31 @@
                     headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': new FormData(form).get('_token') },
                     body: new FormData(form),
                 })
-                .then(response => response.json().then(data => ({ ok: response.ok, data })))
-                .then(({ ok, data }) => {
-                    if (!ok) { throw new Error(data.message || 'Não foi possível gerar o documento.'); }
-                    document.getElementById('download-name').textContent = data.file_name;
-                    document.getElementById('download-date').textContent = `Gerado em ${data.generated_at} · Word (.docx)`;
-                    document.getElementById('download-link').href = data.download_url;
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(data => { throw new Error(data.message || 'Não foi possível gerar o documento.'); });
+                    }
+
+                    const disposition = response.headers.get('Content-Disposition') || '';
+                    const match = disposition.match(/filename\*?=(?:UTF-8'')?"?([^";]+)"?/i);
+                    const fileName = match ? decodeURIComponent(match[1]) : (fileNameInput() + '.docx');
+                    const generatedAt = response.headers.get('X-Generated-At') || '';
+
+                    return response.blob().then(blob => {
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = fileName;
+                        document.body.appendChild(link);
+                        link.click();
+                        link.remove();
+                        URL.revokeObjectURL(url);
+                        return { fileName, generatedAt };
+                    });
+                })
+                .then(({ fileName, generatedAt }) => {
+                    document.getElementById('download-name').textContent = fileName;
+                    document.getElementById('download-date').textContent = generatedAt ? `Gerado em ${generatedAt} · Word (.docx)` : 'Word (.docx)';
                     document.getElementById('status-badge').textContent = 'Documento gerado';
                     document.getElementById('status-badge').className = 'gb-badge gb-badge-success';
                     show('ready-box', false);
@@ -207,7 +227,7 @@
                     show('generate-hint', false);
                     show('download-box', true);
                     show('regenerate-row', true);
-                    document.getElementById('download-link').focus();
+                    document.getElementById('regenerate-button').focus();
                 })
                 .catch(error => Swal.fire({ icon: 'error', title: 'Não foi possível gerar', text: error.message, confirmButtonColor: 'var(--df-brand-01)' }))
                 .finally(() => {

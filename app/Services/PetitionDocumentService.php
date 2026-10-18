@@ -6,7 +6,6 @@ use App\Models\Petition;
 use App\Models\PetitionItem;
 use App\Models\PetitionLog;
 use App\Services\OpenAI\PetitionGenerationService;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class PetitionDocumentService
@@ -16,9 +15,12 @@ class PetitionDocumentService
     ) {}
 
     /**
-     * Generate the Word file from the reviewed texts and keep it with the petition.
+     * Generate the Word file from the reviewed texts. The file is not kept on the
+     * server in this version: it is returned for download and only the draft is saved.
+     *
+     * @return string path of the temporary file to download
      */
-    public function generate(Petition $petition, ?string $fileName = null): Petition
+    public function generate(Petition $petition, ?string $fileName = null): string
     {
         $items = $petition->items()->with('topic')->get();
 
@@ -53,22 +55,14 @@ class PetitionDocumentService
         $temporaryPath = (new PetitionDocxGenerator)->generateMerit($data);
 
         $baseName = Str::slug($fileName ?: $petition->name) ?: 'peticao-inicial';
-        $storedPath = "petitions/{$petition->id}/{$baseName}.docx";
-
-        if ($petition->file_path && $petition->file_path !== $storedPath) {
-            Storage::disk('local')->delete($petition->file_path);
-        }
-
-        Storage::disk('local')->put($storedPath, file_get_contents($temporaryPath));
-        @unlink($temporaryPath);
 
         $petition->update([
             'status' => Petition::STATUS_GENERATED,
             'file_name' => "{$baseName}.docx",
-            'file_path' => $storedPath,
+            'file_path' => null,
             'generated_at' => now(),
         ]);
 
-        return $petition;
+        return $temporaryPath;
     }
 }
