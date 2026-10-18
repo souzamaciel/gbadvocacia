@@ -119,6 +119,7 @@ TEXT;
 
         return [
             'model' => config('services.openai.model'),
+            'temperature' => 0,
             'instructions' => $instructions,
             'input' => [[
                 'role' => 'user',
