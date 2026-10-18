@@ -3,11 +3,13 @@
 namespace Tests\Feature;
 
 use App\Models\Group;
+use App\Models\Petition;
 use App\Models\Topic;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class PetitionCreatePageTest extends TestCase
@@ -127,10 +129,15 @@ class PetitionCreatePageTest extends TestCase
         $gratuidade = Topic::query()->where('title', 'DA GRATUIDADE DE JUSTIÇA')->firstOrFail();
         $pedido = Topic::query()->where('title', 'PEDIDO A1')->firstOrFail();
 
-        $response = $this->actingAs(User::factory()->create())->post(route('petition.store'), [
+        Storage::fake('local');
+        $this->actingAs(User::factory()->create())->post(route('petition.store'), [
             'topics' => [$pedido->id],
             'preliminares' => [$gratuidade->id],
         ]);
+        $petition = Petition::query()->sole();
+        $petition->items()->update(['reviewed_at' => now()]);
+
+        $response = $this->post(route('petition.generate', $petition));
 
         $response->assertOk();
         Http::assertSent(function (Request $request): bool {

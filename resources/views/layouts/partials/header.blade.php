@@ -1,7 +1,7 @@
 @php
     $navigation = [
         ['label' => 'Atendimentos', 'route' => 'appointment.create', 'active' => 'appointment.*'],
-        ['label' => 'Petições', 'route' => 'petition.create', 'active' => 'petition.*'],
+        ['label' => 'Petições', 'route' => 'petition.index', 'active' => 'petition.*'],
         ['label' => 'Biblioteca de tópicos', 'route' => 'settings.topics.index', 'active' => 'settings.*'],
     ];
 @endphp

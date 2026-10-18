@@ -1283,3 +1283,415 @@ div.gb-library-empty [data-lucide] {
   padding: 12px 20px;
   border-top-color: var(--df-border);
 }
+
+/* ---------- Etapas da petição ---------- */
+.gb-wizard {
+  margin-bottom: 16px;
+  padding: 16px 20px;
+}
+
+.gb-wizard ol {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px 32px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.gb-wizard-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+}
+
+.gb-wizard-number {
+  flex: 0 0 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--df-text-03);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font: 500 14px/20px var(--df-font);
+  color: var(--df-text-03);
+}
+
+.gb-wizard-title {
+  display: block;
+  font: 500 14px/20px var(--df-font);
+  color: var(--df-text-03);
+}
+
+.gb-wizard-description {
+  display: block;
+  font: 400 12px/18px var(--df-font);
+  color: var(--df-text-03);
+}
+
+.is-active .gb-wizard-number {
+  background: var(--df-brand-01);
+  border-color: var(--df-brand-01);
+  color: var(--df-white);
+}
+
+.is-active .gb-wizard-title {
+  color: var(--df-brand-01);
+}
+
+.is-complete .gb-wizard-number {
+  background: var(--df-success);
+  border-color: var(--df-success);
+  color: var(--df-white);
+}
+
+.is-complete .gb-wizard-title {
+  color: var(--df-text-01);
+}
+
+.gb-wizard-separator {
+  color: var(--df-text-04);
+}
+
+@media (max-width: 767.98px) {
+  .gb-wizard ol {
+    justify-content: flex-start;
+  }
+
+  .gb-wizard-separator,
+  .gb-wizard-description {
+    display: none;
+  }
+
+  .gb-wizard-step:not(.is-active) .gb-wizard-title {
+    display: none;
+  }
+}
+
+/* ---------- Petições iniciais ---------- */
+.gb-continue-card {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.gb-continue-card .gb-icon-tile {
+  width: 56px;
+  height: 56px;
+}
+
+.gb-continue-progress {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+  font: 400 12px/18px var(--df-font);
+  color: var(--df-text-03);
+}
+
+.gb-continue-progress li {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.gb-continue-progress [data-lucide] {
+  width: 14px;
+  height: 14px;
+}
+
+.gb-continue-progress .is-done {
+  color: var(--df-success);
+}
+
+.gb-continue-progress .is-current {
+  color: var(--df-text-01);
+}
+
+.gb-table {
+  width: 100%;
+  margin: 0;
+  border-collapse: collapse;
+}
+
+.gb-table th {
+  font: 600 10px/14px var(--df-font);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--df-text-03);
+  background: var(--df-ui-01);
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--df-border);
+  text-align: left;
+}
+
+.gb-table td {
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--df-border);
+  vertical-align: middle;
+  font: 400 14px/20px var(--df-font);
+  color: var(--df-text-02);
+}
+
+.gb-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.gb-petition-name {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.gb-petition-name .gb-icon-tile {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+}
+
+.gb-petition-name .gb-icon-tile [data-lucide] {
+  width: 16px;
+  height: 16px;
+}
+
+.gb-petition-title {
+  font: 500 14px/20px var(--df-font);
+  color: var(--df-text-01);
+  margin: 0;
+}
+
+.gb-petition-meta {
+  font: 400 12px/18px var(--df-font);
+  color: var(--df-text-03);
+  margin: 0;
+}
+
+.gb-badge-warning {
+  background: var(--df-warning-bg);
+  color: var(--df-warning);
+}
+
+@media (max-width: 767.98px) {
+  .gb-table thead {
+    display: none;
+  }
+
+  .gb-table,
+  .gb-table tbody,
+  .gb-table tr,
+  .gb-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .gb-table tr {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--df-border);
+  }
+
+  .gb-table td {
+    border: 0;
+    padding: 4px 0;
+  }
+}
+
+.gb-draft-name {
+  padding: 16px 20px 4px;
+}
+
+/* ---------- Revisar conteúdo ---------- */
+.gb-review-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.gb-review-list li {
+  border-bottom: 1px solid var(--df-border);
+}
+
+.gb-review-link {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  background: none;
+  border: 0;
+  border-left: 2px solid transparent;
+  padding: 12px 16px 12px 14px;
+  text-align: left;
+}
+
+.gb-review-link:hover {
+  background: var(--df-ui-01);
+}
+
+.gb-review-link.is-active {
+  background: var(--df-ui-01);
+  border-left-color: var(--df-brand-01);
+}
+
+.gb-review-number {
+  font: 400 14px/20px var(--df-font);
+  color: var(--df-text-03);
+}
+
+.gb-review-title {
+  display: block;
+  font: 500 14px/20px var(--df-font);
+  color: var(--df-text-01);
+}
+
+.gb-review-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font: 400 12px/18px var(--df-font);
+  color: var(--df-text-03);
+}
+
+.gb-review-state [data-lucide] {
+  width: 12px;
+  height: 12px;
+}
+
+.gb-pending-box {
+  padding: 16px;
+  border-radius: var(--df-radius);
+  background: var(--df-warning-bg);
+}
+
+.gb-pending-box.is-complete {
+  background: var(--df-success-bg);
+}
+
+.gb-pending-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font: 500 14px/20px var(--df-font);
+  color: var(--df-accent-text);
+  margin: 0 0 12px;
+}
+
+.gb-pending-box.is-complete .gb-pending-title {
+  color: var(--df-success);
+}
+
+.gb-document-preview {
+  border: 1px solid var(--df-border);
+  border-radius: var(--df-radius);
+  padding: 24px;
+  font: 400 15px/24px var(--doc-font);
+  color: var(--df-text-01);
+  text-align: justify;
+}
+
+.gb-document-preview p {
+  margin: 0 0 14px;
+}
+
+.gb-document-title {
+  border: 1px solid var(--df-text-01);
+  padding: 4px 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  text-align: left;
+  margin-top: 8px !important;
+}
+
+.gb-placeholder {
+  background: var(--df-warning-bg);
+  color: var(--df-accent-text);
+  text-decoration: underline;
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+.gb-filled {
+  background: var(--df-success-bg);
+  border-radius: 2px;
+  padding: 0 2px;
+}
+
+.gb-review-check {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 20px;
+  background: var(--df-ui-01);
+  border-top: 1px solid var(--df-border);
+}
+
+.gb-review-summary {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 16px 20px;
+  background: var(--df-ui-01);
+}
+
+.btn.disabled {
+  pointer-events: none;
+}
+
+/* ---------- Gerar documento ---------- */
+.gb-format-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--df-ui-03);
+  border-radius: var(--df-radius);
+}
+
+.gb-format-option.is-selected {
+  border-color: var(--df-brand-01);
+  background: var(--df-brand-01-tint);
+}
+
+.gb-ready-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-radius: var(--df-radius);
+  background: var(--df-success-bg);
+  color: var(--df-success);
+}
+
+.gb-ready-box > [data-lucide] {
+  width: 22px;
+  height: 22px;
+}
+
+.gb-download-box {
+  border: 1px solid var(--df-success);
+  flex-wrap: wrap;
+}
+
+.input-group-text {
+  background: var(--df-ui-01);
+  border-color: var(--df-ui-03);
+  font-size: 14px;
+  color: var(--df-text-03);
+}
+
+/* Elementos escondidos continuam escondidos mesmo com utilitários de display (ex.: .d-flex). */
+[hidden] {
+  display: none !important;
+}

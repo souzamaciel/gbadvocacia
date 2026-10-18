@@ -6,8 +6,8 @@
     <title>Entrar — GB Advocacia</title>
     <link rel="icon" href="{{ asset('favicon.ico') }}">
     <link rel="stylesheet" href="{{ asset('vendor/dashforge/dashforge.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/gb-tokens.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/gb-app.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/gb-tokens.css').'?v='.filemtime(public_path('css/gb-tokens.css')) }}">
+    <link rel="stylesheet" href="{{ asset('css/gb-app.css').'?v='.filemtime(public_path('css/gb-app.css')) }}">
 </head>
 <body class="gb-login">
     <main class="gb-login-main">

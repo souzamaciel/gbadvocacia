@@ -1,0 +1,65 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\Petition;
+use App\Models\PetitionItem;
+use App\Models\PetitionLog;
+use App\Services\OpenAI\PetitionGenerationService;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+
+class PetitionDocumentService
+{
+    public function __construct(
+        protected PetitionGenerationService $petitionGenerationService
+    ) {}
+
+    /**
+     * Generate the Word file from the reviewed texts and keep it with the petition.
+     */
+    public function generate(Petition $petition, ?string $fileName = null): Petition
+    {
+        $items = $petition->items()->get();
+
+        $toPayload = fn (PetitionItem $item, int $index): array => [
+            'sort_order' => $index + 1,
+            'topic_id' => $item->topic_id,
+            'title' => $item->title,
+            'content' => $item->renderedContent(),
+        ];
+
+        $preliminares = $items->where('kind', PetitionItem::KIND_PRELIMINAR)->values()->map($toPayload)->all();
+        $topics = $items->where('kind', PetitionItem::KIND_PEDIDO)->values()->map($toPayload)->all();
+
+        $normalized = PetitionFormSerializer::normalizeFormData([], $topics, $preliminares);
+        $resultado = $this->petitionGenerationService->generate($normalized, false, false);
+
+        PetitionLog::create([
+            'openai_model' => $resultado['openai_model'],
+            'request_payload' => $resultado['request_payload'],
+            'response_payload' => $resultado['raw_response'],
+        ]);
+
+        $temporaryPath = (new PetitionDocxGenerator)->generateMerit($resultado['blade_data']);
+
+        $baseName = Str::slug($fileName ?: $petition->name) ?: 'peticao-inicial';
+        $storedPath = "petitions/{$petition->id}/{$baseName}.docx";
+
+        if ($petition->file_path && $petition->file_path !== $storedPath) {
+            Storage::disk('local')->delete($petition->file_path);
+        }
+
+        Storage::disk('local')->put($storedPath, file_get_contents($temporaryPath));
+        @unlink($temporaryPath);
+
+        $petition->update([
+            'status' => Petition::STATUS_GENERATED,
+            'file_name' => "{$baseName}.docx",
+            'file_path' => $storedPath,
+            'generated_at' => now(),
+        ]);
+
+        return $petition;
+    }
+}

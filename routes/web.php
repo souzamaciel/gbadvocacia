@@ -25,8 +25,21 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/appointments/create', [AppointmentController::class, 'create'])->name('appointment.create');
     Route::post('/appointments/create', [AppointmentController::class, 'store'])->name('appointment.store');
     Route::post('/appointments/print', [AppointmentController::class, 'print'])->name('appointment.print');
-    Route::get('/petitions/create', [PetitionController::class, 'create'])->name('petition.create');
-    Route::post('/petitions/create', [PetitionController::class, 'store'])->name('petition.store');
+
+    Route::prefix('petitions')->name('petition.')->controller(PetitionController::class)->group(function (): void {
+        Route::get('/', 'index')->name('index');
+        Route::get('/create', 'create')->name('create');
+        Route::post('/', 'store')->name('store');
+        Route::get('/{petition}/edit', 'edit')->name('edit');
+        Route::put('/{petition}', 'update')->name('update');
+        Route::delete('/{petition}', 'destroy')->name('destroy');
+        Route::get('/{petition}/review', 'review')->name('review');
+        Route::put('/{petition}/items/{item}', 'updateItem')->scopeBindings()->name('items.update');
+        Route::get('/{petition}/generate', 'showGenerate')->name('generate.show');
+        Route::post('/{petition}/generate', 'generate')->name('generate');
+        Route::get('/{petition}/download', 'download')->name('download');
+    });
+
     Route::get('/password', [PasswordController::class, 'edit'])->name('password.edit');
     Route::put('/password', [PasswordController::class, 'update'])->name('password.update');
 

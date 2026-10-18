@@ -1,0 +1,204 @@
+@extends('layouts.app')
+
+@section('title', 'Gerar documento')
+
+@section('page-header')
+    <x-page-header title="Gerar documento"
+                   description="Sua petição foi revisada. Prepare o arquivo para download."
+                   :breadcrumbs="['Petições' => route('petition.index'), $petition->name]">
+        <x-slot:actions>
+            <span class="gb-badge {{ $petition->isGenerated() ? 'gb-badge-success' : 'gb-badge-neutral' }}" id="status-badge">
+                {{ $petition->isGenerated() ? 'Documento gerado' : 'Rascunho' }}
+            </span>
+        </x-slot:actions>
+    </x-page-header>
+@endsection
+
+@section('content')
+    <x-petition-steps :current="3" :petition="$petition" />
+
+    <div class="row g-3 align-items-start">
+        <div class="col-12 col-lg-6">
+            <form class="card" id="generate-form" method="POST" action="{{ route('petition.generate', $petition) }}" novalidate>
+                @csrf
+                <div class="card-header">
+                    <h2 class="card-title">Configurações do arquivo</h2>
+                    <p class="card-description">Conteúdo e ordem preservados da revisão.</p>
+                </div>
+                <div class="card-body d-flex flex-column gap-3 p-4">
+                    <div>
+                        <label for="file-name" class="form-label">Nome do arquivo</label>
+                        <div class="input-group">
+                            <input type="text" id="file-name" name="file_name" class="form-control" maxlength="120"
+                                   value="{{ $petition->file_name ? \Illuminate\Support\Str::beforeLast($petition->file_name, '.docx') : \Illuminate\Support\Str::slug($petition->name) }}">
+                            <span class="input-group-text">.docx</span>
+                        </div>
+                        <p class="gb-field-hint">Você poderá renomear o arquivo depois de baixar.</p>
+                    </div>
+
+                    <div>
+                        <p class="form-label">Formato do documento</p>
+                        <div class="gb-format-option is-selected">
+                            <span class="gb-icon-tile gb-icon-tile-sm"><i data-lucide="file-pen-line"></i></span>
+                            <div class="flex-grow-1">
+                                <p class="gb-petition-title">Word (.docx)</p>
+                                <p class="gb-petition-meta">Continue editando no Word. Para PDF, use “Salvar como PDF” no Word.</p>
+                            </div>
+                            <span class="gb-badge gb-badge-neutral">Recomendado</span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="gb-icon-tile gb-icon-tile-sm"><i data-lucide="layout-template"></i></span>
+                        <div>
+                            <p class="gb-petition-title">Modelo GB Advocacia</p>
+                            <p class="gb-petition-meta">Timbrado do escritório · numeração dos tópicos</p>
+                        </div>
+                    </div>
+
+                    <div class="gb-ready-box" id="ready-box" role="status" @if ($petition->isGenerated()) hidden @endif>
+                        <i data-lucide="circle-check"></i>
+                        <div>
+                            <p class="gb-petition-title">Tudo pronto para gerar</p>
+                            <p class="gb-petition-meta">{{ $petition->items->count() }} tópicos revisados · nenhuma informação pendente</p>
+                        </div>
+                    </div>
+
+                    <div class="gb-ready-box gb-download-box" id="download-box" role="status" @unless ($petition->isGenerated()) hidden @endunless>
+                        <i data-lucide="circle-check"></i>
+                        <div class="flex-grow-1">
+                            <p class="gb-petition-title">Documento pronto para baixar</p>
+                            <p class="gb-petition-meta" id="download-name">{{ $petition->file_name }}</p>
+                            <p class="gb-petition-meta" id="download-date">
+                                @if ($petition->generated_at)
+                                    Gerado em {{ $petition->generated_at->locale('pt_BR')->translatedFormat('d/m/Y \à\s H:i') }} · Word (.docx)
+                                @endif
+                            </p>
+                        </div>
+                        <a href="{{ route('petition.download', $petition) }}" class="btn btn-primary" id="download-link"><i data-lucide="download"></i> Baixar Word</a>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100" id="generate-button" @if ($petition->isGenerated()) hidden @endif>
+                        <i data-lucide="file-text"></i> Gerar documento
+                    </button>
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2" id="regenerate-row" @unless ($petition->isGenerated()) hidden @endunless>
+                        <button type="submit" class="btn btn-white" id="regenerate-button"><i data-lucide="refresh-cw"></i> Gerar novamente</button>
+                        <span class="gb-field-hint m-0">O rascunho continua disponível para ajustes.</span>
+                    </div>
+                    <p class="gb-field-hint justify-content-center m-0" id="generate-hint" @if ($petition->isGenerated()) hidden @endif>
+                        A geração leva cerca de um minuto. O rascunho continua disponível para ajustes.
+                    </p>
+                </div>
+            </form>
+        </div>
+
+        <div class="col-12 col-lg-6">
+            <section class="card" aria-labelledby="summary-title">
+                <div class="card-header d-flex align-items-center gap-3">
+                    <div class="flex-grow-1">
+                        <h2 class="card-title" id="summary-title">Resumo da petição</h2>
+                        <p class="card-description">{{ $petition->name }}</p>
+                    </div>
+                    <span class="gb-badge gb-badge-brand">{{ $petition->items->count() }} tópicos</span>
+                </div>
+                <p class="gb-list-label">Ordem do documento</p>
+                <ol class="gb-selected-list">
+                    @foreach ($petition->items as $item)
+                        <li class="gb-selected-item">
+                            <span class="gb-order {{ $item->kind === \App\Models\PetitionItem::KIND_PRELIMINAR ? 'gb-order-muted' : '' }}">{{ $loop->iteration }}</span>
+                            <div class="gb-selected-text">
+                                <p class="gb-selected-title">{{ $item->title }}</p>
+                                <p class="gb-selected-meta">{{ $item->group_name }}</p>
+                            </div>
+                            <i data-lucide="check" class="text-success"></i>
+                        </li>
+                    @endforeach
+                </ol>
+                <div class="card-body">
+                    <button type="button" class="btn btn-white w-100" data-bs-toggle="modal" data-bs-target="#full-petition">
+                        <i data-lucide="eye"></i> Ver conteúdo revisado
+                    </button>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <div class="gb-form-actions">
+        <a href="{{ route('petition.review', $petition) }}" class="btn btn-white"><i data-lucide="arrow-left"></i> Voltar à revisão</a>
+        <span class="gb-field-hint m-0">Seleção, ordem e textos preservados no rascunho.</span>
+    </div>
+
+    <div class="modal fade" id="full-petition" tabindex="-1" aria-labelledby="full-petition-title" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div>
+                        <h2 class="card-title" id="full-petition-title">Conteúdo revisado</h2>
+                        <p class="card-description">{{ $petition->name }}</p>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="gb-document-preview">
+                        @foreach ($petition->items as $item)
+                            <p class="gb-document-title">{{ $item->title }}</p>
+                            @foreach (preg_split('/\n{2,}/', $item->renderedContent()) as $paragraph)
+                                <p>{!! nl2br(e($paragraph)) !!}</p>
+                            @endforeach
+                        @endforeach
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-white" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+@endsection
+
+@section('scripts')
+    <script>
+        (function () {
+            const form = document.getElementById('generate-form');
+            const buttons = [document.getElementById('generate-button'), document.getElementById('regenerate-button')];
+            const show = (id, visible) => { document.getElementById(id).hidden = !visible; };
+
+            form.addEventListener('submit', event => {
+                event.preventDefault();
+                const labels = buttons.map(button => button.innerHTML);
+                form.setAttribute('aria-busy', 'true');
+                buttons.forEach(button => {
+                    button.disabled = true;
+                    button.innerHTML = '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span> Gerando documento…';
+                });
+
+                fetch(form.action, {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': new FormData(form).get('_token') },
+                    body: new FormData(form),
+                })
+                .then(response => response.json().then(data => ({ ok: response.ok, data })))
+                .then(({ ok, data }) => {
+                    if (!ok) { throw new Error(data.message || 'Não foi possível gerar o documento.'); }
+                    document.getElementById('download-name').textContent = data.file_name;
+                    document.getElementById('download-date').textContent = `Gerado em ${data.generated_at} · Word (.docx)`;
+                    document.getElementById('download-link').href = data.download_url;
+                    document.getElementById('status-badge').textContent = 'Documento gerado';
+                    document.getElementById('status-badge').className = 'gb-badge gb-badge-success';
+                    show('ready-box', false);
+                    show('generate-button', false);
+                    show('generate-hint', false);
+                    show('download-box', true);
+                    show('regenerate-row', true);
+                    document.getElementById('download-link').focus();
+                })
+                .catch(error => Swal.fire({ icon: 'error', title: 'Não foi possível gerar', text: error.message, confirmButtonColor: 'var(--df-brand-01)' }))
+                .finally(() => {
+                    form.removeAttribute('aria-busy');
+                    buttons.forEach((button, index) => { button.disabled = false; button.innerHTML = labels[index]; });
+                    lucide.createIcons();
+                });
+            });
+        })();
+    </script>
+@endsection

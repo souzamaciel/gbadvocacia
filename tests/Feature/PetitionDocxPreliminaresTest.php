@@ -3,11 +3,13 @@
 namespace Tests\Feature;
 
 use App\Models\Group;
+use App\Models\Petition;
 use App\Models\Topic;
 use App\Models\User;
 use App\Services\PetitionDocxGenerator;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 use ZipArchive;
 
@@ -51,13 +53,17 @@ class PetitionDocxPreliminaresTest extends TestCase
         $pedido = Topic::factory()->create();
         $this->fakeOpenAi();
 
-        $response = $this->actingAs(User::factory()->create())->post(route('petition.store'), [
+        Storage::fake('local');
+        $this->actingAs(User::factory()->create())->post(route('petition.store'), [
             'topics' => [$pedido->id],
             'preliminares' => [Topic::GRATUIDADE_JUSTICA_ID],
         ]);
+        $petition = Petition::query()->sole();
+        $petition->items()->update(['reviewed_at' => now()]);
 
-        $response->assertOk();
-        $text = $this->docxText($response->baseResponse->getFile()->getPathname());
+        $this->post(route('petition.generate', $petition))->assertOk();
+
+        $text = $this->docxText(Storage::disk('local')->path($petition->fresh()->file_path));
         $this->assertStringNotContainsString(self::JUIZO_DIGITAL_TEXT, $text);
         $this->assertStringContainsString(self::GRATUIDADE_TEXT, $text);
     }

@@ -5,18 +5,34 @@
 @section('page-header')
     <x-page-header title="Monte sua petição inicial"
                    description="Escolha os tópicos e organize a sequência do documento."
-                   :breadcrumbs="['Petições' => route('petition.create'), 'Nova petição']">
+                   :breadcrumbs="['Petições' => route('petition.index'), $petition?->name ?? 'Nova petição']">
         <x-slot:actions>
-            <button type="submit" form="petition-form" class="btn btn-primary js-generate-button d-none d-lg-inline-flex" disabled>
-                Gerar petição <i data-lucide="arrow-right"></i>
+            <button type="submit" form="petition-form" name="action" value="save" class="btn btn-white">
+                <i data-lucide="save"></i> Salvar
+            </button>
+            <button type="submit" form="petition-form" name="action" value="review" class="btn btn-primary js-review-button d-none d-lg-inline-flex" disabled>
+                Revisar petição <i data-lucide="arrow-right"></i>
             </button>
         </x-slot:actions>
     </x-page-header>
 @endsection
 
 @section('content')
-    <form id="petition-form" method="POST" action="{{ route('petition.store') }}">
+    @if (session('status'))
+        <div class="alert alert-success alert-dismissible" role="status">
+            <i data-lucide="circle-check"></i>
+            <span>{{ session('status') }}</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar aviso"></button>
+        </div>
+    @endif
+
+    <x-petition-steps :current="1" :petition="$petition" />
+
+    <form id="petition-form" method="POST" action="{{ $petition ? route('petition.update', $petition) : route('petition.store') }}">
         @csrf
+        @if ($petition)
+            @method('PUT')
+        @endif
 
         <div class="row g-3 align-items-start">
             {{-- Biblioteca de tópicos --}}
@@ -90,6 +106,12 @@
                         <span class="gb-badge gb-badge-brand" id="selected-count">0 tópicos</span>
                     </div>
 
+                    <div class="gb-draft-name">
+                        <label for="petition-name" class="form-label">Nome do rascunho</label>
+                        <input type="text" id="petition-name" name="name" class="form-control" maxlength="255"
+                               value="{{ old('name', $petition?->name) }}" placeholder="Ex.: Petição inicial — Maria Aparecida">
+                    </div>
+
                     <div id="selected-preliminares-block" hidden>
                         <p class="gb-list-label">Preliminares</p>
                         <ul class="gb-selected-list" id="selected-preliminares"></ul>
@@ -108,8 +130,8 @@
                             <p class="gb-list-label p-0 m-0">Total</p>
                             <p class="gb-total" id="selected-total">0 tópicos na petição</p>
                         </div>
-                        <button type="submit" class="btn btn-primary js-generate-button" disabled>
-                            Gerar petição <i data-lucide="arrow-right"></i>
+                        <button type="submit" name="action" value="review" class="btn btn-primary js-review-button" disabled>
+                            Revisar petição <i data-lucide="arrow-right"></i>
                         </button>
                     </div>
                 </section>
@@ -117,8 +139,8 @@
                 <div class="card gb-hint-card">
                     <i data-lucide="file-text"></i>
                     <div>
-                        <p class="gb-hint-title">Revise antes de protocolar</p>
-                        <p class="gb-hint-text">O documento é gerado em Word no formato do escritório. Complete o que estiver entre [colchetes] e confira o texto antes de protocolar.</p>
+                        <p class="gb-hint-title">Revise antes de gerar o documento</p>
+                        <p class="gb-hint-text">Na próxima etapa você confere o texto de cada tópico e preenche as informações do caso. O documento é gerado em Word.</p>
                     </div>
                 </div>
             </div>
@@ -129,8 +151,8 @@
                 <span class="gb-list-label p-0">Minha petição</span>
                 <span class="gb-total js-selected-label">0 tópicos</span>
             </a>
-            <button type="submit" class="btn btn-primary js-generate-button" disabled>
-                Gerar petição <i data-lucide="arrow-right"></i>
+            <button type="submit" name="action" value="review" class="btn btn-primary js-review-button" disabled>
+                Revisar petição <i data-lucide="arrow-right"></i>
             </button>
         </div>
     </form>
@@ -142,11 +164,14 @@
             const form = document.getElementById('petition-form');
             const items = Array.from(document.querySelectorAll('.gb-library-item'));
             const itemsById = new Map(items.map(item => [Number(item.dataset.id), item]));
-            const generateButtons = document.querySelectorAll('.js-generate-button');
+            const reviewButtons = document.querySelectorAll('.js-review-button');
 
+            const savedSelection = {{ Js::from($selection) }};
             const state = {
-                preliminares: items.filter(item => item.dataset.kind === 'preliminar').map(item => Number(item.dataset.id)),
-                pedidos: [],
+                preliminares: savedSelection
+                    ? savedSelection.preliminares.filter(id => itemsById.has(id))
+                    : items.filter(item => item.dataset.kind === 'preliminar').map(item => Number(item.dataset.id)),
+                pedidos: savedSelection ? savedSelection.pedidos.filter(id => itemsById.has(id)) : [],
             };
 
             function topicTitle(id) {
@@ -241,7 +266,7 @@
                 document.getElementById('selected-count').textContent = label;
                 document.getElementById('selected-total').textContent = label + ' na petição';
                 document.querySelectorAll('.js-selected-label').forEach(element => { element.textContent = label; });
-                generateButtons.forEach(button => {
+                reviewButtons.forEach(button => {
                     button.disabled = state.pedidos.length === 0;
                     button.title = state.pedidos.length === 0 ? 'Adicione ao menos um pedido' : '';
                 });
@@ -290,71 +315,7 @@
             document.getElementById('library-search').addEventListener('input', filterLibrary);
             document.getElementById('library-group').addEventListener('change', filterLibrary);
 
-            form.addEventListener('submit', event => {
-                event.preventDefault();
-                if (state.pedidos.length === 0) { return; }
-
-                const originalLabels = Array.from(generateButtons).map(button => button.innerHTML);
-                generateButtons.forEach(button => {
-                    button.disabled = true;
-                    button.innerHTML = '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span> Gerando…';
-                });
-
-                const restoreButtons = () => generateButtons.forEach((button, index) => {
-                    button.disabled = false;
-                    button.innerHTML = originalLabels[index];
-                });
-
-                const formData = new FormData(form);
-
-                fetch(form.action, {
-                    method: 'POST',
-                    headers: { 'X-CSRF-TOKEN': formData.get('_token'), 'Accept': 'application/json' },
-                    body: formData,
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        return response.json().then(data => { throw new Error(data.message || 'Erro ao gerar petição.'); });
-                    }
-
-                    const disposition = response.headers.get('Content-Disposition') || '';
-                    const filenameMatch = disposition.match(/filename="?([^";\s]+)"?/);
-                    const filename = filenameMatch ? filenameMatch[1] : 'peticao-merito.docx';
-
-                    return response.blob().then(blob => {
-                        const url = URL.createObjectURL(blob);
-                        const link = document.createElement('a');
-                        link.href = url;
-                        link.download = filename;
-                        document.body.appendChild(link);
-                        link.click();
-                        link.remove();
-                        URL.revokeObjectURL(url);
-                        restoreButtons();
-
-                        Swal.fire({
-                            title: 'Petição gerada!',
-                            text: 'O arquivo Word foi baixado. Deseja montar outra petição?',
-                            icon: 'success',
-                            showCancelButton: true,
-                            confirmButtonColor: 'var(--df-brand-01)',
-                            confirmButtonText: 'Montar outra',
-                            cancelButtonText: 'Continuar aqui',
-                        }).then(result => {
-                            if (result.isConfirmed) { window.location.href = '{{ route('petition.create') }}'; }
-                        });
-                    });
-                })
-                .catch(error => {
-                    restoreButtons();
-                    Swal.fire({
-                        title: 'Não foi possível gerar',
-                        text: error.message || 'Erro de conexão. Tente novamente.',
-                        icon: 'error',
-                        confirmButtonColor: 'var(--df-brand-01)',
-                    });
-                });
-            });
+            form.addEventListener('submit', () => { window.onbeforeunload = null; });
 
             render();
         })();
