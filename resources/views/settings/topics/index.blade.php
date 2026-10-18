@@ -202,6 +202,19 @@
                                 Use [colchetes] para os dados que o advogado completa no documento, ex.: [NOME DA 1ª RECLAMADA].
                             </p>
                         </div>
+                        <div class="col-12">
+                            <label for="topic-notes" class="form-label">Orientação interna · opcional</label>
+                            <textarea id="topic-notes" name="notes" rows="3" maxlength="2000" placeholder="Instruções para quem prepara a petição"
+                                      class="form-control @error('notes') is-invalid @enderror"
+                                      @error('notes') aria-describedby="topic-notes-error" @enderror>{{ old('notes') }}</textarea>
+                            @error('notes')
+                                <div id="topic-notes-error" class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <p class="gb-field-hint">
+                                <i data-lucide="info"></i>
+                                Esta orientação não é incluída no documento gerado.
+                            </p>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -351,6 +364,7 @@
                     document.getElementById('topic-title').value = topic ? topic.title : '';
                     document.getElementById('topic-group').value = topic ? topic.group_id : (activeGroup || '');
                     document.getElementById('topic-content').value = topic ? topic.content : '';
+                    document.getElementById('topic-notes').value = topic ? (topic.notes || '') : '';
                     form.querySelectorAll('.is-invalid').forEach(field => field.classList.remove('is-invalid'));
                 }
 

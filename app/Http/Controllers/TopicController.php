@@ -46,6 +46,7 @@ class TopicController extends Controller
             'group_id' => $request->integer('group_id'),
             'title' => $request->string('title')->toString(),
             'content' => $request->string('content')->toString(),
+            'notes' => $request->filled('notes') ? $request->string('notes')->trim()->toString() : null,
             'sort_order' => $maxOrder + 1,
         ]);
 
@@ -65,6 +66,7 @@ class TopicController extends Controller
             'group_id' => $request->integer('group_id'),
             'title' => $request->string('title')->toString(),
             'content' => $request->string('content')->toString(),
+            'notes' => $request->filled('notes') ? $request->string('notes')->trim()->toString() : null,
         ]);
 
         return redirect()

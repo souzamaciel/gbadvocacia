@@ -21,6 +21,7 @@ class StoreTopicRequest extends FormRequest
             'group_id' => ['required', 'exists:groups,id'],
             'title' => ['required', 'string', 'max:255'],
             'content' => ['required', 'string'],
+            'notes' => ['nullable', 'string', 'max:2000'],
         ];
     }
 
@@ -35,6 +36,7 @@ class StoreTopicRequest extends FormRequest
             'title.required' => 'O título do tópico é obrigatório.',
             'title.max' => 'O título deve ter no máximo 255 caracteres.',
             'content.required' => 'O conteúdo do tópico é obrigatório.',
+            'notes.max' => 'A orientação interna deve ter no máximo 2000 caracteres.',
         ];
     }
 }

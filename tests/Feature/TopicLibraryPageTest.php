@@ -68,6 +68,50 @@ class TopicLibraryPageTest extends TestCase
         $response->assertSessionHasErrors(['title', 'content', 'group_id']);
     }
 
+    public function test_internal_guidance_is_saved_with_a_new_topic(): void
+    {
+        $group = Group::factory()->create();
+
+        $this->actingAs(User::factory()->create())->post(route('settings.topics.store'), [
+            'group_id' => $group->id,
+            'title' => 'NOVO TÓPICO',
+            'content' => 'Conteúdo do tópico.',
+            'notes' => '  Conferir a CCT antes de gerar.  ',
+        ])->assertRedirect(route('settings.topics.index'));
+
+        $this->assertSame('Conferir a CCT antes de gerar.', Topic::query()->where('title', 'NOVO TÓPICO')->value('notes'));
+    }
+
+    public function test_clearing_the_internal_guidance_removes_it(): void
+    {
+        $topic = Topic::factory()->create(['notes' => 'Orientação antiga.']);
+
+        $this->actingAs(User::factory()->create())->put(route('settings.topics.update', $topic), [
+            'group_id' => $topic->group_id,
+            'title' => $topic->title,
+            'content' => $topic->content,
+            'notes' => '',
+        ])->assertRedirect(route('settings.topics.index'));
+
+        $this->assertNull($topic->fresh()->notes);
+        $this->assertSame($topic->content, $topic->fresh()->content);
+    }
+
+    public function test_internal_guidance_has_a_size_limit(): void
+    {
+        $topic = Topic::factory()->create();
+
+        $this->actingAs(User::factory()->create())
+            ->from(route('settings.topics.index'))
+            ->put(route('settings.topics.update', $topic), [
+                'group_id' => $topic->group_id,
+                'title' => $topic->title,
+                'content' => $topic->content,
+                'notes' => str_repeat('a', 2001),
+            ])
+            ->assertSessionHasErrors(['notes' => 'A orientação interna deve ter no máximo 2000 caracteres.']);
+    }
+
     public function test_placeholder_count_ignores_repeated_placeholders(): void
     {
         $topic = Topic::factory()->make(['content' => 'Entre [DATA] e [DATA], a [EMPRESA] pagou [VALOR].']);
