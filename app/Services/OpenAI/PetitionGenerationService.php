@@ -101,6 +101,7 @@ Regras obrigatórias:
 - Se faltar dado necessário, registre em "pendencias".
 - Retorne somente JSON válido conforme o schema informado.
 - Os campos *_html (e o "conteudo_html" das preliminares e tópicos) devem conter HTML simples e seguro, usando apenas: <p>, <br>, <strong>, <em>, <u>, <s>, <sub>, <sup>, <h1>, <h2>, <blockquote>, <pre>, <ol>, <ul>, <li>, <a href> e <span>.
+- Em cada item de "preliminares" e de "topicos", preencha "topic_id" copiando exatamente o "topic_id" do item selecionado que deu origem a ele (use 0 se não corresponder a nenhum item selecionado).
 - Quando o "content" de um tópico ou preliminar vier em HTML, copie para o "conteudo_html" exatamente a mesma marcação: as mesmas tags, os atributos class (ql-align-*, ql-indent-*, ql-size-*), os atributos style de cor (color e background-color) e os links (href). Não remova, não troque e não acrescente formatação.
 
 Regras sobre variáveis no texto-base (content):
@@ -163,10 +164,11 @@ TEXT;
                         'type' => 'object',
                         'additionalProperties' => false,
                         'properties' => [
+                            'topic_id' => ['type' => 'integer'],
                             'titulo' => ['type' => 'string'],
                             'conteudo_html' => ['type' => 'string'],
                         ],
-                        'required' => ['titulo', 'conteudo_html'],
+                        'required' => ['topic_id', 'titulo', 'conteudo_html'],
                     ],
                 ],
                 'contrato_trabalho_html' => ['type' => 'string'],
@@ -176,6 +178,7 @@ TEXT;
                         'type' => 'object',
                         'additionalProperties' => false,
                         'properties' => [
+                            'topic_id' => ['type' => 'integer'],
                             'ordem' => ['type' => 'string'],
                             'titulo' => ['type' => 'string'],
                             'conteudo_html' => ['type' => 'string'],
@@ -193,7 +196,7 @@ TEXT;
                                 ],
                             ],
                         ],
-                        'required' => ['ordem', 'titulo', 'conteudo_html', 'subtopicos'],
+                        'required' => ['topic_id', 'ordem', 'titulo', 'conteudo_html', 'subtopicos'],
                     ],
                 ],
                 'incluir_honorarios' => ['type' => 'boolean'],

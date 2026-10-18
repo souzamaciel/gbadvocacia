@@ -68,7 +68,7 @@ class PetitionController extends Controller
 
     public function review(Petition $petition): View|RedirectResponse
     {
-        $petition->load('items');
+        $petition->load('items.topic');
 
         if ($petition->items->where('kind', PetitionItem::KIND_PEDIDO)->isEmpty()) {
             return redirect()
@@ -122,7 +122,7 @@ class PetitionController extends Controller
 
     public function showGenerate(Petition $petition): View|RedirectResponse
     {
-        $petition->load('items');
+        $petition->load('items.topic');
 
         if (! $petition->isFullyReviewed()) {
             return redirect()
@@ -197,6 +197,7 @@ class PetitionController extends Controller
             'pending' => $item->pendingPlaceholders(),
             'field_values' => (object) ($item->field_values ?? []),
             'reviewed' => $item->reviewed_at !== null,
+            'notes' => trim((string) $item->topic?->notes) ?: null,
         ];
     }
 

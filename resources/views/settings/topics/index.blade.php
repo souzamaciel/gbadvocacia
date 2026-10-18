@@ -237,7 +237,7 @@
                             @enderror
                             <p class="gb-field-hint">
                                 <i data-lucide="info"></i>
-                                Esta orientação não é incluída no documento gerado.
+                                Aparece na revisão da petição e em destaque verde no documento gerado, para ser apagada antes de protocolar.
                             </p>
                         </div>
                     </div>

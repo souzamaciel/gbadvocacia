@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\PetitionController;
 use App\Models\Group;
 use App\Models\Petition;
 use App\Models\PetitionItem;
@@ -189,6 +190,41 @@ class PetitionDraftFlowTest extends TestCase
         $this->get(route('petition.download', $petition))->assertOk()->assertDownload('peticao-maria.docx');
     }
 
+    public function test_internal_guidance_goes_in_green_with_the_matching_topic(): void
+    {
+        Storage::fake('local');
+        $this->horasExtras->update(['notes' => 'Verificar na CCT o adicional aplicável.']);
+        $this->fakeOpenAi([
+            ['topic_id' => $this->multa->id, 'ordem' => '02', 'titulo' => 'MULTA DO ART. 477', 'conteudo_html' => '<p>Texto da multa.</p>', 'subtopicos' => []],
+            ['topic_id' => $this->horasExtras->id, 'ordem' => '03', 'titulo' => 'HORAS EXTRAS', 'conteudo_html' => '<p>Texto das horas.</p>', 'subtopicos' => []],
+        ]);
+        $petition = $this->draftWith([$this->horasExtras, $this->multa]);
+        $petition->items()->update(['reviewed_at' => now()]);
+
+        $this->actingAs($this->user)->postJson(route('petition.generate', $petition))->assertOk();
+
+        $xml = $this->documentXml(Storage::disk('local')->path($petition->fresh()->file_path));
+        $this->assertMatchesRegularExpression(
+            '/HORAS EXTRAS\.?<\/w:t>(?:(?!<\/w:p>).)*<\/w:p><w:p><w:pPr>(?:(?!<\/w:pPr>).)*<w:shd[^>]*w:fill="E2EFDA"[^>]*\/>.*?Orientação interna: .*?Verificar na CCT o adicional aplicável\..*?Texto das horas/s',
+            $xml,
+        );
+        $this->assertDoesNotMatchRegularExpression('/MULTA DO ART\. 477\.?<\/w:t>(?:(?!HORAS EXTRAS).)*Orientação interna/s', $xml);
+    }
+
+    public function test_review_screen_shows_the_internal_guidance(): void
+    {
+        $this->horasExtras->update(['notes' => 'Conferir a jornada no cartão de ponto.']);
+        $petition = $this->draftWith([$this->horasExtras]);
+
+        $response = $this->actingAs($this->user)->get(route('petition.review', $petition));
+
+        $response->assertOk();
+        $this->assertSame(
+            'Conferir a jornada no cartão de ponto.',
+            PetitionController::itemPayload($response->viewData('petition')->items->first())['notes'],
+        );
+    }
+
     public function test_editing_after_generating_turns_it_back_into_a_draft(): void
     {
         $petition = $this->draftWith([$this->multa]);
@@ -234,6 +270,16 @@ class PetitionDraftFlowTest extends TestCase
         Storage::disk('local')->assertMissing('petitions/9/arquivo.docx');
     }
 
+    private function documentXml(string $path): string
+    {
+        $zip = new \ZipArchive;
+        $zip->open($path);
+        $xml = $zip->getFromName('word/document.xml');
+        $zip->close();
+
+        return $xml;
+    }
+
     /**
      * @param  array<int, Topic>  $topics
      */
@@ -255,7 +301,10 @@ class PetitionDraftFlowTest extends TestCase
         return $petition->load('items');
     }
 
-    private function fakeOpenAi(): void
+    /**
+     * @param  array<int, array<string, mixed>>  $topicos
+     */
+    private function fakeOpenAi(array $topicos = []): void
     {
         Http::fake(['*/responses' => Http::response([
             'id' => 'resp_test',
@@ -267,7 +316,7 @@ class PetitionDraftFlowTest extends TestCase
                         'titulo_acao' => 'RECLAMAÇÃO TRABALHISTA',
                         'preliminares' => [['titulo' => 'DA GRATUIDADE DE JUSTIÇA', 'conteudo_html' => '<p>Gratuidade.</p>']],
                         'contrato_trabalho_html' => '<p>Contrato.</p>',
-                        'topicos' => [],
+                        'topicos' => $topicos,
                         'incluir_honorarios' => false,
                         'honorarios_ordem' => '06',
                         'honorarios_html' => '',

@@ -176,6 +176,13 @@ class PetitionDocxGenerator
                 'spaceAfter' => Converter::pointToTwip(18),
                 'lineHeight' => 1.5,
             ],
+            'internalNote' => [
+                'alignment' => Jc::BOTH,
+                'keepNext' => true,
+                'spaceAfter' => Converter::pointToTwip(12),
+                'lineHeight' => 1.15,
+                'shading' => ['fill' => 'E2EFDA'],
+            ],
             'spacer' => [
                 'spaceAfter' => Converter::pointToTwip(54),
             ],
@@ -343,6 +350,8 @@ class PetitionDocxGenerator
                     );
                 }
 
+                $this->addInternalNote($section, $preliminar['orientacao'] ?? null);
+
                 if (! empty($preliminar['conteudo_html'])) {
                     $this->addHtmlContent($section, $preliminar['conteudo_html']);
                 }
@@ -375,6 +384,8 @@ class PetitionDocxGenerator
                     $this->styles['boldUpper'],
                     $this->styles['topicTitle']
                 );
+
+                $this->addInternalNote($section, $topico['orientacao'] ?? null);
 
                 if (! empty($topico['conteudo_html'])) {
                     $this->addHtmlContent($section, $topico['conteudo_html']);
@@ -545,6 +556,27 @@ class PetitionDocxGenerator
                 $cell->addText($adv['nome'] ?? '', null, ['alignment' => Jc::CENTER, 'spaceBefore' => Converter::pointToTwip(18), 'spaceAfter' => 0]);
                 $cell->addText($adv['oab'] ?? '', null, ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
             }
+        }
+    }
+
+    /**
+     * Internal guidance of the topic, highlighted in green for the lawyer to check and remove before filing.
+     */
+    protected function addInternalNote(Section $section, ?string $note): void
+    {
+        $note = trim((string) $note);
+        if ($note === '') {
+            return;
+        }
+
+        $textRun = $section->addTextRun($this->styles['internalNote']);
+        $textRun->addText('Orientação interna: ', ['bold' => true, 'color' => '375623']);
+
+        foreach (preg_split('/\R/u', $note) as $index => $line) {
+            if ($index > 0) {
+                $textRun->addTextBreak();
+            }
+            $textRun->addText($line, ['color' => '375623']);
         }
     }
 

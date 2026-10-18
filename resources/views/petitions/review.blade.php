@@ -56,6 +56,15 @@
                 </div>
 
                 <div class="card-body d-flex flex-column gap-3 p-4">
+                    <div class="gb-internal-note" id="item-notes" role="note" hidden>
+                        <i data-lucide="message-square-text"></i>
+                        <div>
+                            <p class="gb-internal-note-title">Orientação interna</p>
+                            <p class="gb-internal-note-text" id="item-notes-text"></p>
+                            <p class="gb-internal-note-hint">Também aparece em destaque verde no documento gerado. Apague no Word antes de protocolar.</p>
+                        </div>
+                    </div>
+
                     <div class="gb-pending-box" id="fields-box" hidden>
                         <p class="gb-pending-title"><i data-lucide="circle-alert"></i> Complete as informações deste tópico</p>
                         <div class="row g-3" id="fields"></div>
@@ -164,7 +173,8 @@
             }
 
             function documentBlock(item) {
-                return `<p class="gb-document-title">${escape(item.title)}</p><div class="gb-rich-text">${renderText(item)}</div>`;
+                const note = item.notes ? `<p class="gb-document-note"><strong>Orientação interna:</strong> ${escape(item.notes).replace(/\n/g, '<br>')}</p>` : '';
+                return `<p class="gb-document-title">${escape(item.title)}</p>${note}<div class="gb-rich-text">${renderText(item)}</div>`;
             }
 
             function itemState(item) {
@@ -225,6 +235,8 @@
                 const item = items[current];
                 document.getElementById('item-group').textContent = item.group_name || '';
                 document.getElementById('item-title').textContent = item.title;
+                document.getElementById('item-notes').hidden = !item.notes;
+                document.getElementById('item-notes-text').textContent = item.notes || '';
                 renderFields(item);
                 document.getElementById('preview').hidden = editing;
                 document.getElementById('editor').hidden = !editing;

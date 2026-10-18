@@ -143,6 +143,9 @@
                     <div class="gb-document-preview">
                         @foreach ($petition->items as $item)
                             <p class="gb-document-title">{{ $item->title }}</p>
+                            @if (trim((string) $item->topic?->notes) !== '')
+                                <p class="gb-document-note"><strong>Orientação interna:</strong> {!! nl2br(e(trim($item->topic->notes))) !!}</p>
+                            @endif
                             <div class="gb-rich-text">{!! $item->renderedContent() !!}</div>
                         @endforeach
                     </div>
