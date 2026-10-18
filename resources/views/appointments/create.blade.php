@@ -352,7 +352,7 @@
                                 <p class="subsection-title">Tomadoras de Serviço</p>
                                 <div id="tomadoras-container"></div>
                                 <button type="button" class="add-btn mt-2" onclick="addTomadora()">
-                                    <i class="fa-solid fa-plus fa-xs"></i> Adicionar tomadora
+                                    <i data-lucide="plus"></i> Adicionar tomadora
                                 </button>
                             </div>
 
@@ -423,7 +423,7 @@
                                 <p class="subsection-title">Funções Exercidas</p>
                                 <div id="funcoes-container"></div>
                                 <button type="button" class="add-btn mt-2" onclick="addFuncao()">
-                                    <i class="fa-solid fa-plus fa-xs"></i> Adicionar função
+                                    <i data-lucide="plus"></i> Adicionar função
                                 </button>
                             </div>
 
@@ -666,7 +666,7 @@
                                 <p class="subsection-title">Tomadoras de Serviço</p>
                                 <div id="jornada-tomadoras-container"></div>
                                 <button type="button" class="add-btn mt-2" onclick="addJornadaTomadora()">
-                                    <i class="fa-solid fa-plus fa-xs"></i> Adicionar tomadora
+                                    <i data-lucide="plus"></i> Adicionar tomadora
                                 </button>
                             </div>
 
@@ -1589,7 +1589,7 @@
                     <div class="print-signature-area">
                         <div class="section-card">
                             <div class="section-header">
-                                <span class="section-badge"><i class="fa-solid fa-signature" style="font-size:11px;"></i></span>
+                                
                                 <h6 class="section-title">Assinatura do Cliente</h6>
                             </div>
                             <div class="section-body" style="padding:2rem 1.25rem;">
@@ -1845,12 +1845,13 @@
                 <input type="date" name="funcoes[${index}][ate]" class="form-control form-control-sm">
             </div>
             <div class="col-12 col-md-2 d-flex align-items-end">
-                <button type="button" class="btn btn-sm btn-outline-danger w-100" onclick="this.closest('.funcao-row').remove()">
-                    <i class="fa-solid fa-trash fa-xs"></i>
+                <button type="button" class="btn btn-white w-100 text-danger" aria-label="Remover linha" onclick="this.closest('.funcao-row').remove()">
+                    <i data-lucide="trash-2"></i>
                 </button>
             </div>
         `;
         container.appendChild(row);
+        lucide.createIcons();
     }
 
     function addTomadora() {
@@ -1868,12 +1869,13 @@
                 <input type="text" name="tomadoras[${index}][cnpj]" class="form-control form-control-sm" placeholder="00.000.000/0000-00" data-mask="cnpj">
             </div>
             <div class="col-12 col-md-3 d-flex align-items-end">
-                <button type="button" class="btn btn-sm btn-outline-danger w-100" onclick="this.closest('.tomadora-row').remove()">
-                    <i class="fa-solid fa-trash fa-xs"></i>
+                <button type="button" class="btn btn-white w-100 text-danger" aria-label="Remover linha" onclick="this.closest('.tomadora-row').remove()">
+                    <i data-lucide="trash-2"></i>
                 </button>
             </div>
         `;
         container.appendChild(row);
+        lucide.createIcons();
         applyAllMasks(row);
     }
 
@@ -1963,12 +1965,13 @@
                 <input type="text" name="jornada_tomadoras[${index}][local]" class="form-control form-control-sm" placeholder="Cidade/Endereço">
             </div>
             <div class="col-12 col-md-3 d-flex align-items-end">
-                <button type="button" class="btn btn-sm btn-outline-danger w-100" onclick="this.closest('.tomadora-row').remove()">
-                    <i class="fa-solid fa-trash fa-xs"></i>
+                <button type="button" class="btn btn-white w-100 text-danger" aria-label="Remover linha" onclick="this.closest('.tomadora-row').remove()">
+                    <i data-lucide="trash-2"></i>
                 </button>
             </div>
         `;
         container.appendChild(row);
+        lucide.createIcons();
     }
 
     document.addEventListener('DOMContentLoaded', function () {

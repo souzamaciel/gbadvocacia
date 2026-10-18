@@ -1274,3 +1274,12 @@ div.gb-library-empty [data-lucide] {
   font-size: 13px;
   color: var(--df-text-02);
 }
+
+.gb-narrow {
+  max-width: 560px;
+}
+
+.card-footer {
+  padding: 12px 20px;
+  border-top-color: var(--df-border);
+}
