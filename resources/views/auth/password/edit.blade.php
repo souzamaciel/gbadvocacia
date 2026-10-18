@@ -56,7 +56,7 @@
             </div>
 
             <div class="card-footer d-flex flex-wrap align-items-center justify-content-end gap-2 bg-white">
-                <span class="gb-field-hint me-auto m-0" id="password-hint" aria-live="polite"></span>
+                <p class="gb-footer-hint me-auto m-0" id="password-hint" aria-live="polite"></p>
                 <a href="{{ route('home') }}" class="btn btn-white">Cancelar</a>
                 <button type="submit" class="btn btn-primary" id="password-submit" disabled><i data-lucide="check"></i> Salvar nova senha</button>
             </div>
@@ -75,8 +75,13 @@
                 if (!current.value) { hint = 'Informe a senha atual.'; }
                 else if (password.value.length < 8) { hint = 'A nova senha precisa ter pelo menos 8 caracteres.'; }
                 else if (confirmation.value !== password.value) { hint = 'A confirmação precisa ser igual à nova senha.'; }
+                const box = document.getElementById('password-hint');
                 document.getElementById('password-submit').disabled = hint !== '';
-                document.getElementById('password-hint').textContent = hint;
+                box.classList.toggle('is-warning', hint !== '');
+                box.innerHTML = hint
+                    ? `<i data-lucide="circle-alert"></i><span>${hint}</span>`
+                    : '<i data-lucide="circle-check"></i><span>Pronto para salvar a nova senha.</span>';
+                lucide.createIcons();
             };
             [current, password, confirmation].forEach(field => field.addEventListener('input', refresh));
             refresh();

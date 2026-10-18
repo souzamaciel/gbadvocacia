@@ -1648,9 +1648,9 @@
     </div>
 
     <div class="gb-form-actions no-print">
-        <p class="gb-field-hint m-0">
-            <i data-lucide="info"></i>
-            <span id="submit-hint">Confira os pedidos no passo 9 para concluir o atendimento.</span>
+        <p class="gb-footer-hint is-warning m-0" id="submit-hint" aria-live="polite">
+            <i data-lucide="circle-alert"></i>
+            <span>Para concluir, confira os pedidos no <button type="button" class="gb-hint-link" data-step-target="9">passo 9 · Pedidos</button>.</span>
         </p>
         <div class="gb-page-actions">
             <button type="button" id="btn-print-form" class="btn btn-white">
@@ -1678,9 +1678,12 @@
             current = Math.min(Math.max(step, 1), total);
             visitedLast = visitedLast || current === total;
             document.getElementById('btn-submit-appointment').disabled = !visitedLast;
-            document.getElementById('submit-hint').textContent = visitedLast
-                ? 'Os dados são enviados só quando você conclui o atendimento.'
-                : 'Confira os pedidos no passo 9 para concluir o atendimento.';
+            const hint = document.getElementById('submit-hint');
+            if (visitedLast && hint.classList.contains('is-warning')) {
+                hint.classList.remove('is-warning');
+                hint.innerHTML = '<i data-lucide="circle-check"></i><span>Pronto para concluir. Os dados são enviados só quando você conclui o atendimento.</span>';
+                lucide.createIcons();
+            }
             panels.forEach(panel => { panel.hidden = Number(panel.dataset.step) !== current; });
             links.forEach(link => {
                 const active = Number(link.dataset.stepTarget) === current;
@@ -1702,6 +1705,10 @@
         }
 
         links.forEach(link => link.addEventListener('click', () => show(Number(link.dataset.stepTarget))));
+        document.getElementById('submit-hint').addEventListener('click', event => {
+            const link = event.target.closest('[data-step-target]');
+            if (link) { show(Number(link.dataset.stepTarget)); }
+        });
         select.addEventListener('change', () => show(Number(select.value)));
         document.getElementById('step-previous').addEventListener('click', () => show(current - 1));
         document.getElementById('step-next').addEventListener('click', () => show(current + 1));

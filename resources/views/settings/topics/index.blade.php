@@ -172,27 +172,31 @@
                 </ol>
                 <div class="modal-body">
                     <div class="row g-3 gb-topic-step" id="topic-step-1">
-                        <div class="col-12 col-md-8">
-                            <label for="topic-title" class="form-label">Título</label>
-                            <input type="text" id="topic-title" name="title" maxlength="255" placeholder="Ex.: Horas extras habituais"
-                                   class="form-control @error('title') is-invalid @enderror" value="{{ old('title') }}"
-                                   @error('title') aria-describedby="topic-title-error" @enderror>
-                            @error('title')
-                                <div id="topic-title-error" class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="col-12 col-md-4">
-                            <label for="topic-group" class="form-label">Grupo</label>
-                            <select id="topic-group" name="group_id" class="form-select @error('group_id') is-invalid @enderror"
-                                    @error('group_id') aria-describedby="topic-group-error" @enderror>
-                                <option value="">Selecione</option>
-                                @foreach ($groups as $group)
-                                    <option value="{{ $group->id }}" @selected((string) old('group_id') === (string) $group->id)>{{ $group->name }}</option>
-                                @endforeach
-                            </select>
-                            @error('group_id')
-                                <div id="topic-group-error" class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                        <div class="col-12" id="topic-identity">
+                            <div class="row g-3">
+                            <div class="col-12 col-md-8">
+                                <label for="topic-title" class="form-label">Título</label>
+                                <input type="text" id="topic-title" name="title" maxlength="255" placeholder="Ex.: Horas extras habituais"
+                                       class="form-control @error('title') is-invalid @enderror" value="{{ old('title') }}"
+                                       @error('title') aria-describedby="topic-title-error" @enderror>
+                                @error('title')
+                                    <div id="topic-title-error" class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <label for="topic-group" class="form-label">Grupo</label>
+                                <select id="topic-group" name="group_id" class="form-select @error('group_id') is-invalid @enderror"
+                                        @error('group_id') aria-describedby="topic-group-error" @enderror>
+                                    <option value="">Selecione</option>
+                                    @foreach ($groups as $group)
+                                        <option value="{{ $group->id }}" @selected((string) old('group_id') === (string) $group->id)>{{ $group->name }}</option>
+                                    @endforeach
+                                </select>
+                                @error('group_id')
+                                    <div id="topic-group-error" class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            </div>
                         </div>
                         <div class="col-12">
                             <div class="gb-ai-intro">
@@ -297,7 +301,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <p class="gb-field-hint me-auto my-0" id="topic-footer-hint">Este modelo ficará disponível para novas petições.</p>
+                    <p class="gb-footer-hint me-auto my-0" id="topic-footer-hint" aria-live="polite">Este modelo ficará disponível para novas petições.</p>
                     <button type="button" class="btn btn-white" data-bs-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-white" id="topic-back" hidden><i data-lucide="arrow-left"></i> Voltar</button>
                     <button type="button" class="btn btn-primary" id="topic-next" hidden>Continuar <i data-lucide="arrow-right"></i></button>

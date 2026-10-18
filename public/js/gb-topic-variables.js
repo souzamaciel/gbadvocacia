@@ -64,7 +64,8 @@ window.gbTopicVariables = (function () {
     }
 
     function init({ editor, suggestUrl, csrfToken }) {
-        const state = { step: 1, original: '', suggestions: [], selection: '', busy: false, editorRange: null };
+        const state = { step: 1, original: '', suggestions: [], selection: '', busy: false, editorRange: null, touched: new Set() };
+        const identity = $('topic-identity');
         const dialog = document.querySelector('#topic-modal .modal-dialog');
 
         /* ---------- Etapa 1 ---------- */
@@ -86,22 +87,53 @@ window.gbTopicVariables = (function () {
             $('manual-variable-step1').disabled = state.busy || !hasText || !hasSelection;
             $('topic-save').disabled = state.busy || !hasTitle || !hasGroup || !hasText;
 
-            const missing = [!hasTitle && 'título', !hasGroup && 'grupo', !hasText && 'conteúdo'].filter(Boolean);
+            const missing = [
+                !hasTitle && { field: 'topic-title', label: 'título' },
+                !hasGroup && { field: 'topic-group', label: 'grupo' },
+                !hasText && { field: 'topic-editor', label: 'conteúdo do modelo' },
+            ].filter(Boolean);
             $('step1-hint').textContent = !hasText
                 ? 'Cole ou digite o texto para pedir sugestões à IA.'
                 : (!hasSelection ? 'Para criar uma variável manualmente, selecione um trecho no texto.' : '');
 
+            const footer = $('topic-footer-hint');
             if (state.step !== 2) {
-                $('topic-footer-hint').textContent = missing.length
-                    ? `Preencha ${missing.join(', ').replace(/, ([^,]*)$/, ' e $1')} para salvar.`
-                    : (state.step === 1 ? 'Você pode salvar sem variáveis ou pedir sugestões à IA.' : 'O modelo fica disponível para novas petições assim que for salvo.');
+                footer.classList.toggle('is-warning', missing.length > 0);
+                if (missing.length) {
+                    const links = missing.map(item => `<button type="button" class="gb-hint-link" data-focus="${item.field}">${item.label}</button>`);
+                    const list = links.length > 1 ? `${links.slice(0, -1).join(', ')} e ${links[links.length - 1]}` : links[0];
+                    footer.innerHTML = `<i data-lucide="circle-alert"></i><span>Para salvar, preencha ${list}.</span>`;
+                } else {
+                    footer.innerHTML = `<i data-lucide="circle-check"></i><span>${state.step === 1 ? 'Pronto para salvar. Você também pode pedir sugestões de variáveis à IA.' : 'Pronto para salvar. O modelo fica disponível para novas petições.'}</span>`;
+                }
+                lucide.createIcons();
             }
+
+            // Campos obrigatórios em vermelho só depois de tocados ou na etapa final.
+            $('topic-title').classList.toggle('is-invalid', !hasTitle && (state.step === 3 || state.touched.has('topic-title')));
+            $('topic-group').classList.toggle('is-invalid', !hasGroup && (state.step === 3 || state.touched.has('topic-group')));
         }
 
         editor.on('text-change', () => { if (state.step === 1) { updateCount(); } refreshButtons(); });
         editor.on('selection-change', range => { state.editorRange = range; refreshButtons(); });
         $('topic-title').addEventListener('input', refreshButtons);
         $('topic-group').addEventListener('change', refreshButtons);
+        ['topic-title', 'topic-group'].forEach(id => $(id).addEventListener('blur', () => { state.touched.add(id); refreshButtons(); }));
+
+        $('topic-footer-hint').addEventListener('click', event => {
+            const link = event.target.closest('[data-focus]');
+            if (!link) { return; }
+            const target = link.dataset.focus;
+            state.touched.add(target);
+            if (target === 'topic-editor') {
+                if (state.step === 3) { goTo(1, { keepEditor: true }); }
+                editor.focus();
+            } else {
+                $(target).focus();
+                $(target).scrollIntoView({ block: 'center', behavior: 'smooth' });
+            }
+            refreshButtons();
+        });
 
         $('manual-variable-step1').addEventListener('mousedown', event => event.preventDefault());
         $('manual-variable-step1').addEventListener('click', () => {
@@ -401,6 +433,13 @@ window.gbTopicVariables = (function () {
 
             state.step = step;
             hidePopover();
+            if (step === 3) {
+                $('ai-ready').after(identity);
+                identity.classList.add('mb-3');
+            } else if (identity.parentElement !== $('topic-step-1')) {
+                $('topic-step-1').prepend(identity);
+                identity.classList.remove('mb-3');
+            }
             [1, 2, 3].forEach(number => { $(`topic-step-${number}`).hidden = number !== step; });
             document.querySelectorAll('#topic-steps li').forEach(item => {
                 const number = Number(item.dataset.step);
@@ -429,6 +468,7 @@ window.gbTopicVariables = (function () {
             reset() {
                 state.step = 1;
                 state.original = '';
+                state.touched.clear();
                 goTo(1, { keepEditor: true });
             },
         };
