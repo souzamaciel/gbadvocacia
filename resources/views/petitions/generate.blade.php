@@ -7,8 +7,8 @@
                    description="Sua petição foi revisada. Prepare o arquivo para download."
                    :breadcrumbs="['Petições' => route('petition.index'), $petition->name]">
         <x-slot:actions>
-            <span class="gb-badge {{ $petition->isGenerated() ? 'gb-badge-success' : 'gb-badge-neutral' }}" id="status-badge">
-                {{ $petition->isGenerated() ? 'Documento gerado' : 'Rascunho' }}
+            <span class="gb-badge gb-badge-neutral" id="status-badge">
+                Rascunho
             </span>
         </x-slot:actions>
     </x-page-header>
@@ -220,7 +220,7 @@
                 .then(({ fileName, generatedAt }) => {
                     document.getElementById('download-name').textContent = fileName;
                     document.getElementById('download-date').textContent = generatedAt ? `Gerado em ${generatedAt} · Word (.docx)` : 'Word (.docx)';
-                    document.getElementById('status-badge').textContent = 'Documento gerado';
+                    document.getElementById('status-badge').textContent = 'Documento baixado';
                     document.getElementById('status-badge').className = 'gb-badge gb-badge-success';
                     show('ready-box', false);
                     show('generate-button', false);
