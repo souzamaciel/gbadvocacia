@@ -173,10 +173,23 @@
                 return ['A revisar', '', null];
             }
 
+            /**
+             * Só se avança depois de conferir o tópico atual: tópicos já conferidos,
+             * anteriores ou até o primeiro ainda não conferido continuam acessíveis.
+             */
+            function canVisit(index) {
+                const firstUnreviewed = items.findIndex(item => !item.reviewed);
+                return index <= current
+                    || items[index].reviewed
+                    || (index === current + 1 && items[current].reviewed)
+                    || (firstUnreviewed !== -1 && index <= firstUnreviewed);
+            }
+
             function renderList() {
                 document.getElementById('review-list').innerHTML = items.map((item, index) => {
                     const [label, className, icon] = itemState(item);
-                    return `<li><button type="button" class="gb-review-link ${index === current ? 'is-active' : ''}" data-index="${index}" ${index === current ? 'aria-current="true"' : ''}>
+                    const locked = !canVisit(index);
+                    return `<li><button type="button" class="gb-review-link ${index === current ? 'is-active' : ''}" data-index="${index}" ${index === current ? 'aria-current="true"' : ''} ${locked ? 'disabled title="Confira o tópico atual para avançar"' : ''}>
                         <span class="gb-review-number">${index + 1}.</span>
                         <span><span class="gb-review-title">${escape(item.title)}</span>
                         <span class="gb-review-state ${className}">${icon ? `<i data-lucide="${icon}"></i> ` : ''}${label}</span></span>
@@ -220,7 +233,6 @@
                 document.getElementById('position-label').textContent = `${current + 1} de ${items.length} tópicos`;
                 document.getElementById('structure-position').textContent = `${current + 1} de ${items.length}`;
                 document.getElementById('previous').disabled = current === 0;
-                document.getElementById('next').disabled = current === items.length - 1;
                 refreshStatus();
             }
 
@@ -242,7 +254,13 @@
                 checkbox.disabled = editing || (item.pending.length > 0 && !item.reviewed);
                 document.getElementById('reviewed-hint').textContent = editing
                     ? 'Conclua a edição para marcar este tópico'
-                    : (item.pending.length && !item.reviewed ? 'Preencha as informações pendentes para marcar' : '');
+                    : (item.pending.length && !item.reviewed
+                        ? 'Preencha as informações pendentes para marcar e avançar'
+                        : (!item.reviewed && current < items.length - 1 ? 'Marque como conferido para avançar ao próximo tópico' : ''));
+
+                const next = document.getElementById('next');
+                next.disabled = editing || current === items.length - 1 || !item.reviewed;
+                next.title = !item.reviewed && current < items.length - 1 ? 'Marque o tópico como conferido para avançar' : '';
 
                 renderList();
                 renderSummary();
@@ -275,7 +293,7 @@
             }
 
             function goTo(index) {
-                if (editing) { return; }
+                if (editing || !canVisit(Math.min(Math.max(index, 0), items.length - 1))) { return; }
                 current = Math.min(Math.max(index, 0), items.length - 1);
                 render();
                 document.getElementById('item-title').setAttribute('tabindex', '-1');
