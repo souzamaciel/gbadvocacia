@@ -1,0 +1,89 @@
+/* GB Advocacia · DashForge GB — tokens gerados da coleção Figma "DF · DashForge GB" (VariableCollectionId:114:2)
+   Carregar DEPOIS de assets/css/dashforge.css. Os nomes batem com o code syntax WEB das variáveis no Figma. */
+
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Carlito:wght@400;700&family=Open+Sans:wght@400&display=swap');
+
+:root {
+  /* brand */
+  --df-brand-01: #202a44;
+  --df-brand-01-hover: #192238;
+  --df-brand-01-active: #121a2c;
+  --df-brand-01-tint: #edeff4;
+  --df-accent: #a97945;
+  --df-accent-text: #6f4c28;
+
+  /* text */
+  --df-text-01: #001737;
+  --df-text-02: #1b2e4b;
+  --df-text-03: #8392a5;
+  --df-text-04: #c0ccda;
+  --df-white: #ffffff;
+
+  /* ui */
+  --df-ui-01: #f5f6fa;
+  --df-ui-02: #e5e9f2;
+  --df-ui-03: #c0ccda;
+  --df-border: #dfe2e7;
+
+  /* status */
+  --df-success: #10b759;
+  --df-danger: #f10075;
+  --df-warning: #f49917;
+  --df-teal: #00cccc;
+  --df-indigo: #5b47fb;
+  --df-success-bg: #e4f7ec;
+  --df-indigo-bg: #ece9fe;
+  --df-teal-bg: #dff8f8;
+  --df-pink-bg: #fee5f1;
+  --df-warning-bg: #fef3e2;
+
+  /* editor (Quill snow) */
+  --df-editor-icon: #596882;
+  --df-editor-hover: #eceff3;
+  --df-editor-border: rgba(72, 94, 144, 0.16);
+  --df-editor-picker-caret: #97a3b9;
+
+  /* documento (A4) */
+  --doc-gold: #d7aa2d;
+
+  /* overlays */
+  --df-backdrop: rgba(15, 21, 32, 0.7);
+  --df-modal-border: rgba(28, 39, 60, 0.16);
+
+  /* tipografia */
+  --df-font: 'IBM Plex Sans', system-ui, sans-serif;
+  --doc-font: Calibri, 'Carlito', sans-serif;
+  --doc-footer-font: Verdana, 'Open Sans', sans-serif;
+
+  /* layout */
+  --df-header-h: 64px;
+  --df-content-pad-top: 25px;
+  --df-content-pad-x: 60px;      /* desktop */
+  --df-grid-gap: 16px;
+  --df-radius: 4px;
+  --df-control-h: 38px;
+}
+
+@media (max-width: 991.98px) { :root { --df-content-pad-x: 24px; } }
+@media (max-width: 575.98px) { :root { --df-content-pad-x: 16px; } }
+
+/* Mapeamento Bootstrap/DashForge → marca GB */
+.btn-primary { --bs-btn-bg: var(--df-brand-01); --bs-btn-border-color: var(--df-brand-01);
+  --bs-btn-hover-bg: var(--df-brand-01-hover); --bs-btn-hover-border-color: var(--df-brand-01-hover);
+  --bs-btn-active-bg: var(--df-brand-01-active); --bs-btn-active-border-color: var(--df-brand-01-active); }
+.btn-group .btn-white.active { background: var(--df-brand-01-tint); color: var(--df-brand-01); border-color: var(--df-ui-03); }
+
+/* Estilos de texto do Figma */
+.t-page-title  { font: 500 24px/30px var(--df-font); letter-spacing: -0.5px; color: var(--df-text-01); }
+.t-card-title  { font: 500 15px/20px var(--df-font); color: var(--df-text-01); }
+.t-body        { font: 400 14px/20px var(--df-font); }
+.t-body-medium { font: 500 14px/20px var(--df-font); }
+.t-small       { font: 400 13px/20px var(--df-font); }
+.t-xsmall      { font: 400 12px/18px var(--df-font); }
+.t-label, .form-label, .t-breadcrumb, .t-footer
+               { font: 600 10px/14px var(--df-font); letter-spacing: 0.5px; text-transform: uppercase; }
+.t-button      { font: 600 11px/16px var(--df-font); letter-spacing: 0.5px; text-transform: uppercase; }
+.t-nav         { font: 500 14px/20px var(--df-font); }
+.doc-body      { font: 400 12pt/22pt var(--doc-font); text-align: justify; }
+.doc-strong    { font-weight: 700; }
+.doc-footer    { font: 400 9pt/13pt var(--doc-footer-font); color: var(--doc-gold); }

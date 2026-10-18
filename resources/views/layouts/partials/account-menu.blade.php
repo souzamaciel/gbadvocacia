@@ -1,0 +1,19 @@
+<li>
+    <a class="dropdown-item" href="{{ route('settings.groups.index') }}">
+        <i data-lucide="layers"></i> Grupos
+    </a>
+</li>
+<li>
+    <a class="dropdown-item" href="{{ route('password.edit') }}">
+        <i data-lucide="key-round"></i> Alterar senha
+    </a>
+</li>
+<li><hr class="dropdown-divider my-1"></li>
+<li>
+    <form method="POST" action="{{ route('logout') }}">
+        @csrf
+        <button type="submit" class="dropdown-item">
+            <i data-lucide="log-out"></i> Sair
+        </button>
+    </form>
+</li>
