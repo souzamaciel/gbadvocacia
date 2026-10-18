@@ -432,9 +432,11 @@ window.gbTopicVariables = (function () {
                 $('manual-variable-step2').disabled = selectedPassage() === '';
                 const left = pending().length;
                 $('topic-next').disabled = left > 0;
-                hint.textContent = left > 0
-                    ? `Revise ${left === 1 ? 'a sugestão pendente' : `as ${left} sugestões pendentes`} para continuar.`
-                    : 'Tudo revisado. Continue para ver o modelo.';
+                hint.classList.toggle('is-warning', left > 0);
+                hint.innerHTML = left > 0
+                    ? `<i data-lucide="circle-alert"></i><span>Revise ${left === 1 ? 'a sugestão pendente' : `as ${left} sugestões pendentes`} para continuar.</span>`
+                    : '<i data-lucide="circle-check"></i><span>Tudo revisado. Continue para ver o modelo.</span>';
+                lucide.createIcons();
             }
 
             refreshButtons();
