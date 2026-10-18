@@ -104,7 +104,7 @@
                             data-group="{{ $topic->group_id }}"
                             data-position="{{ $loop->index }}"
                             data-title="{{ mb_strtolower($topic->title) }}"
-                            data-search="{{ mb_strtolower($topic->title.' '.$topic->content) }}">
+                            data-search="{{ mb_strtolower($topic->title.' '.\App\Services\RichText::toPlainText($topic->content)) }}">
                             <div class="gb-library-item-body">
                                 <p class="gb-library-item-group">{{ $topic->group?->name }}</p>
                                 <h3 class="gb-library-item-title">
@@ -113,7 +113,7 @@
                                         <span class="gb-badge gb-badge-neutral ms-1">Inativo</span>
                                     @endunless
                                 </h3>
-                                <p class="gb-library-item-summary">{{ $topic->content }}</p>
+                                <p class="gb-library-item-summary">{{ \App\Services\RichText::toPlainText($topic->content) }}</p>
                                 <p class="gb-library-item-meta">
                                     @switch($topic->placeholderCount())
                                         @case(0) Nenhum campo a completar @break
@@ -190,12 +190,13 @@
                             @enderror
                         </div>
                         <div class="col-12">
-                            <label for="topic-content" class="form-label">Conteúdo do modelo</label>
-                            <textarea id="topic-content" name="content" rows="12" placeholder="Digite o texto do tópico…"
-                                      class="form-control @error('content') is-invalid @enderror"
-                                      @error('content') aria-describedby="topic-content-error" @enderror>{{ old('content') }}</textarea>
+                            <p class="form-label" id="topic-content-label">Conteúdo do modelo</p>
+                            <div class="gb-editor @error('content') is-invalid @enderror">
+                                <div id="topic-editor"></div>
+                            </div>
+                            <textarea id="topic-content" name="content" hidden>{{ old('content') }}</textarea>
                             @error('content')
-                                <div id="topic-content-error" class="invalid-feedback">{{ $message }}</div>
+                                <div id="topic-content-error" class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
                             <p class="gb-field-hint">
                                 <i data-lucide="info"></i>
@@ -239,7 +240,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="gb-preview-text" id="preview-modal-content"></div>
+                    <div class="gb-preview-text gb-rich-text" id="preview-modal-content"></div>
                     <p class="gb-preview-note" id="preview-modal-notes" hidden></p>
                 </div>
                 <div class="modal-footer">
@@ -285,9 +286,10 @@
 
 @section('scripts')
     @php
-        $topicsData = $topics->map(fn ($topic) => $topic->only(['id', 'group_id', 'title', 'content', 'notes']))->values();
+        $topicsData = $topics->map(fn ($topic) => [...$topic->only(['id', 'group_id', 'title', 'notes']), 'content' => $topic->contentHtml()])->values();
         $groupsData = $groups->map(fn ($group) => $group->only(['id', 'name']))->values();
     @endphp
+    <x-editor-assets />
     <script>
         (function () {
             const csrfToken = '{{ csrf_token() }}';
@@ -305,6 +307,7 @@
             const list = document.getElementById('topic-list');
             const items = Array.from(list.querySelectorAll('.gb-library-item'));
             const topicModal = new bootstrap.Modal('#topic-modal');
+            const topicEditor = gbEditor.create('#topic-editor', { placeholder: 'Digite o texto do tópico…', label: 'Conteúdo do modelo' });
             const previewModal = new bootstrap.Modal('#preview-modal');
             const groupModal = new bootstrap.Modal('#group-modal');
             let activeGroup = '';
@@ -363,28 +366,34 @@
                 if (!keepValues) {
                     document.getElementById('topic-title').value = topic ? topic.title : '';
                     document.getElementById('topic-group').value = topic ? topic.group_id : (activeGroup || '');
-                    document.getElementById('topic-content').value = topic ? topic.content : '';
+                    gbEditor.setHtml(topicEditor, topic ? topic.content : '');
+                    document.querySelector('#topic-form .gb-editor').classList.remove('is-invalid');
                     document.getElementById('topic-notes').value = topic ? (topic.notes || '') : '';
                     form.querySelectorAll('.is-invalid').forEach(field => field.classList.remove('is-invalid'));
                 }
 
+                if (keepValues) { gbEditor.setHtml(topicEditor, document.getElementById('topic-content').value); }
+
                 topicModal.show();
             }
+
+            document.getElementById('topic-form').addEventListener('submit', () => {
+                document.getElementById('topic-content').value = gbEditor.getHtml(topicEditor);
+            });
 
             document.querySelectorAll('.js-new-topic').forEach(button => button.addEventListener('click', () => openTopicForm(null)));
 
             /* ---------- Tópico: prévia ---------- */
             function openPreview(topic) {
                 previewTopicId = topic.id;
-                const fields = new Set(topic.content.match(/\[[^\]]+\]/g) || []);
+                const fields = new Set(topic.content.match(/\[[^\[\]<>]+\]/g) || []);
                 document.getElementById('preview-modal-group').textContent = groupNames.get(topic.group_id) || '';
                 document.getElementById('preview-modal-title').textContent = topic.title;
                 document.getElementById('preview-modal-meta').textContent = 'Prévia do modelo · ' +
                     (fields.size === 0 ? 'nenhum campo a completar' : fields.size + (fields.size === 1 ? ' campo a completar' : ' campos a completar'));
 
-                const content = document.getElementById('preview-modal-content');
-                content.textContent = topic.content;
-                content.innerHTML = content.innerHTML.replace(/\[[^\]]+\]/g, match => `<mark>${match}</mark>`);
+                document.getElementById('preview-modal-content').innerHTML =
+                    topic.content.replace(/\[[^\[\]<>]+\]/g, match => `<mark>${match}</mark>`);
 
                 const notes = document.getElementById('preview-modal-notes');
                 notes.hidden = !topic.notes;

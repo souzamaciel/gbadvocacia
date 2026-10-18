@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\RichText;
 use Database\Factories\PetitionItemFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -15,8 +16,6 @@ class PetitionItem extends Model
     public const KIND_PRELIMINAR = 'preliminar';
 
     public const KIND_PEDIDO = 'pedido';
-
-    private const PLACEHOLDER_PATTERN = '/\[([^\[\]]+)\]/u';
 
     protected $fillable = [
         'petition_id',
@@ -56,7 +55,7 @@ class PetitionItem extends Model
      */
     public function placeholders(): array
     {
-        preg_match_all(self::PLACEHOLDER_PATTERN, $this->content, $matches);
+        preg_match_all(RichText::PLACEHOLDER_PATTERN, RichText::toPlainText($this->content), $matches);
 
         return array_values(array_unique($matches[1]));
     }
@@ -77,16 +76,24 @@ class PetitionItem extends Model
     }
 
     /**
-     * Text with filled placeholders replaced by their values; empty ones keep the [brackets].
+     * The item's text as safe HTML.
+     */
+    public function contentHtml(): string
+    {
+        return RichText::toHtml($this->content);
+    }
+
+    /**
+     * HTML with filled placeholders replaced by their values; empty ones keep the [brackets].
      */
     public function renderedContent(): string
     {
         $values = $this->field_values ?? [];
 
-        return preg_replace_callback(self::PLACEHOLDER_PATTERN, function (array $match) use ($values): string {
-            $value = trim((string) ($values[$match[1]] ?? ''));
+        return preg_replace_callback(RichText::PLACEHOLDER_PATTERN, function (array $match) use ($values): string {
+            $value = trim((string) ($values[html_entity_decode($match[1], ENT_QUOTES, 'UTF-8')] ?? ''));
 
-            return $value === '' ? $match[0] : $value;
-        }, $this->content);
+            return $value === '' ? $match[0] : e($value);
+        }, $this->contentHtml());
     }
 }

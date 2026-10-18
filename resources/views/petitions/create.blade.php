@@ -69,7 +69,7 @@
                                     <div class="gb-library-item-body">
                                         <p class="gb-library-item-group">{{ $group->name }}</p>
                                         <h3 class="gb-library-item-title">{{ $topic->title }}</h3>
-                                        <p class="gb-library-item-content" id="topic-content-{{ $topic->id }}">{{ $topic->content }}</p>
+                                        <div class="gb-library-item-content gb-rich-text" id="topic-content-{{ $topic->id }}">{!! $topic->contentHtml() !!}</div>
                                         <button type="button" class="gb-link js-toggle-content"
                                                 aria-expanded="false" aria-controls="topic-content-{{ $topic->id }}">
                                             Ver conteúdo

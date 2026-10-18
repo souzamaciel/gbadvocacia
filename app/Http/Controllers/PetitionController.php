@@ -172,6 +172,7 @@ class PetitionController extends Controller
         if ($petition->file_path) {
             Storage::disk('local')->delete($petition->file_path);
         }
+        Storage::disk('local')->deleteDirectory("petitions/{$petition->id}");
 
         $petition->delete();
 
@@ -190,7 +191,7 @@ class PetitionController extends Controller
             'kind' => $item->kind,
             'title' => $item->title,
             'group_name' => $item->group_name,
-            'content' => $item->content,
+            'content' => $item->contentHtml(),
             'rendered' => $item->renderedContent(),
             'placeholders' => $item->placeholders(),
             'pending' => $item->pendingPlaceholders(),

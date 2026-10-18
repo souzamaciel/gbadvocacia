@@ -100,7 +100,8 @@ Regras obrigatórias:
 - TODOS os itens listados em "topicos_selecionados" e em "preliminares_selecionadas" devem ser gerados, sem exceção, sem omitir, unir ou descartar nenhum — independentemente de você considerá-los aplicáveis ou não ao caso.
 - Se faltar dado necessário, registre em "pendencias".
 - Retorne somente JSON válido conforme o schema informado.
-- Os campos *_html (e o "conteudo_html" das preliminares e tópicos) devem conter HTML simples e seguro, preferindo apenas: <p>, <strong>, <br>, <ol>, <ul>, <li>.
+- Os campos *_html (e o "conteudo_html" das preliminares e tópicos) devem conter HTML simples e seguro, preferindo apenas: <p>, <strong>, <em>, <u>, <br>, <ol>, <ul>, <li>.
+- Quando o "content" de um tópico ou preliminar vier em HTML, preserve no "conteudo_html" exatamente a mesma formatação (negrito, itálico, sublinhado, listas e parágrafos).
 
 Regras sobre variáveis no texto-base (content):
 {$variableInstruction}

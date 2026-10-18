@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\RichText;
 use Database\Factories\TopicFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -56,8 +57,16 @@ class Topic extends Model
      */
     public function placeholderCount(): int
     {
-        preg_match_all('/\[[^\]]+\]/u', (string) $this->content, $matches);
+        preg_match_all(RichText::PLACEHOLDER_PATTERN, (string) $this->content, $matches);
 
         return count(array_unique($matches[0]));
+    }
+
+    /**
+     * The text as safe HTML, whether it was stored as plain text or from the editor.
+     */
+    public function contentHtml(): string
+    {
+        return RichText::toHtml((string) $this->content);
     }
 }

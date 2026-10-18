@@ -2,11 +2,28 @@
 
 namespace App\Http\Requests;
 
+use App\Services\RichText;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateTopicRequest extends FormRequest
 {
+    /**
+     * Keep only the formatting the Word generator supports; an empty editor counts as empty.
+     */
+    protected function prepareForValidation(): void
+    {
+        if (! is_string($this->input('content'))) {
+            return;
+        }
+
+        $content = RichText::isHtml($this->input('content'))
+            ? RichText::sanitize($this->input('content'))
+            : $this->input('content');
+
+        $this->merge(['content' => RichText::toPlainText($content) === '' ? '' : $content]);
+    }
+
     public function authorize(): bool
     {
         return $this->user() !== null;

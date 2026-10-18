@@ -142,9 +142,7 @@
                     <div class="gb-document-preview">
                         @foreach ($petition->items as $item)
                             <p class="gb-document-title">{{ $item->title }}</p>
-                            @foreach (preg_split('/\n{2,}/', $item->renderedContent()) as $paragraph)
-                                <p>{!! nl2br(e($paragraph)) !!}</p>
-                            @endforeach
+                            <div class="gb-rich-text">{!! $item->renderedContent() !!}</div>
                         @endforeach
                     </div>
                 </div>

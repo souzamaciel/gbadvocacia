@@ -114,7 +114,7 @@ class PetitionDraftFlowTest extends TestCase
         $response->assertOk()
             ->assertJsonPath('item.placeholders', ['PERÍODO TRABALHADO', 'JORNADA'])
             ->assertJsonPath('item.pending', ['JORNADA'])
-            ->assertJsonPath('item.rendered', 'Durante o período de março de 2022 a julho de 2025, cumpria a jornada de [JORNADA].');
+            ->assertJsonPath('item.rendered', '<p>Durante o período de março de 2022 a julho de 2025, cumpria a jornada de [JORNADA].</p>');
         $this->assertSame(['PERÍODO TRABALHADO' => 'março de 2022 a julho de 2025'], $item->fresh()->field_values);
     }
 

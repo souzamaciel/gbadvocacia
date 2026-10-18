@@ -9,6 +9,7 @@ use PhpOffice\PhpWord\IOFactory;
 use PhpOffice\PhpWord\PhpWord;
 use PhpOffice\PhpWord\Shared\Converter;
 use PhpOffice\PhpWord\SimpleType\Jc;
+use PhpOffice\PhpWord\Style\Font;
 use PhpOffice\PhpWord\Style\Tab;
 
 class PetitionDocxGenerator
@@ -554,7 +555,7 @@ class PetitionDocxGenerator
      */
     protected function addHtmlContent(Section $section, string $html): void
     {
-        $html = strip_tags($html, '<p><strong><b><br><ol><ul><li><em><i>');
+        $html = strip_tags($html, '<p><strong><b><br><ol><ul><li><em><i><u>');
         $html = trim($html);
 
         if (empty($html)) {
@@ -589,11 +590,16 @@ class PetitionDocxGenerator
 
     protected function addListFromHtml(Section $section, string $html): void
     {
-        preg_match_all('/<li>(.*?)<\/li>/si', $html, $items);
+        preg_match_all('/<(ol|ul)[^>]*>(.*?)<\/\1>/si', $html, $lists, PREG_SET_ORDER);
 
-        foreach ($items[1] as $item) {
-            $textRun = $section->addTextRun($this->styles['indent']);
-            $this->addFormattedText($textRun, $item);
+        foreach ($lists as [, $type, $body]) {
+            preg_match_all('/<li[^>]*>(.*?)<\/li>/si', $body, $items);
+
+            foreach ($items[1] as $index => $item) {
+                $textRun = $section->addTextRun($this->styles['indent']);
+                $textRun->addText(strtolower($type) === 'ol' ? ($index + 1).'. ' : '• ');
+                $this->addFormattedText($textRun, $item);
+            }
         }
     }
 
@@ -604,10 +610,11 @@ class PetitionDocxGenerator
     {
         $html = str_replace(['<br>', '<br/>', '<br />'], "\n", $html);
 
-        $parts = preg_split('/(<\/?(?:strong|b|em|i)>)/i', $html, -1, PREG_SPLIT_DELIM_CAPTURE);
+        $parts = preg_split('/(<\/?(?:strong|b|em|i|u)>)/i', $html, -1, PREG_SPLIT_DELIM_CAPTURE);
 
         $bold = false;
         $italic = false;
+        $underline = false;
 
         foreach ($parts as $part) {
             $lower = strtolower($part);
@@ -632,6 +639,11 @@ class PetitionDocxGenerator
 
                 continue;
             }
+            if ($lower === '<u>' || $lower === '</u>') {
+                $underline = $lower === '<u>';
+
+                continue;
+            }
 
             $text = html_entity_decode(strip_tags($part), ENT_QUOTES, 'UTF-8');
             if ($text === '') {
@@ -644,6 +656,9 @@ class PetitionDocxGenerator
             }
             if ($italic) {
                 $fontStyle['italic'] = true;
+            }
+            if ($underline) {
+                $fontStyle['underline'] = Font::UNDERLINE_SINGLE;
             }
 
             $lines = explode("\n", $text);

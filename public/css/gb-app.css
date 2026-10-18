@@ -659,7 +659,7 @@ body {
   font: 400 13px/20px var(--df-font);
   color: var(--df-text-02);
   margin: 0 0 4px;
-  white-space: pre-line;
+  white-space: normal;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -1033,7 +1033,7 @@ div.gb-library-empty [data-lucide] {
   padding: 16px;
   font: 400 14px/22px var(--df-font);
   color: var(--df-text-02);
-  white-space: pre-line;
+  white-space: normal;
 }
 
 .gb-preview-text mark {
@@ -1694,4 +1694,93 @@ div.gb-library-empty [data-lucide] {
 /* Elementos escondidos continuam escondidos mesmo com utilitários de display (ex.: .d-flex). */
 [hidden] {
   display: none !important;
+}
+
+/* ---------- Editor de texto (Quill snow) ---------- */
+.gb-editor .ql-toolbar.ql-snow {
+  border-color: var(--df-editor-border);
+  border-radius: var(--df-radius) var(--df-radius) 0 0;
+  font-family: var(--df-font);
+  background: var(--df-ui-01);
+}
+
+.gb-editor .ql-container.ql-snow {
+  border-color: var(--df-editor-border);
+  border-radius: 0 0 var(--df-radius) var(--df-radius);
+  font: 400 14px/22px var(--df-font);
+  color: var(--df-text-02);
+}
+
+.gb-editor .ql-editor {
+  min-height: 220px;
+  max-height: 460px;
+  overflow-y: auto;
+}
+
+.gb-editor .ql-editor p {
+  margin-bottom: 10px;
+}
+
+.gb-editor .ql-editor.ql-blank::before {
+  color: var(--df-text-04);
+  font-style: normal;
+}
+
+.gb-editor .ql-snow .ql-stroke {
+  stroke: var(--df-editor-icon);
+}
+
+.gb-editor .ql-snow .ql-fill {
+  fill: var(--df-editor-icon);
+}
+
+.gb-editor .ql-snow button:hover,
+.gb-editor .ql-snow button.ql-active {
+  background: var(--df-editor-hover);
+  border-radius: var(--df-radius);
+}
+
+.gb-editor .ql-snow button:hover .ql-stroke,
+.gb-editor .ql-snow button.ql-active .ql-stroke {
+  stroke: var(--df-brand-01);
+}
+
+.gb-editor .ql-snow button:hover .ql-fill,
+.gb-editor .ql-snow button.ql-active .ql-fill {
+  fill: var(--df-brand-01);
+}
+
+.gb-editor.is-invalid .ql-container.ql-snow,
+.gb-editor.is-invalid .ql-toolbar.ql-snow {
+  border-color: var(--bs-form-invalid-border-color, var(--df-danger));
+}
+
+.gb-rich-text p {
+  margin: 0 0 10px;
+}
+
+.gb-rich-text p:last-child {
+  margin-bottom: 0;
+}
+
+.gb-rich-text ol,
+.gb-rich-text ul {
+  margin: 0 0 10px;
+  padding-left: 22px;
+}
+
+.gb-library-item:not(.is-expanded) .gb-library-item-content {
+  display: block;
+}
+
+.gb-library-item:not(.is-expanded) .gb-library-item-content > :not(:first-child) {
+  display: none;
+}
+
+.gb-library-item:not(.is-expanded) .gb-library-item-content > :first-child {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0;
 }

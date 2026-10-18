@@ -69,8 +69,7 @@
                     <div class="gb-document-preview" id="preview"></div>
 
                     <div id="editor" hidden>
-                        <label for="editor-text" class="visually-hidden">Texto do tópico</label>
-                        <textarea id="editor-text" class="form-control" rows="12"></textarea>
+                        <div class="gb-editor"><div id="item-editor"></div></div>
                         <p class="gb-field-hint">
                             <i data-lucide="info"></i>
                             Mantenha os campos entre [colchetes] para que as informações continuem sendo preenchidas.
@@ -135,6 +134,7 @@
 
 @section('scripts')
     @php($itemsData = $petition->items->map(fn ($item) => \App\Http\Controllers\PetitionController::itemPayload($item))->values())
+    <x-editor-assets />
     <script>
         (function () {
             const csrfToken = '{{ csrf_token() }}';
@@ -145,18 +145,20 @@
             const saveTimers = {};
 
             const escape = text => { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; };
+            const decode = html => { const area = document.createElement('textarea'); area.innerHTML = html; return area.value; };
+            const itemEditor = gbEditor.create('#item-editor', { label: 'Texto do tópico' });
 
             function renderText(item) {
-                return escape(item.content).replace(/\[([^\[\]]+)\]/g, (match, name) => {
-                    const value = (item.field_values[name] || '').trim();
+                return item.content.replace(/\[([^\[\]<>]+)\]/g, (match, name) => {
+                    const value = (item.field_values[decode(name)] || '').trim();
                     return value
                         ? `<span class="gb-filled">${escape(value)}</span>`
                         : `<mark class="gb-placeholder">${match}</mark>`;
-                }).split(/\n{2,}/).map(paragraph => `<p>${paragraph.replace(/\n/g, '<br>')}</p>`).join('');
+                });
             }
 
             function documentBlock(item) {
-                return `<p class="gb-document-title">${escape(item.title)}</p>${renderText(item)}`;
+                return `<p class="gb-document-title">${escape(item.title)}</p><div class="gb-rich-text">${renderText(item)}</div>`;
             }
 
             function itemState(item) {
@@ -307,14 +309,14 @@
 
             document.getElementById('edit-text').addEventListener('click', () => {
                 editing = true;
-                document.getElementById('editor-text').value = items[current].content;
+                gbEditor.setHtml(itemEditor, items[current].content);
                 render();
-                document.getElementById('editor-text').focus();
+                itemEditor.focus();
             });
             document.getElementById('cancel-edit').addEventListener('click', () => { editing = false; render(); });
             document.getElementById('apply-edit').addEventListener('click', () => {
-                const content = document.getElementById('editor-text').value;
-                if (!content.trim()) { return showError(new Error('O texto do tópico não pode ficar vazio.')); }
+                const content = gbEditor.getHtml(itemEditor);
+                if (!content) { return showError(new Error('O texto do tópico não pode ficar vazio.')); }
                 save(current, { content }).then(() => { editing = false; render(); }).catch(showError);
             });
 
