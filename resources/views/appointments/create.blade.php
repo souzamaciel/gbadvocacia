@@ -1799,17 +1799,38 @@
         };
 
         input.disabled = true;
+        setCepMessage(input, '');
         fetch('https://viacep.com.br/ws/' + cep + '/json/')
             .then(function (res) { return res.json(); })
             .then(function (data) {
-                if (data.erro) { return; }
+                if (data.erro) {
+                    setCepMessage(input, 'CEP não encontrado. Preencha o endereço manualmente.');
+                    return;
+                }
                 if (fields.endereco) { fields.endereco.value = data.logradouro || ''; }
                 if (fields.bairro) { fields.bairro.value = data.bairro || ''; }
                 if (fields.cidade) { fields.cidade.value = data.localidade || ''; }
                 if (fields.uf) { fields.uf.value = data.uf || ''; }
             })
-            .catch(function () {})
+            .catch(function () {
+                setCepMessage(input, 'Não foi possível consultar o CEP agora. Preencha o endereço manualmente.');
+            })
             .finally(function () { input.disabled = false; });
+    }
+
+    function setCepMessage(input, message) {
+        var feedback = input.parentElement.querySelector('.gb-cep-feedback');
+        if (!feedback) {
+            feedback = document.createElement('div');
+            feedback.className = 'invalid-feedback gb-cep-feedback';
+            feedback.id = input.name + '-feedback';
+            feedback.setAttribute('role', 'status');
+            input.insertAdjacentElement('afterend', feedback);
+            input.setAttribute('aria-describedby', feedback.id);
+        }
+        feedback.textContent = message;
+        feedback.classList.toggle('d-block', message !== '');
+        input.classList.toggle('is-invalid', message !== '');
     }
 
     function applyCepLookup(container) {
