@@ -55,6 +55,33 @@
 @endphp
 
 @section('content')
+    @if ($appointment?->import_file_name)
+        <div class="alert alert-warning alert-dismissible gb-import-banner no-print" role="status">
+            <i data-lucide="sparkles"></i>
+            <div>
+                <strong>Ficha importada de “{{ $appointment->import_file_name }}” pela IA.</strong>
+                Confira todas as respostas, as preliminares e os pedidos sugeridos antes de concluir: a IA pode ter se enganado.
+                @if (! empty($appointment->import_notes['pedidos']))
+                    <p class="mb-0 mt-2"><strong>Pedidos sugeridos e por quê:</strong></p>
+                    <ul>
+                        @foreach ($appointment->import_notes['pedidos'] as $pedido)
+                            <li><strong>{{ $pedido['titulo'] }}</strong>@if ($pedido['motivo']) — {{ $pedido['motivo'] }}@endif</li>
+                        @endforeach
+                    </ul>
+                @endif
+                @if (! empty($appointment->import_notes['observacoes']))
+                    <p class="mb-0 mt-2"><strong>Pontos para conferir:</strong></p>
+                    <ul>
+                        @foreach ($appointment->import_notes['observacoes'] as $note)
+                            <li>{{ $note }}</li>
+                        @endforeach
+                    </ul>
+                @endif
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar aviso"></button>
+        </div>
+    @endif
+
     <form id="appointment-form" method="POST" action="{{ route('appointment.store') }}" novalidate>
     @csrf
     <input type="hidden" name="appointment_id" id="appointment-id" value="{{ $appointment?->id }}">

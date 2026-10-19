@@ -15,6 +15,7 @@
             @can('appointment_form.manage')
                 <a href="{{ route('admin.form.index') }}" class="btn btn-white"><i data-lucide="settings-2"></i> Configurar ficha</a>
             @endcan
+            <a href="{{ route('appointment.import') }}" class="btn btn-white"><i data-lucide="file-up"></i> Importar ficha (Word)</a>
             <a href="{{ route('appointment.create') }}" class="btn btn-primary"><i data-lucide="plus"></i> Novo atendimento</a>
         </x-slot:actions>
     </x-page-header>
@@ -72,6 +73,7 @@
                                         <p class="gb-petition-meta">
                                             {{ count($appointment->pedidos ?? []) }} {{ count($appointment->pedidos ?? []) === 1 ? 'pedido' : 'pedidos' }}
                                             @if ($appointment->generated_at) · Petição gerada em {{ $appointment->generated_at->format('d/m/Y') }} às {{ $appointment->generated_at->format('H:i') }} @endif
+                                            @if ($appointment->import_file_name) · Importado do Word @endif
                                             @if ($appointment->user) · {{ $appointment->user->name }} @endif
                                         </p>
                                     </div>

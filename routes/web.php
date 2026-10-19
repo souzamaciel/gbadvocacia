@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AppointmentFormController;
+use App\Http\Controllers\AppointmentImportController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\GroupController;
@@ -30,6 +31,8 @@ Route::middleware('auth')->group(function (): void {
     Route::middleware('can:appointments.create')->group(function (): void {
         Route::get('/appointments', [AppointmentController::class, 'index'])->name('appointment.index');
         Route::get('/appointments/create', [AppointmentController::class, 'create'])->name('appointment.create');
+        Route::get('/appointments/import', [AppointmentImportController::class, 'create'])->name('appointment.import');
+        Route::post('/appointments/import', [AppointmentImportController::class, 'store'])->name('appointment.import.store');
         Route::get('/appointments/{appointment}/edit', [AppointmentController::class, 'edit'])->name('appointment.edit');
         Route::post('/appointments/drafts', [AppointmentController::class, 'storeDraft'])->name('appointment.draft.store');
         Route::put('/appointments/{appointment}/draft', [AppointmentController::class, 'updateDraft'])->name('appointment.draft.update');

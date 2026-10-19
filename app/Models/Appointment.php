@@ -24,6 +24,8 @@ class Appointment extends Model
         'answers',
         'preliminares',
         'pedidos',
+        'import_file_name',
+        'import_notes',
         'generated_at',
     ];
 
@@ -36,6 +38,7 @@ class Appointment extends Model
             'answers' => 'array',
             'preliminares' => 'array',
             'pedidos' => 'array',
+            'import_notes' => 'array',
             'generated_at' => 'datetime',
         ];
     }
