@@ -15,6 +15,7 @@ enum Permission: string
     case GroupsManage = 'groups.manage';
     case UsersManage = 'users.manage';
     case RolesManage = 'roles.manage';
+    case AppointmentFormManage = 'appointment_form.manage';
 
     public function label(): string
     {
@@ -30,6 +31,7 @@ enum Permission: string
             self::GroupsManage => 'Gerenciar grupos',
             self::UsersManage => 'Gerenciar usuários',
             self::RolesManage => 'Gerenciar perfis de permissão',
+            self::AppointmentFormManage => 'Configurar a ficha de atendimento',
         };
     }
 
@@ -47,6 +49,7 @@ enum Permission: string
             self::GroupsManage => 'Criar, renomear e excluir grupos da Biblioteca.',
             self::UsersManage => 'Cadastrar, editar, desativar usuários e redefinir senhas.',
             self::RolesManage => 'Criar e alterar os perfis e suas permissões.',
+            self::AppointmentFormManage => 'Adicionar, editar e excluir assuntos e perguntas da ficha de atendimento.',
         };
     }
 
@@ -56,7 +59,7 @@ enum Permission: string
             self::AppointmentsCreate => 'Atendimentos',
             self::PetitionsEdit, self::PetitionsGenerate, self::PetitionsDelete => 'Petições',
             self::LibraryView, self::TopicsEdit, self::TopicsAi, self::TopicsDelete, self::GroupsManage => 'Biblioteca',
-            self::UsersManage, self::RolesManage => 'Administração',
+            self::UsersManage, self::RolesManage, self::AppointmentFormManage => 'Administração',
         };
     }
 

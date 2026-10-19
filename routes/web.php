@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AppointmentController;
+use App\Http\Controllers\AppointmentFormController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\GroupController;
@@ -82,6 +83,18 @@ Route::middleware('auth')->group(function (): void {
             Route::put('/users/{user}', 'update')->name('users.update');
             Route::put('/users/{user}/password', 'resetPassword')->name('users.password');
             Route::put('/users/{user}/status', 'toggleStatus')->name('users.status');
+        });
+
+        Route::middleware('can:appointment_form.manage')->controller(AppointmentFormController::class)->group(function (): void {
+            Route::get('/ficha', 'index')->name('form.index');
+            Route::post('/ficha/assuntos', 'storeStep')->name('form.steps.store');
+            Route::put('/ficha/assuntos/{step}', 'updateStep')->name('form.steps.update');
+            Route::put('/ficha/assuntos/{step}/mover', 'moveStep')->name('form.steps.move');
+            Route::delete('/ficha/assuntos/{step}', 'destroyStep')->name('form.steps.destroy');
+            Route::post('/ficha/perguntas', 'storeQuestion')->name('form.questions.store');
+            Route::put('/ficha/perguntas/{question}', 'updateQuestion')->name('form.questions.update');
+            Route::put('/ficha/perguntas/{question}/mover', 'moveQuestion')->name('form.questions.move');
+            Route::delete('/ficha/perguntas/{question}', 'destroyQuestion')->name('form.questions.destroy');
         });
 
         Route::middleware('can:roles.manage')->controller(RoleController::class)->group(function (): void {

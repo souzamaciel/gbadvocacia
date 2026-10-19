@@ -1,12 +1,12 @@
 @php
     $user = auth()->user();
     $navigation = array_values(array_filter([
-        $user->can('appointments.create') ? ['label' => 'Atendimentos', 'route' => 'appointment.create', 'active' => 'appointment.*'] : null,
+        $user->can('appointments.create') ? ['label' => 'Atendimentos', 'route' => 'appointment.create', 'active' => ['appointment.*', 'admin.form.*']] : null,
         $user->can('petitions.edit') ? ['label' => 'Petições', 'route' => 'petition.index', 'active' => 'petition.*'] : null,
         $user->can('library.view') ? ['label' => 'Biblioteca de tópicos', 'route' => 'settings.topics.index', 'active' => 'settings.*'] : null,
         $user->can('users.manage')
-            ? ['label' => 'Usuários', 'route' => 'admin.users.index', 'active' => 'admin.*']
-            : ($user->can('roles.manage') ? ['label' => 'Perfis de permissão', 'route' => 'admin.roles.index', 'active' => 'admin.*'] : null),
+            ? ['label' => 'Usuários', 'route' => 'admin.users.index', 'active' => ['admin.users.*', 'admin.roles.*']]
+            : ($user->can('roles.manage') ? ['label' => 'Perfis de permissão', 'route' => 'admin.roles.index', 'active' => 'admin.roles.*'] : null),
     ]));
 @endphp
 
@@ -20,8 +20,8 @@
             @foreach ($navigation as $item)
                 <li>
                     <a href="{{ route($item['route']) }}"
-                       class="gb-nav-link {{ request()->routeIs($item['active']) ? 'active' : '' }}"
-                       @if (request()->routeIs($item['active'])) aria-current="page" @endif>
+                       class="gb-nav-link {{ request()->routeIs(...(array) $item['active']) ? 'active' : '' }}"
+                       @if (request()->routeIs(...(array) $item['active'])) aria-current="page" @endif>
                         {{ $item['label'] }}
                     </a>
                 </li>
@@ -55,7 +55,7 @@
             @foreach ($navigation as $item)
                 <li>
                     <a href="{{ route($item['route']) }}"
-                       class="gb-nav-link {{ request()->routeIs($item['active']) ? 'active' : '' }}">
+                       class="gb-nav-link {{ request()->routeIs(...(array) $item['active']) ? 'active' : '' }}">
                         {{ $item['label'] }}
                     </a>
                 </li>

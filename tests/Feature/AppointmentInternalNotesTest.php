@@ -31,6 +31,8 @@ class AppointmentInternalNotesTest extends TestCase
 
         $response = $this->actingAs(User::factory()->create())->post(route('appointment.store'), [
             'cliente_nome' => 'Maria Teste',
+            'cliente_cpf' => '123.456.789-00',
+            'empregador_nome' => 'Empresa Teste Ltda.',
             'topics' => [$horas->id, $multa->id],
             'preliminares' => [$gratuidade->id],
         ]);
