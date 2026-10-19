@@ -23,16 +23,21 @@ class RoleManagementTest extends TestCase
 
     public function test_initial_profiles_are_created_by_the_migration(): void
     {
-        $this->assertEqualsCanonicalizing(['Administrador', 'Advogado', 'Assistente'], Role::query()->pluck('name')->all());
+        $this->assertEqualsCanonicalizing(['Administrador', 'Advogado'], Role::query()->pluck('name')->all());
         $this->assertCount(count(Permission::cases()), Role::administrator()->grantedPermissions());
 
         $lawyer = Role::query()->where('name', 'Advogado')->first();
-        $this->assertTrue($lawyer->allows(Permission::TopicsAi));
+        $this->assertSame([
+            Permission::AppointmentsCreate->value,
+            Permission::PetitionsEdit->value,
+            Permission::PetitionsGenerate->value,
+            Permission::PetitionsDelete->value,
+            Permission::LibraryView->value,
+        ], $lawyer->permissions);
+        $this->assertFalse($lawyer->allows(Permission::TopicsEdit));
+        $this->assertFalse($lawyer->allows(Permission::TopicsAi));
+        $this->assertFalse($lawyer->allows(Permission::GroupsManage));
         $this->assertFalse($lawyer->allows(Permission::UsersManage));
-
-        $assistant = Role::query()->where('name', 'Assistente')->first();
-        $this->assertTrue($assistant->allows(Permission::LibraryView));
-        $this->assertFalse($assistant->allows(Permission::TopicsEdit));
     }
 
     public function test_admin_creates_a_profile_and_dependencies_are_added(): void
@@ -63,10 +68,10 @@ class RoleManagementTest extends TestCase
 
     public function test_admin_updates_a_profile(): void
     {
-        $role = Role::query()->where('name', 'Assistente')->first();
+        $role = Role::query()->where('name', 'Advogado')->first();
 
         $this->actingAs($this->admin)->put(route('admin.roles.update', $role), [
-            'name' => 'Assistente',
+            'name' => 'Advogado',
             'permissions' => [Permission::AppointmentsCreate->value],
         ])->assertRedirect(route('admin.roles.index'));
 
@@ -102,11 +107,11 @@ class RoleManagementTest extends TestCase
 
     public function test_duplicating_prefills_the_permissions(): void
     {
-        $source = Role::query()->where('name', 'Assistente')->first();
+        $source = Role::query()->where('name', 'Advogado')->first();
 
         $this->actingAs($this->admin)->get(route('admin.roles.create', ['from' => $source->id]))
             ->assertOk()
-            ->assertSee('Assistente (cópia)');
+            ->assertSee('Advogado (cópia)');
     }
 
     public function test_users_without_permission_cannot_manage_profiles(): void

@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\Permission;
 use App\Models\Group;
 use App\Models\Petition;
+use App\Models\Role;
 use App\Models\Topic;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -84,5 +85,29 @@ class PermissionAccessTest extends TestCase
 
         $this->actingAs($user)->get(route('appointment.create'))->assertForbidden();
         $this->actingAs($user)->post(route('appointment.store'), [])->assertForbidden();
+    }
+
+    public function test_lawyer_profile_issues_petitions_but_cannot_change_the_library(): void
+    {
+        $lawyer = User::factory()->create(['role_id' => Role::query()->where('name', 'Advogado')->value('id')]);
+        $topic = Topic::factory()->create();
+        $petition = Petition::factory()->create();
+
+        $this->actingAs($lawyer)->get(route('appointment.create'))->assertOk();
+        $this->actingAs($lawyer)->get(route('petition.create'))->assertOk();
+        $this->assertNotSame(403, $this->actingAs($lawyer)->get(route('petition.generate.show', $petition))->status());
+        $this->actingAs($lawyer)->get(route('settings.topics.index'))
+            ->assertOk()
+            ->assertDontSee('class="btn btn-primary js-new-topic"', false)
+            ->assertDontSee('class="gb-icon-action js-new-group"', false);
+
+        $this->actingAs($lawyer)->put(route('settings.topics.update', $topic), ['title' => 'Novo'])->assertForbidden();
+        $this->actingAs($lawyer)->delete(route('settings.topics.destroy', $topic))->assertForbidden();
+        $this->actingAs($lawyer)->postJson(route('settings.topics.suggest-variables'), ['content' => 'Texto'])->assertForbidden();
+        $this->actingAs($lawyer)->get(route('admin.users.index'))->assertForbidden();
+        $this->actingAs($lawyer)->get(route('admin.roles.index'))->assertForbidden();
+
+        $this->actingAs($lawyer)->delete(route('petition.destroy', $petition))->assertRedirect(route('petition.index'));
+        $this->assertModelMissing($petition);
     }
 }

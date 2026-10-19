@@ -45,14 +45,14 @@ class UserManagementTest extends TestCase
         $this->actingAs($this->admin)->post(route('admin.users.store'), [
             'name' => 'Carlos Lima',
             'email' => 'Carlos@Exemplo.com.br',
-            'role_id' => $this->role('Assistente')->id,
+            'role_id' => $this->role('Advogado')->id,
             'password' => 'provisoria1',
         ])->assertRedirect(route('admin.users.index'));
 
         $user = User::query()->where('email', 'carlos@exemplo.com.br')->firstOrFail();
         $this->assertTrue($user->must_change_password);
         $this->assertTrue($user->is_active);
-        $this->assertSame('Assistente', $user->role->name);
+        $this->assertSame('Advogado', $user->role->name);
         $this->assertTrue(Hash::check('provisoria1', $user->password));
     }
 
@@ -72,7 +72,7 @@ class UserManagementTest extends TestCase
 
     public function test_admin_changes_another_users_profile(): void
     {
-        $user = User::factory()->create(['role_id' => $this->role('Assistente')->id]);
+        $user = User::factory()->create(['role_id' => Role::factory()->create(['name' => 'Estagiário'])->id]);
 
         $this->actingAs($this->admin)->put(route('admin.users.update', $user), [
             'name' => $user->name,
@@ -88,7 +88,7 @@ class UserManagementTest extends TestCase
         $this->actingAs($this->admin)->put(route('admin.users.update', $this->admin), [
             'name' => $this->admin->name,
             'email' => $this->admin->email,
-            'role_id' => $this->role('Assistente')->id,
+            'role_id' => $this->role('Advogado')->id,
         ])->assertSessionHasErrors(['role_id' => 'Você não pode alterar o seu próprio perfil.']);
     }
 

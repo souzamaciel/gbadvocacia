@@ -22,10 +22,13 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        $lawyer = array_values(array_filter(
-            array_map(fn (Permission $permission): string => $permission->value, Permission::cases()),
-            fn (string $value): bool => ! in_array($value, [Permission::UsersManage->value, Permission::RolesManage->value], true),
-        ));
+        $lawyer = [
+            Permission::AppointmentsCreate->value,
+            Permission::PetitionsEdit->value,
+            Permission::PetitionsGenerate->value,
+            Permission::PetitionsDelete->value,
+            Permission::LibraryView->value,
+        ];
 
         $now = now();
 
@@ -40,21 +43,8 @@ return new class extends Migration
             ],
             [
                 'name' => 'Advogado',
-                'description' => 'Atendimentos, petições e Biblioteca completa.',
+                'description' => 'Atendimentos e petições. Só consulta a Biblioteca, sem criar ou alterar tópicos.',
                 'permissions' => json_encode($lawyer),
-                'is_locked' => false,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ],
-            [
-                'name' => 'Assistente',
-                'description' => 'Atendimentos e rascunhos. Só consulta a Biblioteca.',
-                'permissions' => json_encode([
-                    Permission::AppointmentsCreate->value,
-                    Permission::PetitionsEdit->value,
-                    Permission::PetitionsGenerate->value,
-                    Permission::LibraryView->value,
-                ]),
                 'is_locked' => false,
                 'created_at' => $now,
                 'updated_at' => $now,
