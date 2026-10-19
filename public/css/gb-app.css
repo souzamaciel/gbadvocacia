@@ -2517,17 +2517,18 @@ a.gb-group-filter { text-decoration: none; }
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 12px;
-  border: 1px solid rgba(255, 255, 255, .22);
+  padding: 6px 14px;
+  border: 1px solid #ca9247;
   border-radius: 999px;
-  color: #fff;
-  font: 500 13px/18px var(--df-font);
+  background: #ca9247;
+  color: var(--df-brand-01);
+  font: 600 13px/18px var(--df-font);
   text-decoration: none;
   white-space: nowrap;
 }
-.gb-help-link:hover, .gb-help-link.active { color: #fff; background: rgba(255, 255, 255, .1); border-color: var(--df-accent, #c9a24a); }
-.gb-help-label-short { display: none; }
-@media (max-width: 1199.98px) { .gb-help-label-full { display: none; } .gb-help-label-short { display: inline; } }
+.gb-help-link:hover { color: var(--df-brand-01); background: #d8a764; border-color: #d8a764; }
+.gb-help-link.active { color: var(--df-brand-01); background: #d8a764; box-shadow: 0 0 0 2px rgba(202, 146, 71, .45); }
+.gb-help-link:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .gb-help-link svg { width: 18px; height: 18px; }
 .gb-help-link + .gb-account { margin-left: 0; }
 @media (max-width: 991.98px) { .gb-header .gb-help-link { display: none; } }
@@ -2547,3 +2548,5 @@ a.gb-group-filter { text-decoration: none; }
 .ql-toolbar.ql-snow .ql-picker.ql-size .ql-picker-label[data-value=huge]::before,
 .ql-toolbar.ql-snow .ql-picker.ql-size .ql-picker-item[data-value=huge]::before { content: "Muito grande"; }
 .ql-toolbar.ql-snow .ql-picker.ql-size { width: 112px; }
+.gb-help-label-short { display: none; }
+@media (max-width: 1199.98px) { .gb-help-label-full { display: none; } .gb-help-label-short { display: inline; } }
