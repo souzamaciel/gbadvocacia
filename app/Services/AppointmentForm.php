@@ -111,6 +111,42 @@ class AppointmentForm
     }
 
     /**
+     * Raw answers worth keeping in a draft: only known questions, without private
+     * answers (marked "não enviar à IA", such as the GOV password) and without empty ones.
+     *
+     * @param  array<string, mixed>  $raw
+     * @return array<string, mixed>
+     */
+    public function draftAnswers(array $raw): array
+    {
+        $answers = [];
+
+        foreach ($this->questions() as $key => $question) {
+            if (! $question->type->isAnswerable() || ! $question->send_to_ai) {
+                continue;
+            }
+
+            foreach ([$key, $key.'_outro'] as $field) {
+                $value = $raw[$field] ?? null;
+
+                if (is_array($value)) {
+                    $value = array_values(array_filter($value, fn (mixed $item): bool => is_array($item)
+                        ? array_filter($item, fn (mixed $cell): bool => is_scalar($cell) && trim((string) $cell) !== '') !== []
+                        : is_scalar($item) && trim((string) $item) !== ''));
+                } elseif (is_scalar($value)) {
+                    $value = trim((string) $value);
+                }
+
+                if ($value !== null && $value !== '' && $value !== []) {
+                    $answers[$field] = $value;
+                }
+            }
+        }
+
+        return $answers;
+    }
+
+    /**
      * Values of the qualification fields used by the petition, keyed by their fixed keys.
      *
      * @param  array<string, mixed>  $raw

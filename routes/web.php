@@ -27,7 +27,12 @@ Route::middleware('guest')->group(function (): void {
 Route::middleware('auth')->group(function (): void {
     Route::get('/home', [HomeController::class, 'index'])->name('home');
     Route::middleware('can:appointments.create')->group(function (): void {
+        Route::get('/appointments', [AppointmentController::class, 'index'])->name('appointment.index');
         Route::get('/appointments/create', [AppointmentController::class, 'create'])->name('appointment.create');
+        Route::get('/appointments/{appointment}/edit', [AppointmentController::class, 'edit'])->name('appointment.edit');
+        Route::post('/appointments/drafts', [AppointmentController::class, 'storeDraft'])->name('appointment.draft.store');
+        Route::put('/appointments/{appointment}/draft', [AppointmentController::class, 'updateDraft'])->name('appointment.draft.update');
+        Route::delete('/appointments/{appointment}', [AppointmentController::class, 'destroy'])->name('appointment.destroy');
         Route::post('/appointments/create', [AppointmentController::class, 'store'])->name('appointment.store');
         Route::post('/appointments/print', [AppointmentController::class, 'print'])->name('appointment.print');
     });

@@ -1,7 +1,7 @@
 @php
     $user = auth()->user();
     $navigation = array_values(array_filter([
-        $user->can('appointments.create') ? ['label' => 'Atendimentos', 'route' => 'appointment.create', 'active' => ['appointment.*', 'admin.form.*']] : null,
+        $user->can('appointments.create') ? ['label' => 'Atendimentos', 'route' => 'appointment.index', 'active' => ['appointment.*', 'admin.form.*']] : null,
         $user->can('petitions.edit') ? ['label' => 'Petições', 'route' => 'petition.index', 'active' => 'petition.*'] : null,
         $user->can('library.view') ? ['label' => 'Biblioteca de tópicos', 'route' => 'settings.topics.index', 'active' => 'settings.*'] : null,
         $user->can('users.manage')

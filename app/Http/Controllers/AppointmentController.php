@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\SaveAppointmentDraftRequest;
+use App\Models\Appointment;
 use App\Models\Group;
 use App\Models\PetitionLog;
 use App\Models\Topic;
@@ -12,6 +14,7 @@ use App\Services\OpenAI\PetitionGenerationService;
 use App\Services\PetitionDocxGenerator;
 use App\Services\PetitionFormSerializer;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -24,7 +27,54 @@ class AppointmentController extends Controller
         protected AppointmentForm $form,
     ) {}
 
+    public function index(): View
+    {
+        $appointments = Appointment::query()->with('user')->latest('updated_at')->get();
+
+        return view('appointments.index', compact('appointments'));
+    }
+
     public function create(Request $request): View
+    {
+        return $this->formView($request->boolean('test') ? $this->testPrefillData() : null, null);
+    }
+
+    public function edit(Appointment $appointment): View
+    {
+        $titles = Topic::query()->whereIn('id', [...($appointment->pedidos ?? []), ...($appointment->preliminares ?? [])])->pluck('title', 'id');
+        $asItems = fn (array $ids): array => array_values(array_filter(array_map(
+            fn (int $id): ?array => isset($titles[$id]) ? ['id' => $id, 'title' => $titles[$id]] : null,
+            $ids,
+        )));
+
+        return $this->formView([
+            'answers' => $appointment->answers ?? [],
+            'pedidos' => $asItems($appointment->pedidos ?? []),
+            'preliminares' => $asItems($appointment->preliminares ?? []),
+        ], $appointment);
+    }
+
+    public function storeDraft(SaveAppointmentDraftRequest $request): JsonResponse
+    {
+        return $this->draftResponse($this->saveDraft($request, new Appointment(['user_id' => $request->user()->id])), 'Rascunho salvo.');
+    }
+
+    public function updateDraft(SaveAppointmentDraftRequest $request, Appointment $appointment): JsonResponse
+    {
+        return $this->draftResponse($this->saveDraft($request, $appointment), 'Rascunho atualizado.');
+    }
+
+    public function destroy(Appointment $appointment): RedirectResponse
+    {
+        $appointment->delete();
+
+        return redirect()->route('appointment.index')->with('status', "Rascunho “{$appointment->displayName()}” excluído.");
+    }
+
+    /**
+     * @param  array{answers: array<string, mixed>, pedidos: array<int, array{id: int, title: string}>, preliminares: array<int, array{id: int, title: string}>}|null  $prefill
+     */
+    private function formView(?array $prefill, ?Appointment $appointment): View
     {
         $preliminares = Topic::query()
             ->where('active', true)
@@ -39,9 +89,35 @@ class AppointmentController extends Controller
             ->get(['id', 'title']);
 
         $steps = $this->form->steps();
-        $prefill = $request->boolean('test') ? $this->testPrefillData() : null;
 
-        return view('appointments.create', compact('preliminares', 'pedidos', 'steps', 'prefill'));
+        return view('appointments.create', compact('preliminares', 'pedidos', 'steps', 'prefill', 'appointment'));
+    }
+
+    private function saveDraft(Request $request, Appointment $appointment): Appointment
+    {
+        $answers = $this->form->draftAnswers($request->all());
+
+        $appointment->fill([
+            'client_name' => $answers['cliente_nome'] ?? null,
+            'answers' => $answers,
+            'preliminares' => array_values(array_map('intval', (array) $request->input('preliminares', []))),
+            'pedidos' => array_values(array_map('intval', (array) $request->input('topics', []))),
+        ]);
+        $appointment->save();
+        $appointment->touch();
+
+        return $appointment;
+    }
+
+    private function draftResponse(Appointment $appointment, string $message): JsonResponse
+    {
+        return response()->json([
+            'id' => $appointment->id,
+            'message' => $message,
+            'saved_at' => $appointment->updated_at->format('H:i'),
+            'edit_url' => route('appointment.edit', $appointment),
+            'update_url' => route('appointment.draft.update', $appointment),
+        ]);
     }
 
     public function store(Request $request): BinaryFileResponse|JsonResponse
@@ -96,9 +172,17 @@ class AppointmentController extends Controller
             $clientName = $normalized['cliente_nome'] ?? 'peticao';
             $filename = 'peticao-inicial-'.str()->slug($clientName).'.docx';
 
+            $appointment = Appointment::query()->find($request->integer('appointment_id'))
+                ?? new Appointment(['user_id' => $request->user()->id]);
+            $appointment->generated_at = now();
+            $appointment = $this->saveDraft($request, $appointment);
+
             return response()
                 ->download($filePath, $filename, [
                     'Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                    'X-Appointment-Id' => (string) $appointment->id,
+                    'X-Appointment-Url' => route('appointment.edit', $appointment),
+                    'X-Appointment-Update-Url' => route('appointment.draft.update', $appointment),
                 ])
                 ->deleteFileAfterSend();
         } catch (Throwable $e) {

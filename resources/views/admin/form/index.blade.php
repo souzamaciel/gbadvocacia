@@ -46,7 +46,7 @@
 @section('page-header')
     <x-page-header title="Ficha de atendimento"
                    description="Adicione, edite, reordene e exclua os assuntos e as perguntas da ficha."
-                   :breadcrumbs="['Atendimentos' => route('appointment.create'), 'Configurar ficha']">
+                   :breadcrumbs="['Atendimentos' => route('appointment.index'), 'Configurar ficha']">
         <x-slot:actions>
             <a href="{{ route('appointment.create') }}" target="_blank" class="btn btn-white"><i data-lucide="eye"></i> Ver a ficha</a>
         </x-slot:actions>

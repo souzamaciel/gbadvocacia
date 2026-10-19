@@ -1,11 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'Novo atendimento')
+@section('title', $appointment ? $appointment->displayName() : 'Novo atendimento')
 
 @section('page-header')
-    <x-page-header title="Novo atendimento"
+    <x-page-header :title="$appointment ? 'Atendimento' : 'Novo atendimento'"
                    description="Registre o relato e as informações do caso, no ritmo da conversa."
-                   :breadcrumbs="['Atendimentos' => route('appointment.create'), 'Novo atendimento']">
+                   :breadcrumbs="['Atendimentos' => route('appointment.index'), $appointment ? $appointment->displayName() : 'Novo atendimento']">
         @can('appointment_form.manage')
             <x-slot:actions>
                 <a href="{{ route('admin.form.index') }}" class="btn btn-white"><i data-lucide="settings-2"></i> Configurar ficha</a>
@@ -54,6 +54,7 @@
 @section('content')
     <form id="appointment-form" method="POST" action="{{ route('appointment.store') }}" novalidate>
     @csrf
+    <input type="hidden" name="appointment_id" id="appointment-id" value="{{ $appointment?->id }}">
     <div class="row g-3 align-items-start gb-appointment">
         {{-- Roteiro do atendimento --}}
         <div class="col-12 col-lg-3 no-print">
@@ -160,6 +161,12 @@
             <span>Para concluir, confira os pedidos no <button type="button" class="gb-hint-link" data-step-target="{{ $total }}">passo {{ $total }} · Pedidos</button>.</span>
         </p>
         <div class="gb-page-actions">
+            <span class="gb-field-hint m-0 align-self-center" id="draft-status" aria-live="polite">
+                @if ($appointment) Rascunho salvo em {{ $appointment->updated_at->format('d/m/Y') }} às {{ $appointment->updated_at->format('H:i') }} @endif
+            </span>
+            <button type="button" id="btn-save-draft" class="btn btn-white" disabled title="Nenhuma alteração para salvar">
+                <i data-lucide="save"></i> Salvar rascunho
+            </button>
             <button type="button" id="btn-print-form" class="btn btn-white">
                 <i data-lucide="printer"></i> Imprimir ficha
             </button>
@@ -629,6 +636,15 @@
                 var filenameMatch = disposition.match(/filename="?([^";\s]+)"?/);
                 var filename = filenameMatch ? filenameMatch[1] : 'peticao-inicial.docx';
 
+                if (response.headers.get('X-Appointment-Id')) {
+                    window.gbDraft.saved({
+                        id: response.headers.get('X-Appointment-Id'),
+                        edit_url: response.headers.get('X-Appointment-Url'),
+                        update_url: response.headers.get('X-Appointment-Update-Url'),
+                        saved_at: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+                    });
+                }
+
                 return response.blob().then(function (blob) {
                     var url = URL.createObjectURL(blob);
                     var link = document.createElement('a');
@@ -644,12 +660,12 @@
 
                     Swal.fire({
                         title: 'Petição gerada com sucesso!',
-                        text: 'Deseja gerar outra petição?',
+                        text: 'O atendimento ficou salvo nos rascunhos. Deseja começar outro atendimento?',
                         icon: 'success',
                         showCancelButton: true,
                         confirmButtonColor: 'var(--gb-navy)',
                         cancelButtonColor: '#6c757d',
-                        confirmButtonText: 'Sim, gerar outra',
+                        confirmButtonText: 'Sim, novo atendimento',
                         cancelButtonText: 'Não',
                     }).then(function (result) {
                         if (result.isConfirmed) {
@@ -666,5 +682,72 @@
             });
         });
     });
+    // ─── Rascunho ───
+    window.gbDraft = (function () {
+        const form = document.getElementById('appointment-form');
+        const button = document.getElementById('btn-save-draft');
+        const status = document.getElementById('draft-status');
+        let updateUrl = @json($appointment ? route('appointment.draft.update', $appointment) : null);
+        let savedSnapshot = null;
+        let saving = false;
+
+        function snapshot() {
+            const entries = [];
+            new FormData(form).forEach((value, key) => {
+                if (key !== '_token' && key !== 'appointment_id' && typeof value === 'string' && value.trim() !== '') { entries.push(key + '=' + value.trim()); }
+            });
+            return entries.sort().join('&');
+        }
+
+        function isDirty() { return savedSnapshot !== null && snapshot() !== savedSnapshot; }
+
+        function refresh() {
+            const dirty = isDirty();
+            button.disabled = saving || !dirty;
+            button.title = dirty ? '' : 'Nenhuma alteração para salvar';
+        }
+
+        function saved(data) {
+            document.getElementById('appointment-id').value = data.id;
+            updateUrl = data.update_url;
+            savedSnapshot = snapshot();
+            status.textContent = 'Rascunho salvo às ' + data.saved_at;
+            if (data.edit_url && location.href !== data.edit_url) { history.replaceState(null, '', data.edit_url); }
+            refresh();
+        }
+
+        button.addEventListener('click', function () {
+            const formData = new FormData(form);
+            if (updateUrl) { formData.append('_method', 'PUT'); }
+            saving = true;
+            refresh();
+            button.innerHTML = '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span> Salvando…';
+            fetch(updateUrl || @json(route('appointment.draft.store')), {
+                method: 'POST',
+                headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': formData.get('_token') },
+                body: formData,
+            })
+            .then(response => response.json().then(data => {
+                if (!response.ok) { throw new Error(data.message || 'Não foi possível salvar o rascunho.'); }
+                return data;
+            }))
+            .then(saved)
+            .catch(error => Swal.fire({ icon: 'error', title: 'Não foi possível salvar', text: error.message, confirmButtonColor: 'var(--df-brand-01)' }))
+            .finally(() => {
+                saving = false;
+                button.innerHTML = '<i data-lucide="save"></i> Salvar rascunho';
+                lucide.createIcons();
+                refresh();
+            });
+        });
+
+        ['input', 'change', 'click'].forEach(type => form.addEventListener(type, () => setTimeout(refresh, 0)));
+        window.addEventListener('beforeunload', event => {
+            if (isDirty()) { event.preventDefault(); event.returnValue = ''; }
+        });
+        window.addEventListener('load', () => { savedSnapshot = snapshot(); refresh(); });
+
+        return { saved };
+    })();
 </script>
 @endsection
