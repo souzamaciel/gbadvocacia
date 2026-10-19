@@ -11,7 +11,7 @@
     $canGenerate = auth()->user()->can('petitions.generate');
     $stage = function (\App\Models\Petition $petition) use ($canGenerate): array {
         if ($petition->isGenerated()) {
-            return [$canGenerate ? route('petition.generate.show', $petition) : route('petition.review', $petition), 'Último Word gerado em '.$petition->generated_at?->format('d/m/Y')];
+            return [$canGenerate ? route('petition.generate.show', $petition) : route('petition.review', $petition), 'Word gerado em '.$petition->generated_at?->format('d/m/Y').' às '.$petition->generated_at?->format('H:i')];
         }
 
         if ($petition->items_count > 0 && $petition->reviewed_items_count === $petition->items_count) {
@@ -24,6 +24,8 @@
 
         return [route('petition.edit', $petition), 'Selecionar e organizar'];
     };
+    $drafts = $petitions->reject(fn ($petition) => $petition->isGenerated())->count();
+    $generated = $petitions->count() - $drafts;
 @endphp
 
 @section('page-header')
@@ -69,18 +71,23 @@
     <section class="card" aria-labelledby="petitions-title">
         <div class="card-header d-flex align-items-center gap-3">
             <div class="flex-grow-1">
-                <h2 id="petitions-title" class="card-title">Rascunhos</h2>
-                <p class="card-description">Os rascunhos ficam salvos. O documento Word é baixado ao gerar e não fica guardado.</p>
+                <h2 id="petitions-title" class="card-title">Suas petições</h2>
+                <p class="card-description">Rascunhos e petições já geradas. O Word é baixado ao gerar e não fica guardado no sistema.</p>
             </div>
-            <span class="gb-badge gb-badge-neutral">{{ $petitions->count() }} {{ $petitions->count() === 1 ? 'rascunho' : 'rascunhos' }}</span>
+            <span class="gb-badge gb-badge-neutral">{{ $petitions->count() }} {{ $petitions->count() === 1 ? 'petição' : 'petições' }}</span>
         </div>
 
         @if ($petitions->isNotEmpty())
-            <div class="gb-library-filters justify-content-end">
+            <div class="gb-library-filters justify-content-between">
+                <div class="btn-group" role="group" aria-label="Filtrar petições">
+                    <button type="button" class="btn btn-white active" data-filter="" aria-pressed="true">Todas · {{ $petitions->count() }}</button>
+                    <button type="button" class="btn btn-white" data-filter="draft" aria-pressed="false" @disabled($drafts === 0)>Rascunhos · {{ $drafts }}</button>
+                    <button type="button" class="btn btn-white" data-filter="generated" aria-pressed="false" @disabled($generated === 0)>Geradas · {{ $generated }}</button>
+                </div>
                 <div class="gb-input-icon gb-library-group">
                     <i data-lucide="search"></i>
-                    <label for="petition-search" class="visually-hidden">Buscar rascunho</label>
-                    <input type="search" id="petition-search" class="form-control" placeholder="Buscar rascunho…" autocomplete="off">
+                    <label for="petition-search" class="visually-hidden">Buscar petição</label>
+                    <input type="search" id="petition-search" class="form-control" placeholder="Buscar petição…" autocomplete="off">
                 </div>
             </div>
         @endif
@@ -88,7 +95,7 @@
         @if ($petitions->isEmpty())
             <div class="gb-library-empty">
                 <i data-lucide="file-plus"></i>
-                <p class="gb-hint-title">Nenhum rascunho ainda</p>
+                <p class="gb-hint-title">Nenhuma petição ainda</p>
                 <p class="m-0">Clique em “Nova petição” para começar.</p>
             </div>
         @else
@@ -96,6 +103,7 @@
                 <thead>
                     <tr>
                         <th scope="col">Petição</th>
+                        <th scope="col">Situação</th>
                         <th scope="col">Última atualização</th>
                         <th scope="col" class="text-end">Ações</th>
                     </tr>
@@ -103,10 +111,10 @@
                 <tbody id="petition-rows">
                     @foreach ($petitions as $petition)
                         @php([$url, $stageLabel] = $stage($petition))
-                        <tr data-search="{{ mb_strtolower($petition->name) }}">
+                        <tr data-status="{{ $petition->isGenerated() ? 'generated' : 'draft' }}" data-search="{{ mb_strtolower($petition->name) }}">
                             <td>
                                 <div class="gb-petition-name">
-                                    <span class="gb-icon-tile"><i data-lucide="file-pen-line"></i></span>
+                                    <span class="gb-icon-tile"><i data-lucide="{{ $petition->isGenerated() ? 'file-check' : 'file-pen-line' }}"></i></span>
                                     <div>
                                         <p class="gb-petition-title">{{ $petition->name }}</p>
                                         <p class="gb-petition-meta">
@@ -116,10 +124,24 @@
                                     </div>
                                 </div>
                             </td>
+                            <td>
+                                @if ($petition->isGenerated())
+                                    <span class="gb-badge gb-badge-success">Gerada</span>
+                                @else
+                                    <span class="gb-badge gb-badge-warning">Rascunho</span>
+                                @endif
+                            </td>
                             <td>{{ $petition->updated_at->locale('pt_BR')->calendar() }}</td>
                             <td>
                                 <div class="d-flex justify-content-md-end align-items-center gap-1">
-                                    <a href="{{ $url }}" class="btn btn-white btn-sm">Continuar <i data-lucide="arrow-right"></i></a>
+                                    @if ($petition->isGenerated())
+                                        @if ($canGenerate)
+                                            <a href="{{ route('petition.generate.show', $petition) }}" class="btn btn-white btn-sm"><i data-lucide="refresh-cw"></i> Gerar novamente</a>
+                                        @endif
+                                        <a href="{{ route('petition.review', $petition) }}" class="gb-icon-action" aria-label="Revisar {{ $petition->name }}" title="Revisar"><i data-lucide="pencil"></i></a>
+                                    @else
+                                        <a href="{{ $url }}" class="btn btn-white btn-sm">Continuar <i data-lucide="arrow-right"></i></a>
+                                    @endif
                                     @can('petitions.delete')
                                         <form method="POST" action="{{ route('petition.destroy', $petition) }}" class="js-delete-petition" data-name="{{ $petition->name }}">
                                             @csrf
@@ -133,7 +155,7 @@
                     @endforeach
                 </tbody>
             </table>
-            <p class="gb-library-empty" id="petitions-empty" hidden>Nenhum rascunho encontrado.</p>
+            <p class="gb-library-empty" id="petitions-empty" hidden>Nenhuma petição encontrada.</p>
         @endif
 
         <div class="gb-list-summary gb-list-summary-footer">
@@ -146,11 +168,13 @@
     <script>
         (function () {
             const rows = Array.from(document.querySelectorAll('#petition-rows tr'));
+            let status = '';
+
             function apply() {
                 const query = (document.getElementById('petition-search')?.value || '').trim().toLowerCase();
                 let visible = 0;
                 rows.forEach(row => {
-                    const show = !query || row.dataset.search.includes(query);
+                    const show = (!status || row.dataset.status === status) && (!query || row.dataset.search.includes(query));
                     row.hidden = !show;
                     visible += show ? 1 : 0;
                 });
@@ -159,12 +183,20 @@
             }
 
             document.getElementById('petition-search')?.addEventListener('input', apply);
+            document.querySelectorAll('[data-filter]').forEach(button => button.addEventListener('click', () => {
+                status = button.dataset.filter;
+                document.querySelectorAll('[data-filter]').forEach(other => {
+                    other.classList.toggle('active', other === button);
+                    other.setAttribute('aria-pressed', String(other === button));
+                });
+                apply();
+            }));
 
             document.querySelectorAll('.js-delete-petition').forEach(form => form.addEventListener('submit', event => {
                 event.preventDefault();
                 Swal.fire({
-                    title: 'Excluir rascunho?',
-                    text: `O rascunho “${form.dataset.name}” será excluído.`,
+                    title: 'Excluir petição?',
+                    text: `A petição “${form.dataset.name}” será excluída do sistema.`,
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: 'var(--df-danger)',

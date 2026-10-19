@@ -1,7 +1,7 @@
 <h4>Esqueci minha senha. O que faço?</h4>
 <p>Peça ao administrador para redefinir a senha em Usuários. Você receberá uma senha provisória e criará a sua no primeiro acesso.</p>
 <h4>Perdi o Word da petição. Consigo recuperar?</h4>
-<p>Sim. Abra o rascunho (em Petições ou Atendimentos) e gere novamente. Os rascunhos ficam salvos com todas as respostas e revisões.</p>
+<p>Sim. Em Petições ou Atendimentos, abra a aba <strong>Geradas</strong> e gere novamente. As respostas e revisões ficam salvas.</p>
 <h4>Editei um texto na revisão. O modelo da Biblioteca muda?</h4>
 <p>Não. Os ajustes na revisão valem só para aquela petição. Para mudar o modelo, edite o tópico na Biblioteca.</p>
 <h4>O que é a faixa verde “Orientação interna” no Word?</h4>

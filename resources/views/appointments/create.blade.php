@@ -706,7 +706,7 @@
 
                     Swal.fire({
                         title: 'Petição gerada com sucesso!',
-                        text: 'O atendimento ficou salvo nos rascunhos. Deseja começar outro atendimento?',
+                        text: 'O atendimento ficou salvo em Atendimentos, na aba Geradas. Deseja começar outro atendimento?',
                         icon: 'success',
                         showCancelButton: true,
                         confirmButtonColor: 'var(--gb-navy)',

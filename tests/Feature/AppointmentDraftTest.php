@@ -119,4 +119,19 @@ class AppointmentDraftTest extends TestCase
         $this->actingAs($user)->postJson(route('appointment.draft.store'), ['cliente_nome' => 'X'])->assertForbidden();
         $this->actingAs($user)->delete(route('appointment.destroy', $appointment))->assertForbidden();
     }
+
+    public function test_list_separates_drafts_from_generated_and_editing_turns_it_back_into_a_draft(): void
+    {
+        $generated = Appointment::factory()->create(['client_name' => 'Maria Gerada', 'generated_at' => now()]);
+        Appointment::factory()->create(['client_name' => 'João Rascunho']);
+
+        $this->actingAs($this->user)->get(route('appointment.index'))
+            ->assertOk()
+            ->assertSee('Rascunhos · 1')
+            ->assertSee('Geradas · 1');
+
+        $this->actingAs($this->user)->putJson(route('appointment.draft.update', $generated), ['cliente_nome' => 'Maria Gerada'])->assertOk();
+
+        $this->assertNull($generated->fresh()->generated_at);
+    }
 }

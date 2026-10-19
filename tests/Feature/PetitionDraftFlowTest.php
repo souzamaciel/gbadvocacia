@@ -241,7 +241,8 @@ class PetitionDraftFlowTest extends TestCase
 
         $response = $this->actingAs($this->user)->get(route('petition.index'));
 
-        $response->assertOk()->assertSee($mine->name)->assertSee('Petição do colega');
+        $response->assertOk()->assertSee($mine->name)->assertSee('Petição do colega')
+            ->assertSee('Rascunhos · 1')->assertSee('Geradas · 1')->assertSee('Gerar novamente');
         $this->assertTrue($response->viewData('continue')->is($mine));
         $this->assertTrue($response->viewData('petitions')->contains($colleagues));
     }

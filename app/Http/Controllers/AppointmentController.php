@@ -61,6 +61,8 @@ class AppointmentController extends Controller
 
     public function updateDraft(SaveAppointmentDraftRequest $request, Appointment $appointment): JsonResponse
     {
+        $appointment->generated_at = null;
+
         return $this->draftResponse($this->saveDraft($request, $appointment), 'Rascunho atualizado.');
     }
 

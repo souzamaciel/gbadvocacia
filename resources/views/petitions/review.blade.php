@@ -7,8 +7,8 @@
                    description="Confira e ajuste os textos antes de gerar sua petição."
                    :breadcrumbs="['Petições' => route('petition.index'), $petition->name]">
         <x-slot:actions>
-            <span class="gb-badge gb-badge-neutral">
-                Rascunho
+            <span class="gb-badge {{ $petition->isGenerated() ? 'gb-badge-success' : 'gb-badge-neutral' }}">
+                {{ $petition->isGenerated() ? 'Gerada' : 'Rascunho' }}
             </span>
         </x-slot:actions>
     </x-page-header>
