@@ -2524,3 +2524,19 @@ a.gb-group-filter { text-decoration: none; }
 .gb-help-link svg { width: 18px; height: 18px; }
 .gb-help-link + .gb-account { margin-left: 0; }
 @media (max-width: 991.98px) { .gb-header .gb-help-link { display: none; } }
+
+/* ---------- Editor de texto em português ---------- */
+.ql-container.ql-snow .ql-tooltip::before { content: "Abrir link:"; }
+.ql-container.ql-snow .ql-tooltip[data-mode=link]::before { content: "Digite o link:"; }
+.ql-container.ql-snow .ql-tooltip a.ql-action::after { content: "Editar"; }
+.ql-container.ql-snow .ql-tooltip.ql-editing a.ql-action::after { content: "Salvar"; }
+.ql-container.ql-snow .ql-tooltip a.ql-remove::before { content: "Remover"; }
+.ql-toolbar.ql-snow .ql-picker.ql-size .ql-picker-label::before,
+.ql-toolbar.ql-snow .ql-picker.ql-size .ql-picker-item::before { content: "Normal"; }
+.ql-toolbar.ql-snow .ql-picker.ql-size .ql-picker-label[data-value=small]::before,
+.ql-toolbar.ql-snow .ql-picker.ql-size .ql-picker-item[data-value=small]::before { content: "Pequeno"; }
+.ql-toolbar.ql-snow .ql-picker.ql-size .ql-picker-label[data-value=large]::before,
+.ql-toolbar.ql-snow .ql-picker.ql-size .ql-picker-item[data-value=large]::before { content: "Grande"; }
+.ql-toolbar.ql-snow .ql-picker.ql-size .ql-picker-label[data-value=huge]::before,
+.ql-toolbar.ql-snow .ql-picker.ql-size .ql-picker-item[data-value=huge]::before { content: "Muito grande"; }
+.ql-toolbar.ql-snow .ql-picker.ql-size { width: 112px; }

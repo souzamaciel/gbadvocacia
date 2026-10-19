@@ -75,6 +75,11 @@ window.gbEditor = (function () {
             quill.root.setAttribute('role', 'textbox');
             quill.root.setAttribute('aria-multiline', 'true');
             labelToolbar(quill);
+            const linkInput = quill.theme.tooltip?.textbox;
+            if (linkInput) {
+                linkInput.dataset.link = 'https://exemplo.com.br';
+                linkInput.setAttribute('aria-label', 'Endereço do link');
+            }
             return quill;
         },
 

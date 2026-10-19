@@ -15,7 +15,13 @@
 @endsection
 
 @section('styles')
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
 <style>
+    .flatpickr-calendar { font-family: var(--df-font); }
+    .flatpickr-day.selected, .flatpickr-day.selected:hover, .flatpickr-day.today.selected { background: var(--df-brand-01); border-color: var(--df-brand-01); }
+    .flatpickr-day.today { border-color: var(--df-brand-01); }
+    .flatpickr-months .flatpickr-month, .flatpickr-current-month .flatpickr-monthDropdown-months { text-transform: capitalize; }
+    input.flatpickr-input[readonly] { background-color: #fff; }
     .subsection-title { font: 600 10px/14px var(--df-font); letter-spacing: .5px; text-transform: uppercase; color: var(--df-text-03); margin-bottom: .5rem; }
     .accent-note { background: var(--df-ui-01); border-radius: var(--df-radius); padding: 10px 12px; font-size: 13px; color: var(--df-text-03); margin: 0; }
     .add-btn { font: 500 13px/20px var(--df-font); color: var(--df-brand-01); background: none; border: none; padding: 0; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
@@ -176,6 +182,8 @@
 @endsection
 
 @section('scripts')
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/pt.js"></script>
 <script>
     window.gbStepper = (function () {
         const panels = Array.from(document.querySelectorAll('.gb-step-panel'));
@@ -397,13 +405,52 @@
             const value = escapeAttr((values || {})[column.key] || '');
             const field = column.type === 'uf'
                 ? `<select name="${name}" class="form-select form-select-sm" aria-label="${escapeAttr(column.label)}"><option value=""></option>${UFS.map(uf => `<option ${uf === value ? 'selected' : ''}>${uf}</option>`).join('')}</select>`
-                : `<input type="${column.type === 'date' ? 'date' : (column.type === 'number' ? 'number' : 'text')}" name="${name}" value="${value}" class="form-control form-control-sm" aria-label="${escapeAttr(column.label)}" ${MASKS[column.type] ? `data-mask="${MASKS[column.type]}"` : ''}>`;
+                : `<input type="${column.type === 'number' ? 'number' : 'text'}" name="${name}" value="${value}" class="form-control form-control-sm" aria-label="${escapeAttr(column.label)}" ${column.type === 'date' ? 'data-date placeholder="dd/mm/aaaa"' : ''} ${MASKS[column.type] ? `data-mask="${MASKS[column.type]}"` : ''}>`;
             return `<div class="col-12 col-md-${size}"><label class="form-label">${escapeAttr(column.label)}</label>${field}</div>`;
         }).join('') + `<div class="col-12 col-md-auto d-flex align-items-end"><button type="button" class="gb-icon-action gb-icon-action-danger js-repeater-remove" aria-label="Remover linha"><i data-lucide="trash-2"></i></button></div>`;
         rows.appendChild(row);
         lucide.createIcons();
         applyAllMasks(row);
         formatExistingValues(row);
+        initDatePickers(row);
+    }
+
+    // ─── Calendário em português (dd/mm/aaaa) ───
+    function maskDate(v) {
+        return v.replace(/\D/g, '').replace(/(\d{2})(\d)/, '$1/$2').replace(/(\d{2})(\d)/, '$1/$2').slice(0, 10);
+    }
+
+    function parseTypedDate(text) {
+        let match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(text);
+        if (match) { return new Date(Number(match[3]), Number(match[2]) - 1, Number(match[1])); }
+        match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text);
+        if (match) { return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3])); }
+        return undefined;
+    }
+
+    function initDatePickers(container) {
+        (container || document).querySelectorAll('input[data-date]').forEach(input => {
+            if (input._flatpickr) { return; }
+            const picker = flatpickr(input, {
+                locale: 'pt',
+                dateFormat: 'Y-m-d',
+                altInput: true,
+                altFormat: 'd/m/Y',
+                allowInput: true,
+                disableMobile: true,
+                parseDate: parseTypedDate,
+                onChange: () => input.dispatchEvent(new Event('change', { bubbles: true })),
+            });
+            const alt = picker.altInput;
+            alt.placeholder = 'dd/mm/aaaa';
+            alt.setAttribute('inputmode', 'numeric');
+            ['aria-label', 'aria-describedby', 'aria-required'].forEach(attribute => {
+                if (input.hasAttribute(attribute)) { alt.setAttribute(attribute, input.getAttribute(attribute)); }
+            });
+            if (input.id) { alt.id = input.id; input.removeAttribute('id'); }
+            alt.disabled = input.disabled;
+            alt.addEventListener('input', () => { alt.value = maskDate(alt.value); });
+        });
     }
 
     document.addEventListener('click', event => {
@@ -456,7 +503,7 @@
 
     document.getElementById('appointment-form').addEventListener('change', () => { refreshOthers(); refreshConditions(); });
     document.getElementById('appointment-form').addEventListener('input', event => {
-        if (event.target.matches('select, input[type="date"]')) { refreshConditions(); }
+        if (event.target.matches('select')) { refreshConditions(); }
     });
 
     document.addEventListener('DOMContentLoaded', function () {
@@ -542,6 +589,8 @@
         formatExistingValues();
     });
     @endif
+    document.addEventListener('DOMContentLoaded', function () { initDatePickers(document); });
+
     document.addEventListener('DOMContentLoaded', function () {
         var printBtn = document.getElementById('btn-print-form');
         if (printBtn) {
@@ -739,9 +788,7 @@
         });
 
         ['input', 'change', 'click'].forEach(type => form.addEventListener(type, () => setTimeout(refresh, 0)));
-        window.addEventListener('beforeunload', event => {
-            if (isDirty()) { event.preventDefault(); event.returnValue = ''; }
-        });
+        window.gbIsDirty = isDirty;
         window.addEventListener('load', () => { savedSnapshot = snapshot(); refresh(); });
 
         return { saved };

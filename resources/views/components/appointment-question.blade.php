@@ -75,9 +75,10 @@
                 </select>
             @else
                 <input id="{{ $id }}" name="{{ $key }}"
-                       type="{{ match ($type) { QuestionType::Date => 'date', QuestionType::Number => 'number', default => 'text' } }}"
+                       type="{{ $type === QuestionType::Number ? 'number' : 'text' }}"
                        class="form-control form-control-sm"
-                       placeholder="{{ $question->placeholder }}"
+                       placeholder="{{ $type === QuestionType::Date ? 'dd/mm/aaaa' : $question->placeholder }}"
+                       @if ($type === QuestionType::Date) data-date @endif
                        @if ($type->mask()) data-mask="{{ $type->mask() }}" inputmode="numeric" @endif
                        @if ($question->addressPrefix()) data-cep-lookup="{{ $question->addressPrefix() }}" @endif
                        @if ($question->required) aria-required="true" @endif

@@ -330,7 +330,7 @@
             document.getElementById('library-search').addEventListener('input', filterLibrary);
             document.getElementById('library-group').addEventListener('change', filterLibrary);
 
-            form.addEventListener('submit', () => { window.onbeforeunload = null; });
+            window.gbIsDirty = () => !saveButton.disabled;
 
             render();
         })();
