@@ -134,4 +134,17 @@ class AppointmentDraftTest extends TestCase
 
         $this->assertNull($generated->fresh()->generated_at);
     }
+
+    public function test_cancel_button_knows_whether_there_is_a_saved_appointment_to_delete(): void
+    {
+        $this->actingAs($this->user)->get(route('appointment.create'))
+            ->assertOk()
+            ->assertSee('id="btn-cancel-appointment"', false)
+            ->assertDontSee('data-delete-url=', false);
+
+        $appointment = Appointment::factory()->create();
+
+        $this->actingAs($this->user)->get(route('appointment.edit', $appointment))
+            ->assertSee('data-delete-url="'.route('appointment.destroy', $appointment).'"', false);
+    }
 }

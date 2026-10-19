@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\Permission;
 use App\Http\Controllers\PetitionController;
 use App\Models\Group;
 use App\Models\Petition;
@@ -328,5 +329,17 @@ class PetitionDraftFlowTest extends TestCase
                 ]],
             ]],
         ])]);
+    }
+
+    public function test_cancel_button_appears_in_every_step_and_respects_the_delete_permission(): void
+    {
+        $petition = $this->draftWith([$this->multa]);
+
+        $this->actingAs($this->user)->get(route('petition.create'))->assertSee('js-cancel-flow', false)->assertDontSee('data-delete-url=', false);
+        $this->actingAs($this->user)->get(route('petition.edit', $petition))->assertSee('data-delete-url="'.route('petition.destroy', $petition).'"', false);
+        $this->actingAs($this->user)->get(route('petition.review', $petition))->assertSee('js-cancel-flow', false);
+
+        $editor = User::factory()->withPermissions([Permission::PetitionsEdit])->create();
+        $this->actingAs($editor)->get(route('petition.edit', $petition))->assertSee('data-can-delete="false"', false);
     }
 }

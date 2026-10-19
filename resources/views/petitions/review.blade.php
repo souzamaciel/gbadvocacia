@@ -7,6 +7,12 @@
                    description="Confira e ajuste os textos antes de gerar sua petição."
                    :breadcrumbs="['Petições' => route('petition.index'), $petition->name]">
         <x-slot:actions>
+            <button type="button" class="btn btn-white js-cancel-flow" data-item="a petição"
+                    data-list-url="{{ route('petition.index') }}"
+                    @if ($petition->exists) data-delete-url="{{ route('petition.destroy', $petition) }}" @endif
+                    @cannot('petitions.delete') data-can-delete="false" @endcannot>
+                <i data-lucide="x"></i> Cancelar
+            </button>
             <span class="gb-badge {{ $petition->isGenerated() ? 'gb-badge-success' : 'gb-badge-neutral' }}">
                 {{ $petition->isGenerated() ? 'Gerada' : 'Rascunho' }}
             </span>

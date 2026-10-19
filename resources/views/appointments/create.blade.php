@@ -167,6 +167,11 @@
             <span class="gb-field-hint m-0 align-self-center" id="draft-status" aria-live="polite">
                 @if ($appointment) Rascunho salvo em {{ $appointment->updated_at->format('d/m/Y') }} às {{ $appointment->updated_at->format('H:i') }} @endif
             </span>
+            <button type="button" class="btn btn-white js-cancel-flow" id="btn-cancel-appointment" data-item="o atendimento"
+                    data-list-url="{{ route('appointment.index') }}"
+                    @if ($appointment) data-delete-url="{{ route('appointment.destroy', $appointment) }}" @endif>
+                <i data-lucide="x"></i> Cancelar
+            </button>
             <button type="button" id="btn-save-draft" class="btn btn-white" disabled title="Nenhuma alteração para salvar">
                 <i data-lucide="save"></i> Salvar rascunho
             </button>
@@ -755,6 +760,7 @@
 
         function saved(data) {
             document.getElementById('appointment-id').value = data.id;
+            document.getElementById('btn-cancel-appointment').dataset.deleteUrl = @json(route('appointment.destroy', '__ID__')).replace('__ID__', data.id);
             updateUrl = data.update_url;
             savedSnapshot = snapshot();
             status.textContent = 'Rascunho salvo às ' + data.saved_at;

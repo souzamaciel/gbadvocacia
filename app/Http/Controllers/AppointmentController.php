@@ -70,7 +70,7 @@ class AppointmentController extends Controller
     {
         $appointment->delete();
 
-        return redirect()->route('appointment.index')->with('status', "Rascunho “{$appointment->displayName()}” excluído.");
+        return redirect()->route('appointment.index')->with('status', "Atendimento “{$appointment->displayName()}” excluído.");
     }
 
     /**

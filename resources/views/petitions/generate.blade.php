@@ -7,6 +7,12 @@
                    description="Sua petição foi revisada. Prepare o arquivo para download."
                    :breadcrumbs="['Petições' => route('petition.index'), $petition->name]">
         <x-slot:actions>
+            <button type="button" class="btn btn-white js-cancel-flow" data-item="a petição"
+                    data-list-url="{{ route('petition.index') }}"
+                    @if ($petition->exists) data-delete-url="{{ route('petition.destroy', $petition) }}" @endif
+                    @cannot('petitions.delete') data-can-delete="false" @endcannot>
+                <i data-lucide="x"></i> Cancelar
+            </button>
             <span class="gb-badge {{ $petition->isGenerated() ? 'gb-badge-success' : 'gb-badge-neutral' }}" id="status-badge">
                 {{ $petition->isGenerated() ? 'Gerada' : 'Rascunho' }}
             </span>
@@ -72,7 +78,7 @@
                             <p class="gb-petition-meta" id="download-name">{{ $petition->file_name }}</p>
                             <p class="gb-petition-meta" id="download-date">
                                 @if ($petition->generated_at)
-                                    Gerado em {{ $petition->generated_at->locale('pt_BR')->translatedFormat('d/m/Y \à\s H:i') }} · Word (.docx)
+                                    Gerado em {{ $petition->generated_at->locale('pt_BR')->format('d/m/Y').' às '.$petition->generated_at->format('H:i') }} · Word (.docx)
                                 @endif
                             </p>
                             <p class="gb-petition-meta mt-1">O arquivo não fica guardado no sistema. Para baixar de novo, use “Gerar novamente”.</p>

@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title') — GB Advocacia</title>
     <link rel="icon" href="{{ asset('favicon.ico') }}">
     <link rel="stylesheet" href="{{ asset('vendor/dashforge/dashforge.min.css') }}">
@@ -67,6 +68,52 @@
 
             window.addEventListener('beforeunload', event => {
                 if (isDirty()) { event.preventDefault(); event.returnValue = ''; }
+            });
+
+            /* Botão Cancelar: sai do fluxo e volta para a lista.
+               data-list-url: para onde voltar · data-delete-url: exclui o item já salvo (opcional)
+               data-item: "a petição" / "o atendimento" */
+            function leaveTo(url) { window.gbLeaving = true; location.href = url; }
+
+            function deleteAndLeave(url) {
+                window.gbLeaving = true;
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = url;
+                form.innerHTML = `<input type="hidden" name="_token" value="${document.querySelector('meta[name=csrf-token]').content}"><input type="hidden" name="_method" value="DELETE">`;
+                document.body.appendChild(form);
+                form.submit();
+            }
+
+            document.addEventListener('click', event => {
+                const button = event.target.closest('.js-cancel-flow');
+                if (!button) { return; }
+                event.preventDefault();
+                const item = button.dataset.item || 'o item';
+                const saved = !!button.dataset.deleteUrl;
+                const canDelete = saved && button.dataset.canDelete !== 'false';
+                const dirty = typeof window.gbIsDirty === 'function' && window.gbIsDirty();
+
+                if (!saved && !dirty) { leaveTo(button.dataset.listUrl); return; }
+
+                Swal.fire({
+                    title: saved ? 'Cancelar e sair?' : 'Cancelar?',
+                    text: saved
+                        ? (dirty ? 'As alterações ainda não salvas serão perdidas. ' : '') + `Você pode sair mantendo ${item} na lista, para continuar depois${canDelete ? `, ou excluir ${item}` : ''}.`
+                        : 'O que foi preenchido não será salvo.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    showDenyButton: canDelete,
+                    confirmButtonText: saved ? 'Sair e manter na lista' : 'Sim, cancelar',
+                    denyButtonText: `Excluir ${item}`,
+                    cancelButtonText: 'Continuar aqui',
+                    confirmButtonColor: 'var(--df-brand-01)',
+                    denyButtonColor: 'var(--df-danger)',
+                    reverseButtons: false,
+                }).then(result => {
+                    if (result.isConfirmed) { leaveTo(button.dataset.listUrl); }
+                    if (result.isDenied) { deleteAndLeave(button.dataset.deleteUrl); }
+                });
             });
         })();
     </script>

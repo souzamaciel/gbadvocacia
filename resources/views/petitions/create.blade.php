@@ -7,6 +7,12 @@
                    description="Escolha os tópicos e organize a sequência do documento."
                    :breadcrumbs="['Petições' => route('petition.index'), $petition?->name ?? 'Nova petição']">
         <x-slot:actions>
+            <button type="button" class="btn btn-white js-cancel-flow" data-item="a petição"
+                    data-list-url="{{ route('petition.index') }}"
+                    @if ($petition?->exists) data-delete-url="{{ route('petition.destroy', $petition) }}" @endif
+                    @cannot('petitions.delete') data-can-delete="false" @endcannot>
+                <i data-lucide="x"></i> Cancelar
+            </button>
             <button type="submit" form="petition-form" name="action" value="save" class="btn btn-white js-save-button" disabled>
                 <i data-lucide="save"></i> Salvar
             </button>
@@ -330,7 +336,7 @@
             document.getElementById('library-search').addEventListener('input', filterLibrary);
             document.getElementById('library-group').addEventListener('change', filterLibrary);
 
-            window.gbIsDirty = () => !saveButton.disabled;
+            window.gbIsDirty = () => snapshot() !== savedSnapshot;
 
             render();
         })();
