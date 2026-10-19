@@ -5,6 +5,7 @@ use App\Http\Controllers\AppointmentFormController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\GroupController;
+use App\Http\Controllers\HelpController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PetitionController;
 use App\Http\Controllers\ProfileController;
@@ -50,6 +51,7 @@ Route::middleware('auth')->group(function (): void {
         Route::post('/{petition}/generate', 'generate')->middleware('can:petitions.generate')->name('generate');
     });
 
+    Route::get('/ajuda', [HelpController::class, 'index'])->name('help.index');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::get('/password', fn () => redirect()->route('profile.edit'))->name('password.edit');

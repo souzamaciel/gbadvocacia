@@ -20,9 +20,6 @@
     .accent-note { background: var(--df-ui-01); border-radius: var(--df-radius); padding: 10px 12px; font-size: 13px; color: var(--df-text-03); margin: 0; }
     .add-btn { font: 500 13px/20px var(--df-font); color: var(--df-brand-01); background: none; border: none; padding: 0; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
     .add-btn:hover { text-decoration: underline; }
-    .check-group { display: flex; flex-wrap: wrap; gap: 8px 16px; }
-    .check-item { display: flex; align-items: center; gap: 6px; cursor: pointer; margin: 0; font-size: 13px; color: var(--df-text-02); }
-    .check-item input { width: 16px; height: 16px; accent-color: var(--df-brand-01); cursor: pointer; margin: 0; }
 
     .print-signature-area { display: none; }
     .gb-question-heading { font: 600 11px/16px var(--df-font); letter-spacing: .5px; text-transform: uppercase; color: var(--df-brand-02, #7a5a2e); border-bottom: 1px solid var(--df-border); padding: 8px 0 6px; margin: 4px 0 0; }

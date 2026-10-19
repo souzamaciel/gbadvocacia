@@ -29,6 +29,10 @@
         </ul>
     </nav>
 
+    <a href="{{ route('help.index') }}" class="gb-help-link {{ request()->routeIs('help.*') ? 'active' : '' }}" aria-label="Base de conhecimento" title="Base de conhecimento">
+        <i data-lucide="circle-help"></i>
+    </a>
+
     <div class="gb-account dropdown">
         <button type="button" class="gb-account-toggle" data-bs-toggle="dropdown" aria-expanded="false">
             <i data-lucide="user"></i>
