@@ -11,7 +11,7 @@
 
 @section('content')
     <div class="row g-3 align-items-start">
-        <div class="col-12 col-lg-3">
+        <div class="col-12 col-lg-3 gb-help-aside">
             <nav class="card gb-help-nav" aria-label="Índice da base de conhecimento">
                 <div class="p-3 pb-2">
                     <div class="gb-input-icon">
@@ -80,6 +80,14 @@
                     group.hidden = !group.querySelector('li:not([hidden])');
                 });
                 document.getElementById('help-empty').hidden = visible > 0;
+            });
+
+            document.querySelector('.gb-help-nav').addEventListener('click', event => {
+                const link = event.target.closest('[data-nav]');
+                if (!link) { return; }
+                event.preventDefault();
+                document.getElementById(link.dataset.nav).scrollIntoView({ behavior: 'smooth', block: 'start' });
+                history.replaceState(null, '', '#' + link.dataset.nav);
             });
 
             const links = new Map(Array.from(document.querySelectorAll('[data-nav]')).map(link => [link.dataset.nav, link]));
