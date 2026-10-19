@@ -38,7 +38,7 @@ class TopicVariableSuggestionService
             ->withToken(config('services.openai.api_key'))
             ->acceptJson()
             ->asJson()
-            ->timeout(90)
+            ->timeout(120)
             ->post('/responses', $payload);
 
         if (! $response->successful()) {
@@ -146,8 +146,7 @@ Título e grupo do tópico:
 TEXT;
 
         return [
-            'model' => config('services.openai.model'),
-            'temperature' => 0,
+            ...ModelOptions::payload(),
             'instructions' => $instructions,
             'input' => [[
                 'role' => 'user',

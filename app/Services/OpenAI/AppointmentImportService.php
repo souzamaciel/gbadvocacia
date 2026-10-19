@@ -43,7 +43,7 @@ class AppointmentImportService
             ->withToken(config('services.openai.api_key'))
             ->acceptJson()
             ->asJson()
-            ->timeout(180)
+            ->timeout(240)
             ->post('/responses', $payload);
 
         if (! $response->successful()) {
@@ -316,8 +316,7 @@ Retorne somente JSON válido conforme o schema.
 TEXT;
 
         return [
-            'model' => config('services.openai.model'),
-            'temperature' => 0,
+            ...ModelOptions::payload(),
             'instructions' => $instructions,
             'input' => [[
                 'role' => 'user',

@@ -38,7 +38,8 @@ return [
     'openai' => [
         'api_key' => env('OPENAI_API_KEY'),
         'base_url' => env('OPENAI_BASE_URL', 'https://api.openai.com/v1'),
-        'model' => env('OPENAI_MODEL', 'gpt-4.1'),
+        'model' => env('OPENAI_MODEL', 'gpt-6-luna'),
+        'reasoning_effort' => env('OPENAI_REASONING_EFFORT', 'medium'),
         'vector_store_id' => env('OPENAI_VECTOR_STORE_ID'),
     ],
 

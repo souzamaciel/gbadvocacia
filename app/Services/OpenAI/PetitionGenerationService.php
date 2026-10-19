@@ -22,7 +22,7 @@ class PetitionGenerationService
             ->withToken(config('services.openai.api_key'))
             ->acceptJson()
             ->asJson()
-            ->timeout(120)
+            ->timeout(240)
             ->post('/responses', $payload);
 
         if (! $response->successful()) {
@@ -57,7 +57,6 @@ class PetitionGenerationService
 
     protected function buildPayload(array $dados, bool $usarFileSearch = true, bool $hasFormData = true): array
     {
-        $model = config('services.openai.model');
         $vectorStoreId = config('services.openai.vector_store_id');
 
         $tools = [];
@@ -122,7 +121,7 @@ IMPORTANTE:
 TEXT;
 
         $payload = [
-            'model' => $model,
+            ...ModelOptions::payload(false),
             'instructions' => $instructions,
             'input' => [[
                 'role' => 'user',
