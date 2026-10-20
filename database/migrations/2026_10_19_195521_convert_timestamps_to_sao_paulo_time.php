@@ -12,6 +12,9 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
+     * Only tables that existed before this release: the new ones (roles, petitions,
+     * appointments, form) are created already in Brasília time.
+     *
      * @var array<string, list<string>>
      */
     private array $columns = [
@@ -21,12 +24,6 @@ return new class extends Migration
         'groups' => ['created_at', 'updated_at'],
         'topics' => ['created_at', 'updated_at'],
         'petition_logs' => ['created_at', 'updated_at'],
-        'petitions' => ['generated_at', 'created_at', 'updated_at'],
-        'petition_items' => ['reviewed_at', 'created_at', 'updated_at'],
-        'roles' => ['created_at', 'updated_at'],
-        'appointment_form_steps' => ['created_at', 'updated_at'],
-        'appointment_form_questions' => ['created_at', 'updated_at'],
-        'appointments' => ['generated_at', 'created_at', 'updated_at'],
     ];
 
     /**
