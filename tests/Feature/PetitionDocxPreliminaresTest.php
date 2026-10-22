@@ -17,9 +17,9 @@ class PetitionDocxPreliminaresTest extends TestCase
 {
     use RefreshDatabase;
 
-    private const JUIZO_DIGITAL_TEXT = 'A tramitação do processo no Juízo 100% digital';
+    private const JUIZO_DIGITAL_TEXT = 'Requer a tramitação do processo no Juízo 100% digital';
 
-    private const GRATUIDADE_TEXT = 'Os benefícios da Assistência Judiciária Gratuita';
+    private const GRATUIDADE_TEXT = 'Requer os benefícios da Assistência Judiciária Gratuita';
 
     public function test_final_requests_include_both_preliminares_when_selected(): void
     {

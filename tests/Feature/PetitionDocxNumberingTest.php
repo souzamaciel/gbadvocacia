@@ -81,7 +81,7 @@ class PetitionDocxNumberingTest extends TestCase
 
         $this->assertContains('Ipatinga, 14 de março de 2026', $paragraphs);
         $this->assertContains('Nesses termos,', $paragraphs);
-        $this->assertContains('Pede deferimento.', $paragraphs);
+        $this->assertContains('Pede deferimento', $paragraphs);
     }
 
     /**

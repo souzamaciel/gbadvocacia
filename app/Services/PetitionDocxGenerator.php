@@ -12,6 +12,11 @@ use PhpOffice\PhpWord\Style\Tab;
 
 class PetitionDocxGenerator
 {
+    /**
+     * Text width in twips: A4 width minus the left and right margins.
+     */
+    protected const BODY_WIDTH = 11906 - 1276 - 1133;
+
     protected PhpWord $word;
 
     /**
@@ -96,7 +101,7 @@ class PetitionDocxGenerator
 
         $footer = $section->addFooter();
         $footerFont = ['name' => 'Verdana', 'size' => 10, 'color' => 'D7AA2D'];
-        $bodyWidth = 11906 - 1276 - 1133;
+        $bodyWidth = self::BODY_WIDTH;
 
         $addressLine = $footer->addTextRun([
             'alignment' => Jc::LEFT,
@@ -242,9 +247,7 @@ class PetitionDocxGenerator
             $textRun->addText(', PIS/PASEP '.$data['cliente_pis']);
         }
 
-        $estadoCivil = $data['cliente_estado_civil'] ?? '';
-        $isFeminine = $estadoCivil !== '' && mb_substr($estadoCivil, -1) === 'a';
-        $residenteTerm = $isFeminine ? 'residente e domiciliada' : 'residente e domiciliado';
+        $residenteTerm = $this->isFeminine($data) ? 'residente e domiciliada' : 'residente e domiciliado';
 
         $textRun->addText(', '.$residenteTerm.' à '.($data['cliente_endereco'] ?? 'endereço não informado'));
 
@@ -423,7 +426,12 @@ class PetitionDocxGenerator
         }
     }
 
-    /** @param  array<string, mixed>  $data */
+    /**
+     * Pedidos in the office's layout (PETIÇÃO.doc): "a) ..." and indented "a.1) ...", each
+     * ending with a dotted leader up to a blank amount for the lawyer to fill in.
+     *
+     * @param  array<string, mixed>  $data
+     */
     protected function addPedidos(Section $section, array $data): void
     {
         $section->addText(
@@ -432,35 +440,62 @@ class PetitionDocxGenerator
             $this->styles['topicTitle']
         );
 
-        $section->addText(
-            'Diante de todo o exposto, requer a parte reclamante a total procedência da presente reclamação trabalhista, '
-            .'com a condenação da reclamada ao pagamento e cumprimento das parcelas e obrigações abaixo descritas, '
-            .'tudo a ser apurado em regular liquidação de sentença, acrescido de juros, correção monetária e demais '
-            .'consectários legais:',
-            $this->styles['normal'],
-            $this->styles['indent']
+        $intro = $section->addTextRun($this->styles['indent']);
+        $intro->addText('Diante do exposto, ', $this->styles['bold']);
+        $intro->addText(
+            'requer que seja condenada a ré ao pagamento das parcelas abaixo discriminadas, apresentando seu cálculo '
+            .'com descrição dos valores atualizados até '.now()->format('d/m/Y').'.'
         );
 
-        $pedidos = array_values($data['pedidos'] ?? []);
-
-        foreach ($pedidos as $index => $pedido) {
-            $descricao = is_array($pedido) ? ($pedido['descricao'] ?? '') : $pedido;
+        foreach (array_values($data['pedidos'] ?? []) as $index => $pedido) {
             $letter = chr(ord('a') + ($index % 26));
+            $subitens = is_array($pedido) ? array_values(array_filter(
+                array_map(fn ($subitem): string => trim((string) (is_array($subitem) ? ($subitem['descricao'] ?? '') : $subitem)), $pedido['subitens'] ?? []),
+                fn (string $descricao): bool => $descricao !== '',
+            )) : [];
 
-            $section->addText(
-                "{$letter}) {$descricao}",
-                $this->styles['normal'],
-                [
-                    'alignment' => Jc::BOTH,
-                    'spaceAfter' => Converter::pointToTwip($index === count($pedidos) - 1 ? 18 : 4),
-                    'indentation' => [
-                        'left' => Converter::cmToTwip(0.8),
-                        'hanging' => Converter::cmToTwip(0.8),
-                    ],
-                    'lineHeight' => 1.5,
-                ]
+            $this->addPedidoLine(
+                $section,
+                "{$letter}) ".$this->pedidoText(is_array($pedido) ? ($pedido['descricao'] ?? '') : $pedido),
+                0,
+                $subitens === [],
             );
+
+            foreach ($subitens as $subIndex => $subitem) {
+                $this->addPedidoLine(
+                    $section,
+                    "{$letter}.".($subIndex + 1).') '.$this->pedidoText($subitem),
+                    (int) round(Converter::cmToTwip(3)),
+                    $subIndex === count($subitens) - 1,
+                );
+            }
         }
+    }
+
+    /**
+     * Word places the stop of an indented paragraph short by the indent, so the indent is
+     * added back to keep every amount on the right margin (checked in Word).
+     */
+    protected function addPedidoLine(Section $section, string $text, int $leftIndent, bool $lastOfGroup): void
+    {
+        $textRun = $section->addTextRun([
+            'alignment' => Jc::BOTH,
+            'spaceAfter' => $lastOfGroup ? Converter::pointToTwip(18) : 0,
+            'lineHeight' => 1.5,
+            'indentation' => ['left' => $leftIndent],
+            'tabs' => [new Tab(Tab::TAB_STOP_RIGHT, self::BODY_WIDTH + $leftIndent, Tab::TAB_LEADER_DOT)],
+        ]);
+        $textRun->addText($text."\tR$ ________");
+    }
+
+    /**
+     * Strips the trailing period and any dotted amount the AI may have added, so the line ends in the leader.
+     */
+    protected function pedidoText(string $text): string
+    {
+        $text = preg_replace('/\s*(?:\.{3,}|…+)\s*R\$\s*[\d.,_]*\s*$/u', '', trim($text)) ?? $text;
+
+        return rtrim(trim($text), ' .;');
     }
 
     /** @param  array<string, mixed>  $data */
@@ -469,7 +504,7 @@ class PetitionDocxGenerator
         $section->addText(
             'Diante do exposto, requer de Vossa Excelência que proceda a citação da reclamada para contestar a '
             .'presente reclamatória trabalhista, sob pena de revelia e confissão quanto à matéria de fato, que, '
-            .'ao final, deverá ser julgada procedente, condenando a demandada na forma do pedido, acrescido de juros '
+            .'ao final, deverá ser julgada procedente, condenando a reclamada na forma do pedido, acrescido de juros '
             .'e correção monetária.',
             $this->styles['normal'],
             $this->styles['indent']
@@ -479,8 +514,8 @@ class PetitionDocxGenerator
 
         if (in_array(Topic::JUIZO_100_DIGITAL_ID, $selectedPreliminares, true)) {
             $section->addText(
-                'A tramitação do processo no Juízo 100% digital, bem como sejam intimadas as partes requeridas para '
-                .'manifestarem sobre a petição no prazo de 5 dias, sob pena do silêncio entender-se como concordância tácita.',
+                'Requer a tramitação do processo no Juízo 100% digital, bem como seja intimada a parte requerida para '
+                .'manifestar sobre a petição no prazo de 5 dias, sob pena do silêncio entender-se como concordância tácita.',
                 $this->styles['normal'],
                 $this->styles['indent']
             );
@@ -488,8 +523,8 @@ class PetitionDocxGenerator
 
         if (in_array(Topic::GRATUIDADE_JUSTICA_ID, $selectedPreliminares, true)) {
             $section->addText(
-                'Os benefícios da Assistência Judiciária Gratuita, nos termos da Lei nº 1.060/50 e suas alterações, '
-                .'por ser a reclamante pessoa pobre no sentido legal.',
+                'Requer os benefícios da Assistência Judiciária Gratuita, nos termos da Lei nº 1.060/50 e suas alterações, '
+                .'por ser '.($this->isFeminine($data) ? 'a reclamante' : 'o reclamante').' pessoa pobre no sentido legal.',
                 $this->styles['normal'],
                 $this->styles['indent']
             );
@@ -502,7 +537,7 @@ class PetitionDocxGenerator
         $section->addText(
             'Protesta provar o alegado por todos os meios de prova em direito admitidos, sem exclusão de nenhuma, '
             .'especialmente pelo depoimento pessoal da reclamada, sob pena de confissão (En. 74 do C. TST), oitiva de testemunhas, '
-            .'perícia técnica para comprovar a insalubridade e periculosidade, juntada de documentos e demais provas '
+            .'perícia técnica, juntada de documentos e demais provas '
             .'que se fizerem necessárias.',
             $this->styles['normal'],
             $this->styles['indent']
@@ -528,7 +563,7 @@ class PetitionDocxGenerator
     protected function addFecho(Section $section, array $data): void
     {
         $section->addText('Nesses termos,', null, $this->styles['tight']);
-        $section->addText('Pede deferimento.', null, $this->styles['tight']);
+        $section->addText('Pede deferimento', null, $this->styles['tight']);
 
         $cidade = $data['cidade_assinatura'] ?? 'Ipatinga';
         $dataAssinatura = $data['data_assinatura'] ?? now()->locale('pt_BR')->translatedFormat('j \\d\\e F \\d\\e Y');
@@ -617,6 +652,18 @@ class PetitionDocxGenerator
                 'genero' => 'M',
             ],
         ];
+    }
+
+    /**
+     * The client's gender as inferred from the marital status ("casada", "solteira"...).
+     *
+     * @param  array<string, mixed>  $data
+     */
+    protected function isFeminine(array $data): bool
+    {
+        $estadoCivil = (string) ($data['cliente_estado_civil'] ?? '');
+
+        return $estadoCivil !== '' && mb_substr($estadoCivil, -1) === 'a';
     }
 
     /**
