@@ -52,7 +52,7 @@ class PetitionDocumentService
             ],
         );
 
-        $temporaryPath = (new PetitionDocxGenerator)->generateMerit($data);
+        $temporaryPath = (new PetitionDocxGenerator)->generateFull($data);
 
         $baseName = Str::slug($fileName ?: $petition->name) ?: 'peticao-inicial';
 

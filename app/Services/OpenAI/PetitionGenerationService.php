@@ -118,6 +118,7 @@ IMPORTANTE:
 - Os campos "valor_causa" e "valor_causa_extenso" SÃO OBRIGATÓRIOS e nunca devem ficar vazios. O valor da causa deve ser a soma dos valores estimados de todos os pedidos e subitens. Estime um valor de sugestão coerente com os pedidos selecionados e com os dados do caso (quando disponíveis: salário, tempo de contrato, verbas pleiteadas, indenizações etc.). Caso não haja dados suficientes do caso, gere uma estimativa-base razoável a partir dos pedidos. "valor_causa" deve estar no formato "R$ X.XXX,XX" e "valor_causa_extenso" deve ser a grafia por extenso correspondente.
 - O campo "preliminares" deve conter EXATAMENTE UM item para CADA preliminar listada em "preliminares_selecionadas" do JSON, na mesma ordem. NUNCA omita, una ou descarte uma preliminar selecionada — mesmo que falte dado para preencher variáveis, mantenha-as entre [colchetes] e registre em "pendencias". Para cada item, use o "title" da preliminar selecionada como "titulo" e elabore "conteudo_html" a partir do "content" daquela preliminar. Se "preliminares_selecionadas" estiver vazio, retorne array vazio.
 - O campo "honorarios_html" deve existir se houver honorários.
+- O campo "cidade_vara" indica onde fica a Vara do Trabalho competente: a cidade do local da prestação de serviço informada na ficha, seguida do estado por extenso, em maiúsculas (ex.: "CORONEL FABRICIANO/MINAS GERAIS"). Se a ficha não informar o local da prestação de serviço, deixe vazio.
 TEXT;
 
         $payload = [
@@ -157,6 +158,7 @@ TEXT;
             'additionalProperties' => false,
             'properties' => [
                 'titulo_acao' => ['type' => 'string'],
+                'cidade_vara' => ['type' => 'string'],
                 'preliminares' => [
                     'type' => 'array',
                     'items' => [
@@ -236,6 +238,7 @@ TEXT;
             ],
             'required' => [
                 'titulo_acao',
+                'cidade_vara',
                 'preliminares',
                 'contrato_trabalho_html',
                 'topicos',
@@ -304,7 +307,7 @@ TEXT;
         return [
             // base do caso
             'titulo_documento' => 'Petição Inicial Trabalhista',
-            'vara_competente' => $dadosOriginais['vara_competente'] ?? '___ VARA DO TRABALHO DE __________',
+            'cidade_vara' => mb_strtoupper(trim((string) ($structured['cidade_vara'] ?? ''))),
             'titulo_acao' => $structured['titulo_acao'] ?? ($dadosOriginais['titulo_acao'] ?? 'RECLAMAÇÃO TRABALHISTA'),
 
             // cliente

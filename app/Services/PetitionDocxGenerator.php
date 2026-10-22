@@ -41,7 +41,8 @@ class PetitionDocxGenerator
     }
 
     /**
-     * Generate the full petition (with client/employer data).
+     * Generate the full petition: opening with the client and employer data (or [blanks]
+     * to fill in when the petition was built from the Library), then merit and pedidos.
      *
      * @param  array<string, mixed>  $data
      */
@@ -208,89 +209,55 @@ class PetitionDocxGenerator
     /** @param  array<string, mixed>  $data */
     protected function addEnderecamento(Section $section, array $data): void
     {
-        $vara = $data['vara_competente'] ?? '___ VARA DO TRABALHO DE __________';
+        $cidade = trim((string) ($data['cidade_vara'] ?? '')) ?: '[CIDADE]/[ESTADO]';
+
         $section->addText(
-            mb_strtoupper("AO DOUTO JUÍZO DA {$vara}"),
+            mb_strtoupper("AO DOUTO JUÍZO DA ___ª VARA DO TRABALHO DE {$cidade}"),
             $this->styles['boldUpper'],
             array_merge($this->styles['indent'], $this->styles['spacer'])
         );
     }
 
-    /** @param  array<string, mixed>  $data */
+    /**
+     * Client qualification in the office's wording (PETIÇÃO.doc); missing data becomes a
+     * [blank] for the lawyer to fill in.
+     *
+     * @param  array<string, mixed>  $data
+     */
     protected function addQualificacaoReclamante(Section $section, array $data): void
     {
         $textRun = $section->addTextRun($this->styles['tight']);
+        $textRun->addText(mb_strtoupper($this->field($data, 'cliente_nome', 'NOME DO RECLAMANTE')), $this->styles['bold']);
 
-        $textRun->addText(
-            mb_strtoupper($data['cliente_nome'] ?? 'NOME DA PARTE AUTORA'),
-            $this->styles['bold']
+        $endereco = 'na '.$this->field($data, 'cliente_endereco', 'endereço')
+            .', nº '.$this->field($data, 'cliente_numero', 'número')
+            .(trim((string) ($data['cliente_complemento'] ?? '')) !== '' ? ', '.trim($data['cliente_complemento']) : '')
+            .', bairro '.$this->field($data, 'cliente_bairro', 'bairro')
+            .', CEP '.$this->field($data, 'cliente_cep', 'CEP')
+            .', '.$this->field($data, 'cliente_cidade', 'cidade').'/'.$this->field($data, 'cliente_uf', 'UF');
+
+        $textRun->addText(', '.implode(', ', [
+            $this->field($data, 'cliente_nacionalidade', 'nacionalidade'),
+            $this->field($data, 'cliente_estado_civil', 'estado civil'),
+            $this->field($data, 'cliente_profissao', 'profissão'),
+            'RG '.$this->field($data, 'cliente_rg', 'RG'),
+            $this->field($data, 'cliente_orgao_expedidor', 'órgão expedidor'),
+            'CPF '.$this->field($data, 'cliente_cpf', 'CPF'),
+            ($this->isFeminine($data) ? 'residente e domiciliada ' : 'residente e domiciliado ').$endereco,
+            'CTPS: '.$this->field($data, 'cliente_ctps', 'CTPS'),
+            'série '.$this->field($data, 'cliente_ctps_serie', 'série'),
+            'PIS/PASEP '.$this->field($data, 'cliente_pis', 'PIS/PASEP'),
+        ]));
+
+        $advogados = array_map(
+            fn (array $adv): string => ($adv['nome'] ?? '').', '.((($adv['genero'] ?? 'M') === 'F') ? 'inscrita' : 'inscrito').' na '.($adv['oab'] ?? ''),
+            $this->getAdvogados($data),
         );
-
-        $parts = [];
-        $parts[] = $data['cliente_nacionalidade'] ?? 'nacionalidade não informada';
-        $parts[] = $data['cliente_estado_civil'] ?? 'estado civil não informado';
-        $parts[] = $data['cliente_profissao'] ?? 'profissão não informada';
-
-        $textRun->addText(', '.implode(', ', $parts));
-
-        if (! empty($data['cliente_rg'])) {
-            $textRun->addText(', RG '.$data['cliente_rg']);
-            if (! empty($data['cliente_orgao_expedidor'])) {
-                $textRun->addText(', '.$data['cliente_orgao_expedidor']);
-            }
-        }
-
-        if (! empty($data['cliente_cpf'])) {
-            $textRun->addText(', CPF '.$data['cliente_cpf']);
-        }
-
-        if (! empty($data['cliente_ctps'])) {
-            $textRun->addText(', CTPS '.$data['cliente_ctps']);
-        }
-        if (! empty($data['cliente_ctps_serie'])) {
-            $textRun->addText(', SÉRIE '.$data['cliente_ctps_serie']);
-        }
-        if (! empty($data['cliente_pis'])) {
-            $textRun->addText(', PIS/PASEP '.$data['cliente_pis']);
-        }
-
-        $residenteTerm = $this->isFeminine($data) ? 'residente e domiciliada' : 'residente e domiciliado';
-
-        $textRun->addText(', '.$residenteTerm.' à '.($data['cliente_endereco'] ?? 'endereço não informado'));
-
-        if (! empty($data['cliente_numero'])) {
-            $textRun->addText(' nº '.$data['cliente_numero']);
-        }
-        if (! empty($data['cliente_complemento'])) {
-            $textRun->addText(', '.$data['cliente_complemento']);
-        }
-
-        $textRun->addText(', Bairro '.($data['cliente_bairro'] ?? 'não informado'));
-        $textRun->addText(', '.($data['cliente_cidade'] ?? 'cidade não informada').'/'.($data['cliente_uf'] ?? 'UF'));
-        $textRun->addText(', CEP '.($data['cliente_cep'] ?? 'não informado'));
-
-        $advogados = $this->getAdvogados($data);
-        if ($advogados !== []) {
-            $textRun->addText(', por seus advogados ');
-
-            $advTexts = [];
-            foreach ($advogados as $adv) {
-                $inscricao = (($adv['genero'] ?? 'M') === 'F') ? 'inscrita' : 'inscrito';
-                $advTexts[] = ($adv['nome'] ?? '').', '.$inscricao.' na '.($adv['oab'] ?? '');
-            }
-
-            if (count($advTexts) === 1) {
-                $textRun->addText($advTexts[0]);
-            } else {
-                $last = array_pop($advTexts);
-                $textRun->addText(implode(', ', $advTexts).' e '.$last);
-            }
-
-            $textRun->addText(', mandato incluso');
-        }
+        $last = array_pop($advogados);
+        $textRun->addText(', por seus advogados '.($advogados === [] ? $last : implode(', ', $advogados).' e '.$last).', mandato incluso');
 
         $textRun->addText(
-            ', ambos com endereço profissional na Rua Jaspe, nº 290, Bairro: Iguaçu Ipatinga/MG CEP: 35.162-077, '
+            ', ambos com endereço profissional na Rua Jaspe, nº 290, Bairro: Iguaçu – Cidade: Ipatinga/MG – CEP: 35.162-077, '
             .'local onde recebem intimações/notificações, '
             .'vem, respeitosamente, à presença de Vossa Excelência, '
             .'nos termos do Artigo 840 da CLT propor:'
@@ -309,37 +276,30 @@ class PetitionDocxGenerator
     protected function addQualificacaoReclamada(Section $section, array $data): void
     {
         $textRun = $section->addTextRun($this->styles['indent']);
+        $textRun->addText(mb_strtoupper($this->field($data, 'empregador_nome', 'NOME DA RECLAMADA')), $this->styles['bold']);
 
         $textRun->addText(
-            mb_strtoupper($data['empregador_nome'] ?? 'NOME DA RECLAMADA'),
-            $this->styles['bold']
+            ', pessoa jurídica de direito privado, inscrita no CNPJ sob o nº '.$this->field($data, 'empregador_cnpj', 'CNPJ')
+            .', com sede na '.$this->field($data, 'empregador_endereco', 'endereço')
+            .', nº '.$this->field($data, 'empregador_numero', 'número')
+            .(trim((string) ($data['empregador_complemento'] ?? '')) !== '' ? ', '.trim($data['empregador_complemento']) : '')
+            .', '.$this->field($data, 'empregador_bairro', 'bairro')
+            .', '.$this->field($data, 'empregador_cidade', 'cidade').'/'.$this->field($data, 'empregador_uf', 'UF')
+            .', CEP '.$this->field($data, 'empregador_cep', 'CEP')
+            .', de acordo com as razões a seguir aduzidas:'
         );
+    }
 
-        $textRun->addText(', pessoa jurídica de direito privado');
-        $textRun->addText(', inscrita no CNPJ sob o nº '.($data['empregador_cnpj'] ?? 'CNPJ não informado'));
-        $textRun->addText(', com sede e endereço para receber notificações à '.($data['empregador_endereco'] ?? 'endereço não informado'));
+    /**
+     * A case detail, or "[label]" when it was not informed.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    protected function field(array $data, string $key, string $label): string
+    {
+        $value = trim((string) ($data[$key] ?? ''));
 
-        if (! empty($data['empregador_numero'])) {
-            $textRun->addText(', nº '.$data['empregador_numero']);
-        }
-        if (! empty($data['empregador_complemento'])) {
-            $textRun->addText(', '.$data['empregador_complemento']);
-        }
-
-        $textRun->addText(', Bairro '.($data['empregador_bairro'] ?? 'não informado'));
-        $textRun->addText(', '.($data['empregador_cidade'] ?? 'cidade não informada').'/'.($data['empregador_uf'] ?? 'UF'));
-        $textRun->addText(', CEP '.($data['empregador_cep'] ?? 'não informado'));
-
-        $tel = $data['empregador_telefone'] ?? '';
-        $email = $data['empregador_email'] ?? '';
-
-        if ($tel !== '' && $email !== '') {
-            $textRun->addText(', telefone '.$tel.' e endereço eletrônico '.$email);
-        } elseif ($tel !== '') {
-            $textRun->addText(', telefone '.$tel);
-        } elseif ($email !== '') {
-            $textRun->addText(', endereço eletrônico '.$email);
-        }
+        return $value !== '' ? $value : "[{$label}]";
     }
 
     /** @param  array<string, mixed>  $data */
