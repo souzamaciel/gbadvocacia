@@ -2,7 +2,7 @@
 <p>O menu mostra apenas as áreas que o seu perfil pode usar.</p>
 <table class="gb-help-table">
     <tr><th>Menu</th><th>Para que serve</th></tr>
-    <tr><td><strong>Atendimentos</strong></td><td>Preencher a ficha com o cliente, salvar rascunhos e gerar a petição com a IA.</td></tr>
+    <tr><td><strong>Atendimentos</strong></td><td>Preencher a ficha com o cliente ou importar a ficha do Word, salvar rascunhos e gerar a petição com a IA.</td></tr>
     <tr><td><strong>Petições</strong></td><td>Montar, revisar e gerar petições a partir da Biblioteca.</td></tr>
     <tr><td><strong>Biblioteca de tópicos</strong></td><td>Modelos de texto do escritório, organizados em grupos.</td></tr>
     <tr><td><strong>Usuários</strong></td><td>Cadastro da equipe e perfis de permissão (só administradores).</td></tr>

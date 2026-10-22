@@ -2,7 +2,7 @@
 <ol>
     <li>Em <strong>Atendimentos</strong>, clique em <strong>Importar ficha (Word)</strong>.</li>
     <li>Arraste o arquivo <strong>.docx</strong> para a área indicada ou clique para escolher. Depois clique em <strong>Ler ficha com IA</strong>.</li>
-    <li>Aguarde de 30 segundos a 1 minuto. O atendimento abre <strong>preenchido e salvo como rascunho</strong>, com as preliminares e os pedidos sugeridos.</li>
+    <li>Aguarde de 30 segundos a 1 minuto, com a página aberta. O atendimento abre <strong>preenchido e salvo como rascunho</strong>, com as preliminares e os pedidos sugeridos.</li>
     <li>No topo aparece um aviso com <strong>cada pedido sugerido e o motivo</strong>, além dos <strong>pontos para conferir</strong>. Revise todos os assuntos, ajuste o que precisar e clique em <strong>Concluir atendimento</strong> para gerar a petição.</li>
 </ol>
 <div class="gb-help-note is-warning"><i data-lucide="sparkles"></i><div>A IA pode se enganar ou sugerir um pedido sem fundamento suficiente. <strong>Confira sempre</strong> as respostas e os pedidos antes de concluir.</div></div>

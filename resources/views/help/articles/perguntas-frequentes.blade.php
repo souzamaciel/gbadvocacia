@@ -2,6 +2,10 @@
 <p>Peça ao administrador para redefinir a senha em Usuários. Você receberá uma senha provisória e criará a sua no primeiro acesso.</p>
 <h4>Perdi o Word da petição. Consigo recuperar?</h4>
 <p>Sim. Em Petições ou Atendimentos, abra a aba <strong>Geradas</strong> e gere novamente. As respostas e revisões ficam salvas.</p>
+<h4>A geração está demorando. É normal?</h4>
+<p>Sim. A IA leva cerca de um minuto para redigir a petição ou ler a ficha. Deixe a página aberta: quando fica pronto, o Word é baixado sozinho (na importação, o atendimento abre preenchido). Se aparecer “Não foi possível concluir agora”, aguarde alguns instantes e tente de novo. O que você preencheu continua salvo.</p>
+<h4>Fechei a página durante a geração. Perdi o trabalho?</h4>
+<p>Não. A petição e o atendimento são salvos antes da geração começar. Abra-os de novo e gere outra vez. O Word que não foi baixado é apagado automaticamente em até 1 hora.</p>
 <h4>Editei um texto na revisão. O modelo da Biblioteca muda?</h4>
 <p>Não. Os ajustes na revisão valem só para aquela petição. Para mudar o modelo, edite o tópico na Biblioteca.</p>
 <h4>O que é a faixa verde “Orientação interna” no Word?</h4>
