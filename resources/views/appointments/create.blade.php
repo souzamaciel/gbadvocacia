@@ -688,75 +688,60 @@
 
             var btn = document.getElementById('btn-submit-appointment');
             var originalText = btn.innerHTML;
+            var formData = new FormData(form);
 
             btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Carregando...';
-
-            var formData = new FormData(form);
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Gerando a petição…';
+            window.gbGenerating = true;
 
             fetch(form.action, {
                 method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': formData.get('_token'),
-                },
+                headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': formData.get('_token') },
                 body: formData,
             })
             .then(function (response) {
-                if (!response.ok) {
-                    return response.json().then(function (data) {
+                return response.json().catch(function () { return {}; }).then(function (data) {
+                    if (!response.ok) {
                         var error = new Error(data.message || 'Erro ao gerar petição.');
                         error.missing = data.missing;
                         throw error;
-                    });
-                }
-
-                var disposition = response.headers.get('Content-Disposition') || '';
-                var filenameMatch = disposition.match(/filename="?([^";\s]+)"?/);
-                var filename = filenameMatch ? filenameMatch[1] : 'peticao-inicial.docx';
-
-                if (response.headers.get('X-Appointment-Id')) {
+                    }
                     window.gbDraft.saved({
-                        id: response.headers.get('X-Appointment-Id'),
-                        edit_url: response.headers.get('X-Appointment-Url'),
-                        update_url: response.headers.get('X-Appointment-Update-Url'),
+                        id: data.appointment.id,
+                        edit_url: data.appointment.edit_url,
+                        update_url: data.appointment.update_url,
                         saved_at: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
                     });
-                }
-
-                return response.blob().then(function (blob) {
-                    var url = URL.createObjectURL(blob);
-                    var link = document.createElement('a');
-                    link.href = url;
-                    link.download = filename;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    URL.revokeObjectURL(url);
-
-                    btn.disabled = false;
-                    btn.innerHTML = originalText;
-
-                    Swal.fire({
-                        title: 'Petição gerada com sucesso!',
-                        text: 'O atendimento ficou salvo em Atendimentos, na aba Geradas. Deseja começar outro atendimento?',
-                        icon: 'success',
-                        showCancelButton: true,
-                        confirmButtonColor: 'var(--gb-navy)',
-                        cancelButtonColor: '#6c757d',
-                        confirmButtonText: 'Sim, novo atendimento',
-                        cancelButtonText: 'Não',
-                    }).then(function (result) {
-                        if (result.isConfirmed) {
-                            window.location.href = '{{ route('appointment.create') }}';
-                        }
-                    });
+                    return gbGeneration.wait(data.status_url);
+                });
+            })
+            .then(function (result) {
+                return gbGeneration.download(result.download_url, result.file_name);
+            })
+            .then(function () {
+                Swal.fire({
+                    title: 'Petição gerada com sucesso!',
+                    text: 'O atendimento ficou salvo em Atendimentos, na aba Geradas. Deseja começar outro atendimento?',
+                    icon: 'success',
+                    showCancelButton: true,
+                    confirmButtonColor: 'var(--df-brand-01)',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Sim, novo atendimento',
+                    cancelButtonText: 'Não',
+                }).then(function (result) {
+                    if (result.isConfirmed) {
+                        window.location.href = '{{ route('appointment.create') }}';
+                    }
                 });
             })
             .catch(function (err) {
+                if (err.missing && err.missing.length) { showMissing(err.missing); return; }
+                Swal.fire({ icon: 'error', title: 'Não foi possível gerar a petição', text: (err.message || 'Erro de conexão. Tente novamente.') + ' O atendimento continua salvo nos rascunhos.', confirmButtonColor: 'var(--df-brand-01)' });
+            })
+            .finally(function () {
+                window.gbGenerating = false;
                 btn.disabled = false;
                 btn.innerHTML = originalText;
-                if (err.missing && err.missing.length) { showMissing(err.missing); return; }
-                Swal.fire({ icon: 'error', title: 'Não foi possível gerar a petição', text: err.message || 'Erro de conexão. Tente novamente.', confirmButtonColor: 'var(--df-brand-01)' });
             });
         });
     });
@@ -821,7 +806,7 @@
         });
 
         ['input', 'change', 'click'].forEach(type => form.addEventListener(type, () => setTimeout(refresh, 0)));
-        window.gbIsDirty = isDirty;
+        window.gbIsDirty = () => window.gbGenerating === true || isDirty();
         window.addEventListener('load', () => { savedSnapshot = snapshot(); refresh(); });
 
         return { saved };

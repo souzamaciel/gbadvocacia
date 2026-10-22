@@ -27,6 +27,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.14.5"></script>
     <script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+    <script src="{{ asset('js/gb-generation.js').'?v='.filemtime(public_path('js/gb-generation.js')) }}"></script>
     <script>
         lucide.createIcons();
 
@@ -50,8 +51,8 @@
 
             document.addEventListener('click', event => {
                 const link = event.target.closest('a[href]');
-                if (!link || event.defaultPrevented || link.target === '_blank' || event.ctrlKey || event.metaKey || event.shiftKey
-                    || link.getAttribute('href').startsWith('#') || !isDirty()) { return; }
+                if (!link || event.defaultPrevented || link.target === '_blank' || link.hasAttribute('download') || event.ctrlKey || event.metaKey || event.shiftKey
+                    || link.getAttribute('href').startsWith('#') || link.getAttribute('href').startsWith('blob:') || !isDirty()) { return; }
                 event.preventDefault();
                 confirmLeave().then(leave => { if (leave) { location.href = link.href; } });
             });

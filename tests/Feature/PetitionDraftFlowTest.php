@@ -177,9 +177,15 @@ class PetitionDraftFlowTest extends TestCase
         ]);
         $petition->items()->update(['reviewed_at' => now()]);
 
-        $response = $this->actingAs($this->user)->postJson(route('petition.generate', $petition), ['file_name' => 'Petição Maria']);
+        $started = $this->actingAs($this->user)->postJson(route('petition.generate', $petition), ['file_name' => 'Petição Maria']);
+        $status = $this->generationResult($started);
 
-        $response->assertOk()->assertDownload('peticao-maria.docx');
+        $this->assertSame('peticao-maria.docx', $status['file_name']);
+        $token = basename($started->json('status_url'));
+        $this->assertFileExists(storage_path("app/private/geracoes/{$token}.docx"));
+        $download = $this->downloadGeneration($started)->assertOk()->assertDownload('peticao-maria.docx');
+        $this->assertTrue((fn (): bool => $this->deleteFileAfterSend)->call($download->baseResponse), 'O Word deve ser apagado logo após o download.');
+        $this->getJson($started->json('status_url'))->assertNotFound();
         $petition->refresh();
         $this->assertTrue($petition->isGenerated());
         $this->assertNull($petition->file_path);
@@ -199,7 +205,7 @@ class PetitionDraftFlowTest extends TestCase
         $petition = $this->draftWith([$this->horasExtras, $this->multa]);
         $petition->items()->update(['reviewed_at' => now()]);
 
-        $response = $this->actingAs($this->user)->postJson(route('petition.generate', $petition))->assertOk();
+        $response = $this->downloadGeneration($this->actingAs($this->user)->postJson(route('petition.generate', $petition)))->assertOk();
 
         $xml = $this->documentXml($response->baseResponse->getFile()->getPathname());
         $this->assertMatchesRegularExpression(

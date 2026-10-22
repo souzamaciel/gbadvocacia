@@ -184,6 +184,7 @@
             };
             fileName.addEventListener('input', refreshButtons);
             refreshButtons();
+            window.gbIsDirty = () => generating;
 
             form.addEventListener('submit', event => {
                 event.preventDefault();
@@ -196,33 +197,8 @@
                     button.innerHTML = '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span> Gerando documento…';
                 });
 
-                fetch(form.action, {
-                    method: 'POST',
-                    headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': new FormData(form).get('_token') },
-                    body: new FormData(form),
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        return response.json().then(data => { throw new Error(data.message || 'Não foi possível gerar o documento.'); });
-                    }
-
-                    const disposition = response.headers.get('Content-Disposition') || '';
-                    const match = disposition.match(/filename\*?=(?:UTF-8'')?"?([^";]+)"?/i);
-                    const fileName = match ? decodeURIComponent(match[1]) : (fileNameInput() + '.docx');
-                    const generatedAt = response.headers.get('X-Generated-At') || '';
-
-                    return response.blob().then(blob => {
-                        const url = URL.createObjectURL(blob);
-                        const link = document.createElement('a');
-                        link.href = url;
-                        link.download = fileName;
-                        document.body.appendChild(link);
-                        link.click();
-                        link.remove();
-                        URL.revokeObjectURL(url);
-                        return { fileName, generatedAt };
-                    });
-                })
+                gbGeneration.run(form.action, new FormData(form), new FormData(form).get('_token'))
+                .then(({ result }) => gbGeneration.download(result.download_url, result.file_name).then(() => ({ fileName: result.file_name, generatedAt: result.generated_at })))
                 .then(({ fileName, generatedAt }) => {
                     document.getElementById('download-name').textContent = fileName;
                     document.getElementById('download-date').textContent = generatedAt ? `Gerado em ${generatedAt} · Word (.docx)` : 'Word (.docx)';

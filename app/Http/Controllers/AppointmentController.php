@@ -9,6 +9,7 @@ use App\Models\PetitionLog;
 use App\Models\Topic;
 use App\Services\AppointmentForm;
 use App\Services\AppointmentFormDocxGenerator;
+use App\Services\BackgroundGeneration;
 use App\Services\InternalNotes;
 use App\Services\OpenAI\PetitionGenerationService;
 use App\Services\PetitionDocxGenerator;
@@ -25,6 +26,7 @@ class AppointmentController extends Controller
     public function __construct(
         protected PetitionGenerationService $petitionGenerationService,
         protected AppointmentForm $form,
+        protected BackgroundGeneration $generations,
     ) {}
 
     public function index(): View
@@ -122,7 +124,7 @@ class AppointmentController extends Controller
         ]);
     }
 
-    public function store(Request $request): BinaryFileResponse|JsonResponse
+    public function store(Request $request): JsonResponse
     {
         $missing = $this->form->missingRequired($request->all());
 
@@ -155,8 +157,14 @@ class AppointmentController extends Controller
         $notesByTopicId = Topic::whereIn('id', [...$topicIds, ...$preliminarIds])->pluck('notes', 'id')->all();
 
         $normalized = PetitionFormSerializer::normalizeFormData($request->all(), $topics, $preliminares);
+        $filename = 'peticao-inicial-'.str()->slug($normalized['cliente_nome'] ?? 'peticao').'.docx';
 
-        try {
+        $appointment = Appointment::query()->find($request->integer('appointment_id'))
+            ?? new Appointment(['user_id' => $request->user()->id]);
+        $appointment = $this->saveDraft($request, $appointment);
+        $appointmentId = $appointment->id;
+
+        $token = $this->generations->start($request->user()->id, function (string $token) use ($normalized, $notesByTopicId, $preliminares, $topics, $filename, $appointmentId): array {
             $resultado = $this->petitionGenerationService->generate($normalized, false, true);
 
             PetitionLog::create([
@@ -165,36 +173,25 @@ class AppointmentController extends Controller
                 'response_payload' => $resultado['raw_response'],
             ]);
 
-            $generator = new PetitionDocxGenerator;
-            $filePath = $generator->generateFull(InternalNotes::attach($resultado['blade_data'], $notesByTopicId, [
+            $filePath = (new PetitionDocxGenerator)->generateFull(InternalNotes::attach($resultado['blade_data'], $notesByTopicId, [
                 'preliminares' => array_column($preliminares, 'topic_id'),
                 'topicos' => array_column($topics, 'topic_id'),
             ]));
 
-            $clientName = $normalized['cliente_nome'] ?? 'peticao';
-            $filename = 'peticao-inicial-'.str()->slug($clientName).'.docx';
+            $this->generations->storeFile($token, $filePath, $filename);
+            Appointment::query()->whereKey($appointmentId)->update(['generated_at' => now()]);
 
-            $appointment = Appointment::query()->find($request->integer('appointment_id'))
-                ?? new Appointment(['user_id' => $request->user()->id]);
-            $appointment->generated_at = now();
-            $appointment = $this->saveDraft($request, $appointment);
+            return [];
+        });
 
-            return response()
-                ->download($filePath, $filename, [
-                    'Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                    'X-Appointment-Id' => (string) $appointment->id,
-                    'X-Appointment-Url' => route('appointment.edit', $appointment),
-                    'X-Appointment-Update-Url' => route('appointment.draft.update', $appointment),
-                ])
-                ->deleteFileAfterSend();
-        } catch (Throwable $e) {
-            report($e);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro ao gerar petição: '.$e->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'status_url' => route('generation.status', $token),
+            'appointment' => [
+                'id' => $appointment->id,
+                'edit_url' => route('appointment.edit', $appointment),
+                'update_url' => route('appointment.draft.update', $appointment),
+            ],
+        ], 202);
     }
 
     public function print(Request $request): BinaryFileResponse|JsonResponse

@@ -5,6 +5,7 @@ use App\Http\Controllers\AppointmentFormController;
 use App\Http\Controllers\AppointmentImportController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordController;
+use App\Http\Controllers\GenerationController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\HelpController;
 use App\Http\Controllers\HomeController;
@@ -55,6 +56,8 @@ Route::middleware('auth')->group(function (): void {
     });
 
     Route::get('/ajuda', [HelpController::class, 'index'])->name('help.index');
+    Route::get('/geracoes/{token}', [GenerationController::class, 'status'])->where('token', '[A-Za-z0-9]{40}')->name('generation.status');
+    Route::get('/geracoes/{token}/arquivo', [GenerationController::class, 'download'])->where('token', '[A-Za-z0-9]{40}')->name('generation.download');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::get('/password', fn () => redirect()->route('profile.edit'))->name('password.edit');

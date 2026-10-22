@@ -113,19 +113,8 @@
 
                 const data = new FormData();
                 data.append('file', input.files[0]);
-                fetch(@json(route('appointment.import.store')), {
-                    method: 'POST',
-                    headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content },
-                    body: data,
-                })
-                .then(response => response.json().catch(() => ({})).then(body => {
-                    if (!response.ok) {
-                        const first = body.errors ? Object.values(body.errors)[0][0] : null;
-                        throw new Error(first || body.message || 'Não foi possível ler a ficha. Tente novamente.');
-                    }
-                    return body;
-                }))
-                .then(body => { window.gbLeaving = true; location.href = body.redirect; })
+                gbGeneration.run(@json(route('appointment.import.store')), data, document.querySelector('meta[name=csrf-token]').content)
+                .then(({ result }) => { window.gbLeaving = true; location.href = result.redirect; })
                 .catch(error => {
                     busy = false;
                     dropzone.hidden = false;

@@ -9,14 +9,13 @@ use App\Models\Group;
 use App\Models\Petition;
 use App\Models\PetitionItem;
 use App\Models\Topic;
+use App\Services\BackgroundGeneration;
 use App\Services\PetitionDocumentService;
 use App\Services\PetitionDraftService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
-use Throwable;
 
 class PetitionController extends Controller
 {
@@ -136,26 +135,24 @@ class PetitionController extends Controller
     /**
      * Generate and download the Word file. Only the draft stays saved; the file is not kept.
      */
-    public function generate(GeneratePetitionRequest $request, Petition $petition): BinaryFileResponse|JsonResponse
+    public function generate(GeneratePetitionRequest $request, Petition $petition, BackgroundGeneration $generations): JsonResponse
     {
         if (! $petition->isFullyReviewed()) {
             return response()->json(['message' => 'Revise todos os tópicos antes de gerar o documento.'], 422);
         }
 
-        try {
-            $path = $this->documentService->generate($petition, $request->input('file_name'));
-        } catch (Throwable $e) {
-            report($e);
+        $fileName = $request->input('file_name');
+        $petitionId = $petition->id;
 
-            return response()->json(['message' => 'Erro ao gerar o documento: '.$e->getMessage()], 500);
-        }
+        $token = $generations->start($request->user()->id, function (string $token) use ($generations, $petitionId, $fileName): array {
+            $petition = Petition::query()->findOrFail($petitionId);
+            $path = $this->documentService->generate($petition, $fileName);
+            $generations->storeFile($token, $path, $petition->file_name);
 
-        return response()
-            ->download($path, $petition->file_name, [
-                'Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                'X-Generated-At' => $petition->generated_at->locale('pt_BR')->translatedFormat('d/m/Y \à\s H:i'),
-            ])
-            ->deleteFileAfterSend();
+            return ['generated_at' => $petition->generated_at->format('d/m/Y').' às '.$petition->generated_at->format('H:i')];
+        });
+
+        return response()->json(['status_url' => route('generation.status', $token)], 202);
     }
 
     public function destroy(Petition $petition): RedirectResponse

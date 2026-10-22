@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ImportAppointmentRequest;
 use App\Models\Appointment;
+use App\Services\BackgroundGeneration;
 use App\Services\DocxText;
+use App\Services\GenerationFailed;
 use App\Services\OpenAI\AppointmentImportService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
@@ -21,7 +23,7 @@ class AppointmentImportController extends Controller
         return view('appointments.import');
     }
 
-    public function store(ImportAppointmentRequest $request, DocxText $docx, AppointmentImportService $importer): JsonResponse
+    public function store(ImportAppointmentRequest $request, DocxText $docx, AppointmentImportService $importer, BackgroundGeneration $generations): JsonResponse
     {
         $file = $request->file('file');
 
@@ -35,27 +37,32 @@ class AppointmentImportController extends Controller
             return response()->json(['message' => 'O arquivo está vazio ou tem muito pouco texto. Confira se é a ficha de atendimento preenchida.'], 422);
         }
 
-        try {
-            $result = $importer->import(DocxText::redactPrivate($text));
-        } catch (Throwable $e) {
-            report($e);
+        $userId = $request->user()->id;
+        $fileName = mb_substr($file->getClientOriginalName(), 0, 255);
+        $redacted = DocxText::redactPrivate($text);
 
-            return response()->json(['message' => 'Não foi possível ler a ficha agora. Tente novamente em instantes.'], 502);
-        }
+        $token = $generations->start($userId, function () use ($importer, $redacted, $userId, $fileName): array {
+            try {
+                $result = $importer->import($redacted);
+            } catch (Throwable $e) {
+                report($e);
 
-        $appointment = Appointment::create([
-            'user_id' => $request->user()->id,
-            'client_name' => $result['answers']['cliente_nome'] ?? null,
-            'answers' => $result['answers'],
-            'preliminares' => $result['preliminares'],
-            'pedidos' => $result['pedidos'],
-            'import_file_name' => mb_substr($file->getClientOriginalName(), 0, 255),
-            'import_notes' => ['observacoes' => $result['notes'], 'pedidos' => $result['reasons']],
-        ]);
+                throw new GenerationFailed('Não foi possível ler a ficha agora. Tente novamente em instantes.');
+            }
 
-        return response()->json([
-            'redirect' => route('appointment.edit', $appointment),
-            'answered' => count(array_filter(array_keys($result['answers']), fn (string $key): bool => ! str_ends_with($key, '_outro'))),
-        ]);
+            $appointment = Appointment::create([
+                'user_id' => $userId,
+                'client_name' => $result['answers']['cliente_nome'] ?? null,
+                'answers' => $result['answers'],
+                'preliminares' => $result['preliminares'],
+                'pedidos' => $result['pedidos'],
+                'import_file_name' => $fileName,
+                'import_notes' => ['observacoes' => $result['notes'], 'pedidos' => $result['reasons']],
+            ]);
+
+            return ['redirect' => route('appointment.edit', $appointment)];
+        });
+
+        return response()->json(['status_url' => route('generation.status', $token)], 202);
     }
 }

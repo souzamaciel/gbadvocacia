@@ -94,17 +94,17 @@ class AppointmentDraftTest extends TestCase
             'empregador_nome' => 'Empresa Ltda.',
         ]);
 
-        $response->assertOk();
         $appointment = Appointment::sole();
-        $this->assertNotNull($appointment->generated_at);
-        $this->assertSame((string) $appointment->id, $response->headers->get('X-Appointment-Id'));
+        $response->assertAccepted()->assertJsonPath('appointment.id', $appointment->id);
+        $this->assertSame('done', $this->generationResult($response)['status']);
+        $this->assertNotNull($appointment->fresh()->generated_at);
 
-        $this->actingAs($this->user)->post(route('appointment.store'), [
+        $this->downloadGeneration($this->actingAs($this->user)->post(route('appointment.store'), [
             'appointment_id' => $appointment->id,
             'cliente_nome' => 'Maria Ferreira Souza',
             'cliente_cpf' => '123.456.789-00',
             'empregador_nome' => 'Empresa Ltda.',
-        ])->assertOk();
+        ]))->assertOk();
 
         $this->assertSame(1, Appointment::count());
         $this->assertSame('Maria Ferreira Souza', $appointment->fresh()->client_name);

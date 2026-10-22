@@ -37,8 +37,8 @@ class AppointmentInternalNotesTest extends TestCase
             'preliminares' => [$gratuidade->id],
         ]);
 
-        $response->assertOk();
-        $xml = $this->documentXml($response->baseResponse->getFile()->getPathname());
+        $download = $this->downloadGeneration($response)->assertOk();
+        $xml = $this->documentXml($download->baseResponse->getFile()->getPathname());
 
         $this->assertMatchesRegularExpression('/w:fill="E2EFDA".*?Orientação interna: .*?Juntar declaração de hipossuficiência\..*?Texto da gratuidade/s', $xml);
         $this->assertMatchesRegularExpression('/HORAS EXTRAS\.?<\/w:t>.*?w:fill="E2EFDA".*?Conferir o adicional na CCT\..*?Texto das horas/s', $xml);

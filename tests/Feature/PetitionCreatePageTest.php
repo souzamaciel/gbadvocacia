@@ -139,7 +139,7 @@ class PetitionCreatePageTest extends TestCase
 
         $response = $this->post(route('petition.generate', $petition));
 
-        $response->assertOk();
+        $this->assertSame('done', $this->generationResult($response)['status']);
         Http::assertSent(function (Request $request): bool {
             $caseData = $request['input'][0]['content'][0]['text'];
 

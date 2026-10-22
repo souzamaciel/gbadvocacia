@@ -102,7 +102,7 @@ class AppointmentFormAnswersTest extends TestCase
             'empregador_nome' => 'Empresa',
             'afastamento_houve' => 'Sim',
             'afastamento_senha_gov' => 'segredo123',
-        ])->assertOk();
+        ])->assertAccepted();
 
         Http::assertSent(fn (Request $request): bool => ! str_contains($request->body(), 'segredo123'));
     }

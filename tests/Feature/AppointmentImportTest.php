@@ -113,8 +113,9 @@ class AppointmentImportTest extends TestCase
         $response = $this->actingAs(User::factory()->create())
             ->post(route('appointment.import.store'), ['file' => $this->docx(self::FICHA)], ['Accept' => 'application/json']);
 
+        $result = $this->generationResult($response);
         $appointment = Appointment::sole();
-        $response->assertOk()->assertJsonPath('redirect', route('appointment.edit', $appointment));
+        $this->assertSame(['status' => 'done', 'redirect' => route('appointment.edit', $appointment)], $result);
 
         $this->assertSame('Joana Martins de Souza', $appointment->client_name);
         $this->assertSame('Ficha Joana.docx', $appointment->import_file_name);
@@ -163,10 +164,13 @@ class AppointmentImportTest extends TestCase
     {
         Http::fake(['*/responses' => Http::response(['error' => 'quota'], 429)]);
 
-        $this->actingAs(User::factory()->create())
-            ->post(route('appointment.import.store'), ['file' => $this->docx(self::FICHA)], ['Accept' => 'application/json'])
-            ->assertStatus(502)
-            ->assertJsonPath('message', 'Não foi possível ler a ficha agora. Tente novamente em instantes.');
+        $response = $this->actingAs(User::factory()->create())
+            ->post(route('appointment.import.store'), ['file' => $this->docx(self::FICHA)], ['Accept' => 'application/json']);
+
+        $this->assertSame(
+            ['status' => 'failed', 'message' => 'Não foi possível ler a ficha agora. Tente novamente em instantes.'],
+            $this->generationResult($response),
+        );
 
         $this->assertSame(0, Appointment::count());
     }
