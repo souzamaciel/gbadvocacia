@@ -50,6 +50,52 @@ class PetitionDocxPedidosTest extends TestCase
         ], array_column($paragraphs['items'], 'text'));
     }
 
+    public function test_estimates_are_highlighted_and_add_up_to_the_amount_of_the_claim(): void
+    {
+        $path = (new PetitionDocxGenerator)->generateMerit([
+            'contrato_trabalho_html' => '<p>Contrato.</p>',
+            'valor_causa' => 'R$ 999,00',
+            'pedidos' => [
+                ['descricao' => 'Horas extras', 'valor' => 'R$ 9.590,40', 'subitens' => [['descricao' => 'Reflexos em RSR', 'valor' => 'R$ 959,04']]],
+                ['descricao' => 'Seguro-desemprego', 'valor' => '6000', 'subitens' => []],
+            ],
+        ]);
+
+        $xml = $this->documentXml($path);
+
+        $this->assertSame(4, substr_count($xml, '<w:highlight w:val="yellow"/>'));
+        $this->assertStringContainsString('>R$ 9.590,40<', $xml);
+        $this->assertStringContainsString('>R$ 959,04<', $xml);
+        $this->assertStringContainsString('>R$ 6.000,00<', $xml);
+        $this->assertStringContainsString('R$ 16.549,44 (dezesseis mil, quinhentos e quarenta e nove reais e quarenta e quatro centavos)', $xml);
+        $this->assertStringNotContainsString('R$ 999,00', $xml);
+    }
+
+    public function test_without_estimates_the_ai_amount_of_the_claim_is_kept(): void
+    {
+        $xml = $this->documentXml((new PetitionDocxGenerator)->generateMerit([
+            'contrato_trabalho_html' => '<p>Contrato.</p>',
+            'valor_causa' => 'R$ 1.000,00',
+            'valor_causa_extenso' => 'mil reais',
+            'pedidos' => [['descricao' => 'Horas extras', 'subitens' => []]],
+        ]));
+
+        $this->assertStringContainsString('R$ 1.000,00 (mil reais)', $xml);
+        $this->assertStringContainsString('R$ ________', $xml);
+    }
+
+    public function test_honorarios_chosen_as_a_topic_are_not_repeated(): void
+    {
+        $xml = $this->documentXml((new PetitionDocxGenerator)->generateMerit([
+            'contrato_trabalho_html' => '<p>Contrato.</p>',
+            'incluir_honorarios' => true,
+            'honorarios_html' => '<p>Honorários.</p>',
+            'topicos' => [['titulo' => 'DOS HONORÁRIOS ADVOCATÍCIOS', 'conteudo_html' => '<p>Requer honorários.</p>', 'subtopicos' => []]],
+        ]));
+
+        $this->assertSame(1, substr_count($xml, 'DOS HONORÁRIOS ADVOCATÍCIOS'));
+    }
+
     public function test_final_requests_follow_the_model_wording(): void
     {
         $text = implode("\n", array_column($this->pedidoParagraphs([], ['cliente_estado_civil' => 'casada'])['after'], 'text'));
@@ -61,15 +107,20 @@ class PetitionDocxPedidosTest extends TestCase
 
     public function test_empty_contract_text_gets_a_placeholder_so_headings_do_not_share_a_box(): void
     {
-        $path = (new PetitionDocxGenerator)->generateMerit(['contrato_trabalho_html' => '']);
+        $xml = $this->documentXml((new PetitionDocxGenerator)->generateMerit(['contrato_trabalho_html' => '']));
 
+        $this->assertStringContainsString('[Descrever o contrato de trabalho', $xml);
+    }
+
+    private function documentXml(string $path): string
+    {
         $zip = new ZipArchive;
         $zip->open($path);
         $xml = $zip->getFromName('word/document.xml');
         $zip->close();
         @unlink($path);
 
-        $this->assertStringContainsString('[Descrever o contrato de trabalho', $xml);
+        return $xml;
     }
 
     /**

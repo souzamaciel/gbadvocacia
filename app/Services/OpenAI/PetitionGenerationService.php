@@ -93,7 +93,7 @@ Sua tarefa é redigir os blocos variáveis de uma petição inicial trabalhista 
 4. o texto-base (content) de cada tópico selecionado.
 
 Regras obrigatórias:
-- Não invente fatos, datas, valores, documentos, jornadas, cargos ou pedidos.
+- Não invente fatos, datas, valores, documentos, jornadas, cargos ou pedidos. A única exceção são as estimativas de valor pedidas nos campos "valor" dos pedidos e no valor da causa.
 - Use somente as informações fornecidas no JSON e, se habilitado, os trechos recuperados do modelo.
 - Mantenha linguagem formal, técnica e compatível com petição inicial trabalhista.
 - TODOS os itens listados em "topicos_selecionados" e em "preliminares_selecionadas" devem ser gerados, sem exceção, sem omitir, unir ou descartar nenhum — independentemente de você considerá-los aplicáveis ou não ao caso.
@@ -114,8 +114,8 @@ DADOS DO CASO EM JSON:
 IMPORTANTE:
 - O campo "contrato_trabalho_html" deve narrar o vínculo empregatício.
 - O campo "topicos" deve retornar os tópicos de mérito adicionais, utilizando o texto-base (content) de cada tópico como fundamento.
-- O campo "pedidos" deve retornar o rol de pedidos no estilo do escritório: um pedido para cada tópico de mérito, na mesma ordem dos tópicos, e por último os honorários advocatícios, se houver. Cada "descricao" é uma frase objetiva e completa, sem letra de ordem, sem pontilhado e sem valor em reais (ex.: "Pagamento das horas extras além da 08ª diária e 44ª semanal, acrescidas do adicional legal, divisor 220"; "Honorários advocatícios (15%)"). Em "subitens", liste cada parcela ou reflexo pedido no texto do tópico, um por item e sem letra de ordem (ex.: "Reflexos em 13º salários", "Reflexos em férias + 1/3 constitucional", "Reflexos em FGTS + 40%", "Reflexos em aviso prévio", "Reflexos em RSR"). Se o tópico não tiver parcelas ou reflexos, deixe "subitens" vazio. NÃO inclua no campo "pedidos" nenhum item referente a gratuidade de justiça, tramitação no Juízo 100% Digital ou valor da causa — esses itens aparecem em seção própria e fixa da petição.
-- Os campos "valor_causa" e "valor_causa_extenso" SÃO OBRIGATÓRIOS e nunca devem ficar vazios. Estime um valor de sugestão coerente com os pedidos selecionados e com os dados do caso (quando disponíveis: salário, tempo de contrato, verbas pleiteadas, indenizações etc.). Caso não haja dados suficientes do caso, gere uma estimativa-base razoável a partir dos pedidos. "valor_causa" deve estar no formato "R$ X.XXX,XX" e "valor_causa_extenso" deve ser a grafia por extenso correspondente.
+- O campo "pedidos" deve retornar o rol de pedidos no estilo do escritório: um pedido para cada tópico de mérito, na mesma ordem dos tópicos, e por último os honorários advocatícios, se houver. Cada "descricao" é uma frase objetiva e completa, sem letra de ordem, sem pontilhado e sem o valor estimado no texto (ex.: "Pagamento das horas extras além da 08ª diária e 44ª semanal, acrescidas do adicional legal, divisor 220"; "Honorários advocatícios (15%)"). Em "subitens", liste cada parcela ou reflexo pedido no texto do tópico, um por item e sem letra de ordem (ex.: "Reflexos em 13º salários", "Reflexos em férias + 1/3 constitucional", "Reflexos em FGTS + 40%", "Reflexos em aviso prévio", "Reflexos em RSR"). Se o tópico não tiver parcelas ou reflexos, deixe "subitens" vazio. Em "valor" (do pedido e de cada subitem), informe uma ESTIMATIVA no formato "R$ X.XXX,XX", calculada com os dados do caso (salário, período do contrato, jornada, quantidade de horas etc.); sem dados suficientes, use uma estimativa-base razoável. Quando o pedido tiver subitens, o "valor" do pedido é só o da parcela principal, sem somar os subitens. Os valores são sugestões que o advogado vai conferir. NÃO inclua no campo "pedidos" nenhum item referente a gratuidade de justiça, tramitação no Juízo 100% Digital ou valor da causa — esses itens aparecem em seção própria e fixa da petição.
+- Os campos "valor_causa" e "valor_causa_extenso" SÃO OBRIGATÓRIOS e nunca devem ficar vazios. O valor da causa deve ser a soma dos valores estimados de todos os pedidos e subitens. Estime um valor de sugestão coerente com os pedidos selecionados e com os dados do caso (quando disponíveis: salário, tempo de contrato, verbas pleiteadas, indenizações etc.). Caso não haja dados suficientes do caso, gere uma estimativa-base razoável a partir dos pedidos. "valor_causa" deve estar no formato "R$ X.XXX,XX" e "valor_causa_extenso" deve ser a grafia por extenso correspondente.
 - O campo "preliminares" deve conter EXATAMENTE UM item para CADA preliminar listada em "preliminares_selecionadas" do JSON, na mesma ordem. NUNCA omita, una ou descarte uma preliminar selecionada — mesmo que falte dado para preencher variáveis, mantenha-as entre [colchetes] e registre em "pendencias". Para cada item, use o "title" da preliminar selecionada como "titulo" e elabore "conteudo_html" a partir do "content" daquela preliminar. Se "preliminares_selecionadas" estiver vazio, retorne array vazio.
 - O campo "honorarios_html" deve existir se houver honorários.
 TEXT;
@@ -209,6 +209,7 @@ TEXT;
                         'additionalProperties' => false,
                         'properties' => [
                             'descricao' => ['type' => 'string'],
+                            'valor' => ['type' => 'string'],
                             'subitens' => [
                                 'type' => 'array',
                                 'items' => [
@@ -216,12 +217,13 @@ TEXT;
                                     'additionalProperties' => false,
                                     'properties' => [
                                         'descricao' => ['type' => 'string'],
+                                        'valor' => ['type' => 'string'],
                                     ],
-                                    'required' => ['descricao'],
+                                    'required' => ['descricao', 'valor'],
                                 ],
                             ],
                         ],
-                        'required' => ['descricao', 'subitens'],
+                        'required' => ['descricao', 'valor', 'subitens'],
                     ],
                 ],
                 'requerimentos_finais_html' => ['type' => 'string'],

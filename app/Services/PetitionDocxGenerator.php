@@ -17,6 +17,12 @@ class PetitionDocxGenerator
      */
     protected const BODY_WIDTH = 11906 - 1276 - 1133;
 
+    /**
+     * Room kept at the right of each pedido line for its amount, so the text wraps before
+     * it and the dotted leader always has space (the amount sits in the right indent).
+     */
+    protected const AMOUNT_WIDTH = 1701;
+
     protected PhpWord $word;
 
     /**
@@ -192,6 +198,7 @@ class PetitionDocxGenerator
                 'spaceAfter' => Converter::pointToTwip(54),
             ],
             'sectionLabel' => ['bold' => true, 'underline' => 'single', 'allCaps' => true],
+            'estimate' => ['fgColor' => 'yellow'],
             'bold' => ['bold' => true],
             'boldUpper' => ['bold' => true, 'allCaps' => true],
             'normal' => [],
@@ -412,7 +419,10 @@ class PetitionDocxGenerator
         }
 
         // Honorários
-        if (! empty($data['incluir_honorarios'])) {
+        $honorariosIsATopic = collect($data['topicos'] ?? [])
+            ->contains(fn ($topico): bool => is_array($topico) && str_contains(mb_strtoupper((string) ($topico['titulo'] ?? '')), 'HONORÁRIOS'));
+
+        if (! empty($data['incluir_honorarios']) && ! $honorariosIsATopic) {
             $section->addText(
                 $this->nextTopicHeading('DOS HONORÁRIOS ADVOCATÍCIOS'),
                 $this->styles['boldUpper'],
@@ -448,15 +458,17 @@ class PetitionDocxGenerator
         );
 
         foreach (array_values($data['pedidos'] ?? []) as $index => $pedido) {
+            $pedido = is_array($pedido) ? $pedido : ['descricao' => (string) $pedido];
             $letter = chr(ord('a') + ($index % 26));
-            $subitens = is_array($pedido) ? array_values(array_filter(
-                array_map(fn ($subitem): string => trim((string) (is_array($subitem) ? ($subitem['descricao'] ?? '') : $subitem)), $pedido['subitens'] ?? []),
-                fn (string $descricao): bool => $descricao !== '',
-            )) : [];
+            $subitens = array_values(array_filter(
+                array_map(fn ($subitem): array => is_array($subitem) ? $subitem : ['descricao' => (string) $subitem], $pedido['subitens'] ?? []),
+                fn (array $subitem): bool => trim((string) ($subitem['descricao'] ?? '')) !== '',
+            ));
 
             $this->addPedidoLine(
                 $section,
-                "{$letter}) ".$this->pedidoText(is_array($pedido) ? ($pedido['descricao'] ?? '') : $pedido),
+                "{$letter}) ".$this->pedidoText((string) ($pedido['descricao'] ?? '')),
+                $pedido['valor'] ?? null,
                 0,
                 $subitens === [],
             );
@@ -464,7 +476,8 @@ class PetitionDocxGenerator
             foreach ($subitens as $subIndex => $subitem) {
                 $this->addPedidoLine(
                     $section,
-                    "{$letter}.".($subIndex + 1).') '.$this->pedidoText($subitem),
+                    "{$letter}.".($subIndex + 1).') '.$this->pedidoText((string) $subitem['descricao']),
+                    $subitem['valor'] ?? null,
                     (int) round(Converter::cmToTwip(3)),
                     $subIndex === count($subitens) - 1,
                 );
@@ -472,16 +485,29 @@ class PetitionDocxGenerator
         }
     }
 
-    protected function addPedidoLine(Section $section, string $text, int $leftIndent, bool $lastOfGroup): void
+    /**
+     * One line of the pedidos: text, dotted leader and the AI's estimate highlighted in
+     * yellow for the lawyer to check (or a blank to fill in when there is no estimate).
+     */
+    protected function addPedidoLine(Section $section, string $text, ?string $estimate, int $leftIndent, bool $lastOfGroup): void
     {
         $textRun = $section->addTextRun([
             'alignment' => Jc::BOTH,
             'spaceAfter' => $lastOfGroup ? Converter::pointToTwip(18) : 0,
             'lineHeight' => 1.5,
-            'indentation' => ['left' => $leftIndent],
+            'indentation' => ['left' => $leftIndent, 'right' => self::AMOUNT_WIDTH],
             'tabs' => [new Tab(Tab::TAB_STOP_RIGHT, self::BODY_WIDTH, Tab::TAB_LEADER_DOT)],
         ]);
-        $textRun->addText($text."\tR$ ________");
+        $textRun->addText($text."\t");
+
+        $cents = MoneyInWords::parseCents($estimate);
+        if ($cents === null) {
+            $textRun->addText('R$ ________');
+
+            return;
+        }
+
+        $textRun->addText(MoneyInWords::formatCents($cents), $this->styles['estimate']);
     }
 
     /**
@@ -540,19 +566,51 @@ class PetitionDocxGenerator
         );
     }
 
-    /** @param  array<string, mixed>  $data */
+    /**
+     * The amount of the claim is the sum of the pedidos' estimates (or the AI's own
+     * suggestion when there are none), highlighted in yellow like the estimates.
+     *
+     * @param  array<string, mixed>  $data
+     */
     protected function addValorCausa(Section $section, array $data): void
     {
-        $valor = ! empty($data['valor_causa']) ? $data['valor_causa'] : 'R$ 0,00';
-        $extenso = $data['valor_causa_extenso'] ?? '';
+        $cents = $this->estimatesTotal($data['pedidos'] ?? []);
+
+        if ($cents !== null) {
+            $valor = MoneyInWords::formatCents($cents);
+            $extenso = MoneyInWords::spell($cents);
+        } else {
+            $valor = ! empty($data['valor_causa']) ? $data['valor_causa'] : 'R$ 0,00';
+            $extenso = $data['valor_causa_extenso'] ?? '';
+        }
 
         $textRun = $section->addTextRun($this->styles['indent']);
         $textRun->addText('Dá à causa o valor de ');
-        $textRun->addText($valor);
-        if (! empty($extenso)) {
-            $textRun->addText(" ({$extenso})");
-        }
+        $textRun->addText($valor.(! empty($extenso) ? " ({$extenso})" : ''), $this->styles['estimate']);
         $textRun->addText(', para os fins legais.');
+    }
+
+    /**
+     * @param  array<int, mixed>  $pedidos
+     */
+    protected function estimatesTotal(array $pedidos): ?int
+    {
+        $amounts = [];
+
+        foreach ($pedidos as $pedido) {
+            if (! is_array($pedido)) {
+                continue;
+            }
+
+            $amounts[] = MoneyInWords::parseCents($pedido['valor'] ?? null);
+            foreach ($pedido['subitens'] ?? [] as $subitem) {
+                $amounts[] = is_array($subitem) ? MoneyInWords::parseCents($subitem['valor'] ?? null) : null;
+            }
+        }
+
+        $amounts = array_filter($amounts, fn (?int $cents): bool => $cents !== null);
+
+        return $amounts === [] ? null : array_sum($amounts);
     }
 
     /** @param  array<string, mixed>  $data */
