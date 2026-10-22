@@ -210,11 +210,12 @@ class PetitionDocxGenerator
     protected function addEnderecamento(Section $section, array $data): void
     {
         $cidade = trim((string) ($data['cidade_vara'] ?? '')) ?: '[CIDADE]/[ESTADO]';
+        $cidade = mb_strtoupper($cidade);
 
-        $section->addText(
-            mb_strtoupper("AO DOUTO JUÍZO DA ___ª VARA DO TRABALHO DE {$cidade}"),
-            $this->styles['boldUpper'],
-            array_merge($this->styles['indent'], $this->styles['spacer'])
+        WordBlanks::add(
+            $section->addTextRun(array_merge($this->styles['indent'], $this->styles['spacer'])),
+            "AO DOUTO JUÍZO DA ___ª VARA DO TRABALHO DE {$cidade}",
+            $this->styles['bold'],
         );
     }
 
@@ -227,7 +228,7 @@ class PetitionDocxGenerator
     protected function addQualificacaoReclamante(Section $section, array $data): void
     {
         $textRun = $section->addTextRun($this->styles['tight']);
-        $textRun->addText(mb_strtoupper($this->field($data, 'cliente_nome', 'NOME DO RECLAMANTE')), $this->styles['bold']);
+        WordBlanks::add($textRun, mb_strtoupper($this->field($data, 'cliente_nome', 'NOME DO RECLAMANTE')), $this->styles['bold']);
 
         $endereco = 'na '.$this->field($data, 'cliente_endereco', 'endereço')
             .', nº '.$this->field($data, 'cliente_numero', 'número')
@@ -236,7 +237,7 @@ class PetitionDocxGenerator
             .', CEP '.$this->field($data, 'cliente_cep', 'CEP')
             .', '.$this->field($data, 'cliente_cidade', 'cidade').'/'.$this->field($data, 'cliente_uf', 'UF');
 
-        $textRun->addText(', '.implode(', ', [
+        WordBlanks::add($textRun, ', '.implode(', ', [
             $this->field($data, 'cliente_nacionalidade', 'nacionalidade'),
             $this->field($data, 'cliente_estado_civil', 'estado civil'),
             $this->field($data, 'cliente_profissao', 'profissão'),
@@ -254,9 +255,9 @@ class PetitionDocxGenerator
             $this->getAdvogados($data),
         );
         $last = array_pop($advogados);
-        $textRun->addText(', por seus advogados '.($advogados === [] ? $last : implode(', ', $advogados).' e '.$last).', mandato incluso');
+        WordBlanks::add($textRun, ', por seus advogados '.($advogados === [] ? $last : implode(', ', $advogados).' e '.$last).', mandato incluso');
 
-        $textRun->addText(
+        WordBlanks::add($textRun,
             ', ambos com endereço profissional na Rua Jaspe, nº 290, Bairro: Iguaçu – Cidade: Ipatinga/MG – CEP: 35.162-077, '
             .'local onde recebem intimações/notificações, '
             .'vem, respeitosamente, à presença de Vossa Excelência, '
@@ -276,9 +277,9 @@ class PetitionDocxGenerator
     protected function addQualificacaoReclamada(Section $section, array $data): void
     {
         $textRun = $section->addTextRun($this->styles['indent']);
-        $textRun->addText(mb_strtoupper($this->field($data, 'empregador_nome', 'NOME DA RECLAMADA')), $this->styles['bold']);
+        WordBlanks::add($textRun, mb_strtoupper($this->field($data, 'empregador_nome', 'NOME DA RECLAMADA')), $this->styles['bold']);
 
-        $textRun->addText(
+        WordBlanks::add($textRun,
             ', pessoa jurídica de direito privado, inscrita no CNPJ sob o nº '.$this->field($data, 'empregador_cnpj', 'CNPJ')
             .', com sede na '.$this->field($data, 'empregador_endereco', 'endereço')
             .', nº '.$this->field($data, 'empregador_numero', 'número')
@@ -458,7 +459,7 @@ class PetitionDocxGenerator
             'indentation' => ['left' => $leftIndent, 'right' => self::AMOUNT_WIDTH],
             'tabs' => [new Tab(Tab::TAB_STOP_RIGHT, self::BODY_WIDTH, Tab::TAB_LEADER_DOT)],
         ]);
-        $textRun->addText($text."\t");
+        WordBlanks::add($textRun, $text."\t");
 
         $cents = MoneyInWords::parseCents($estimate);
         if ($cents === null) {

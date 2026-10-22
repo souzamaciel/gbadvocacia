@@ -208,7 +208,7 @@ class WordHtmlRenderer
             }
 
             if ($line !== '') {
-                $textRun->addText($line, $font);
+                WordBlanks::add($textRun, $line, $font);
             }
         }
     }

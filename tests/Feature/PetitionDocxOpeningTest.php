@@ -73,6 +73,20 @@ class PetitionDocxOpeningTest extends TestCase
         $this->assertStringStartsWith('[NOME DA RECLAMADA], pessoa jurídica de direito privado, inscrita no CNPJ sob o nº [CNPJ]', $paragraphs[3]);
     }
 
+    public function test_blanks_are_highlighted_in_light_green_and_informed_data_is_not(): void
+    {
+        $path = (new PetitionDocxGenerator)->generateFull(['cliente_nome' => 'Gabriel', 'contrato_trabalho_html' => '<p>Admitido em [data de admissão].</p>']);
+        $zip = new ZipArchive;
+        $zip->open($path);
+        $xml = $zip->getFromName('word/document.xml');
+        $zip->close();
+        @unlink($path);
+
+        $this->assertMatchesRegularExpression('/<w:shd [^>]*w:fill="C6EFCE"[^>]*\/><\/w:rPr><w:t[^>]*>\[CPF\]</', $xml);
+        $this->assertMatchesRegularExpression('/<w:shd [^>]*w:fill="C6EFCE"[^>]*\/><\/w:rPr><w:t[^>]*>\[data de admissão\]</', $xml);
+        $this->assertDoesNotMatchRegularExpression('/w:fill="C6EFCE"[^>]*\/><\/w:rPr><w:t[^>]*>GABRIEL</', $xml);
+    }
+
     public function test_feminine_client_is_residente_e_domiciliada(): void
     {
         $paragraphs = $this->openingParagraphs(['cliente_estado_civil' => 'solteira']);
