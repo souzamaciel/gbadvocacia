@@ -98,7 +98,12 @@ class PetitionDocxPedidosTest extends TestCase
 
     public function test_final_requests_follow_the_model_wording(): void
     {
-        $text = implode("\n", array_column($this->pedidoParagraphs([], ['cliente_estado_civil' => 'casada'])['after'], 'text'));
+        $text = implode("\n", array_column($this->pedidoParagraphs([], [
+            'cliente_estado_civil' => 'casada',
+            'requerimentos_finais_html' => '<p>Requer, ainda, a produção de todos os meios de prova.</p>',
+        ])['after'], 'text'));
+
+        $this->assertStringNotContainsString('Requer, ainda', $text);
 
         $this->assertStringContainsString('condenando a reclamada na forma do pedido', $text);
         $this->assertStringContainsString('perícia técnica, juntada de documentos', $text);

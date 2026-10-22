@@ -535,10 +535,6 @@ class PetitionDocxGenerator
             );
         }
 
-        if (! empty($data['requerimentos_finais_html'])) {
-            $this->addHtmlContent($section, $data['requerimentos_finais_html']);
-        }
-
         $section->addText(
             'Protesta provar o alegado por todos os meios de prova em direito admitidos, sem exclusão de nenhuma, '
             .'especialmente pelo depoimento pessoal da reclamada, sob pena de confissão (En. 74 do C. TST), oitiva de testemunhas, '
