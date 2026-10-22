@@ -59,6 +59,19 @@ class PetitionDocxPedidosTest extends TestCase
         $this->assertStringContainsString("Nesses termos,\nPede deferimento\n", $text);
     }
 
+    public function test_empty_contract_text_gets_a_placeholder_so_headings_do_not_share_a_box(): void
+    {
+        $path = (new PetitionDocxGenerator)->generateMerit(['contrato_trabalho_html' => '']);
+
+        $zip = new ZipArchive;
+        $zip->open($path);
+        $xml = $zip->getFromName('word/document.xml');
+        $zip->close();
+        @unlink($path);
+
+        $this->assertStringContainsString('[Descrever o contrato de trabalho', $xml);
+    }
+
     /**
      * @param  list<array{descricao: string, subitens: list<array{descricao: string}>}>  $pedidos
      * @param  array<string, mixed>  $extra

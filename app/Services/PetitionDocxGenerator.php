@@ -370,10 +370,10 @@ class PetitionDocxGenerator
             $this->styles['boldUpper'],
             $this->styles['topicTitle']
         );
-        $this->addHtmlContent(
-            $section,
-            $data['contrato_trabalho_html'] ?? '<p>Inserir descrição do contrato de trabalho.</p>'
-        );
+        $contrato = trim(strip_tags((string) ($data['contrato_trabalho_html'] ?? ''))) !== ''
+            ? $data['contrato_trabalho_html']
+            : '<p>[Descrever o contrato de trabalho: admissão, função, salário, jornada e desligamento.]</p>';
+        $this->addHtmlContent($section, $contrato);
 
         // Tópicos dinâmicos
         $topicos = $data['topicos'] ?? [];
@@ -472,10 +472,6 @@ class PetitionDocxGenerator
         }
     }
 
-    /**
-     * Word places the stop of an indented paragraph short by the indent, so the indent is
-     * added back to keep every amount on the right margin (checked in Word).
-     */
     protected function addPedidoLine(Section $section, string $text, int $leftIndent, bool $lastOfGroup): void
     {
         $textRun = $section->addTextRun([
@@ -483,7 +479,7 @@ class PetitionDocxGenerator
             'spaceAfter' => $lastOfGroup ? Converter::pointToTwip(18) : 0,
             'lineHeight' => 1.5,
             'indentation' => ['left' => $leftIndent],
-            'tabs' => [new Tab(Tab::TAB_STOP_RIGHT, self::BODY_WIDTH + $leftIndent, Tab::TAB_LEADER_DOT)],
+            'tabs' => [new Tab(Tab::TAB_STOP_RIGHT, self::BODY_WIDTH, Tab::TAB_LEADER_DOT)],
         ]);
         $textRun->addText($text."\tR$ ________");
     }
