@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\PetitionQualification;
 use App\Services\RichText;
 use Database\Factories\PetitionItemFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -16,6 +17,11 @@ class PetitionItem extends Model
     public const KIND_PRELIMINAR = 'preliminar';
 
     public const KIND_PEDIDO = 'pedido';
+
+    /**
+     * The petition's opening (court, client and employer). Sorts first: items are ordered by kind descending.
+     */
+    public const KIND_QUALIFICACAO = 'qualificacao';
 
     protected $fillable = [
         'petition_id',
@@ -91,7 +97,12 @@ class PetitionItem extends Model
         $values = $this->field_values ?? [];
 
         return preg_replace_callback(RichText::PLACEHOLDER_PATTERN, function (array $match) use ($values): string {
-            $value = trim((string) ($values[html_entity_decode($match[1], ENT_QUOTES, 'UTF-8')] ?? ''));
+            $name = html_entity_decode($match[1], ENT_QUOTES, 'UTF-8');
+            $value = trim((string) ($values[$name] ?? ''));
+
+            if ($this->kind === self::KIND_QUALIFICACAO && in_array($name, PetitionQualification::UPPERCASE_FIELDS, true)) {
+                $value = mb_strtoupper($value);
+            }
 
             return $value === '' ? $match[0] : e($value);
         }, $this->contentHtml());

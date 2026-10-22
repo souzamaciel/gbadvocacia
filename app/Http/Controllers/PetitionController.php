@@ -12,6 +12,7 @@ use App\Models\Topic;
 use App\Services\BackgroundGeneration;
 use App\Services\PetitionDocumentService;
 use App\Services\PetitionDraftService;
+use App\Services\PetitionQualification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
@@ -67,6 +68,10 @@ class PetitionController extends Controller
 
     public function review(Petition $petition): View|RedirectResponse
     {
+        if ($petition->items()->where('kind', PetitionItem::KIND_PEDIDO)->exists()) {
+            $this->draftService->ensureQualification($petition);
+        }
+
         $petition->load('items.topic');
 
         if ($petition->items->where('kind', PetitionItem::KIND_PEDIDO)->isEmpty()) {
@@ -182,6 +187,7 @@ class PetitionController extends Controller
             'content' => $item->contentHtml(),
             'rendered' => $item->renderedContent(),
             'placeholders' => $item->placeholders(),
+            'uppercase' => $item->kind === PetitionItem::KIND_QUALIFICACAO ? PetitionQualification::UPPERCASE_FIELDS : [],
             'pending' => $item->pendingPlaceholders(),
             'field_values' => (object) ($item->field_values ?? []),
             'reviewed' => $item->reviewed_at !== null,

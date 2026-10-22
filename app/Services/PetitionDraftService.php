@@ -62,9 +62,28 @@ class PetitionDraftService
                 }
             }
 
+            $kept[] = $this->ensureQualification($petition)->id;
+
             PetitionItem::query()->where('petition_id', $petition->id)->whereNotIn('id', $kept)->delete();
             $petition->touch();
         });
+    }
+
+    /**
+     * The opening item (court, client and employer), created for drafts that do not have it yet.
+     */
+    public function ensureQualification(Petition $petition): PetitionItem
+    {
+        return PetitionItem::query()->firstOrCreate(
+            ['petition_id' => $petition->id, 'kind' => PetitionItem::KIND_QUALIFICACAO],
+            [
+                'topic_id' => null,
+                'position' => 1,
+                'title' => PetitionQualification::TITLE,
+                'group_name' => PetitionQualification::GROUP,
+                'content' => PetitionQualification::content(),
+            ],
+        );
     }
 
     /**

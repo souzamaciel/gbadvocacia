@@ -51,10 +51,14 @@ class PetitionDocxGenerator
         $section = $this->word->addSection($this->styles['section']);
         $this->addHeaderAndFooter($section);
 
-        $this->addEnderecamento($section, $data);
-        $this->addQualificacaoReclamante($section, $data);
-        $this->addTituloAcao($section, $data);
-        $this->addQualificacaoReclamada($section, $data);
+        if (trim(strip_tags((string) ($data['qualificacao_html'] ?? ''))) !== '') {
+            $this->addQualificacaoRevisada($section, $data['qualificacao_html']);
+        } else {
+            $this->addEnderecamento($section, $data);
+            $this->addQualificacaoReclamante($section, $data);
+            $this->addTituloAcao($section, $data);
+            $this->addQualificacaoReclamada($section, $data);
+        }
         $this->addMerito($section, $data);
         $this->addPedidos($section, $data);
         $this->addRequerimentosFinais($section, $data);
@@ -204,6 +208,24 @@ class PetitionDocxGenerator
             'boldUpper' => ['bold' => true, 'allCaps' => true],
             'normal' => [],
         ];
+    }
+
+    /**
+     * The opening reviewed on the petition screen, laid out like the generated one: court
+     * followed by three blank lines, client qualification, centred action title, employer.
+     */
+    protected function addQualificacaoRevisada(Section $section, string $html): void
+    {
+        preg_match_all('/<p\b[^>]*>.*?<\/p>/su', $html, $matches);
+        $paragraphStyles = [
+            array_merge($this->styles['indent'], $this->styles['spacer']),
+            $this->styles['tight'],
+            $this->styles['center'],
+        ];
+
+        foreach ($matches[0] ?: [$html] as $index => $paragraph) {
+            (new WordHtmlRenderer($paragraphStyles[$index] ?? $this->styles['indent']))->render($section, $paragraph);
+        }
     }
 
     /** @param  array<string, mixed>  $data */

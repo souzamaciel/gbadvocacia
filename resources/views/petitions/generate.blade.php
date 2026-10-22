@@ -148,7 +148,9 @@
                 <div class="modal-body">
                     <div class="gb-document-preview">
                         @foreach ($petition->items as $item)
-                            <p class="gb-document-title">{{ $item->title }}</p>
+                            @unless ($item->kind === \App\Models\PetitionItem::KIND_QUALIFICACAO)
+                                <p class="gb-document-title">{{ $item->title }}</p>
+                            @endunless
                             @if (trim((string) $item->topic?->notes) !== '')
                                 <p class="gb-document-note"><strong>Orientação interna:</strong> {!! nl2br(e(trim($item->topic->notes))) !!}</p>
                             @endif

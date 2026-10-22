@@ -54,7 +54,7 @@ class PetitionDraftFlowTest extends TestCase
         $this->assertSame(Petition::STATUS_DRAFT, $petition->status);
         $this->assertSame($this->user->id, $petition->user_id);
         $this->assertSame(
-            ['DA GRATUIDADE DE JUSTIÇA', 'MULTA DO ART. 477', 'HORAS EXTRAS'],
+            ['QUALIFICAÇÃO DAS PARTES', 'DA GRATUIDADE DE JUSTIÇA', 'MULTA DO ART. 477', 'HORAS EXTRAS'],
             $petition->items->pluck('title')->all(),
         );
     }
@@ -85,7 +85,7 @@ class PetitionDraftFlowTest extends TestCase
             'topics' => [$this->horasExtras->id],
         ])->assertRedirect(route('petition.edit', $petition));
 
-        $items = $petition->fresh()->items;
+        $items = $petition->fresh()->items->where('kind', PetitionItem::KIND_PEDIDO);
         $this->assertCount(1, $items);
         $this->assertSame('Texto ajustado [JORNADA].', $items->first()->content);
         $this->assertNotNull($items->first()->reviewed_at);
@@ -225,7 +225,7 @@ class PetitionDraftFlowTest extends TestCase
         $response->assertOk();
         $this->assertSame(
             'Conferir a jornada no cartão de ponto.',
-            PetitionController::itemPayload($response->viewData('petition')->items->first())['notes'],
+            PetitionController::itemPayload($response->viewData('petition')->items->firstWhere('topic_id', $this->horasExtras->id))['notes'],
         );
     }
 

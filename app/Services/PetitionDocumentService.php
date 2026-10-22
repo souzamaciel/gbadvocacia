@@ -52,6 +52,8 @@ class PetitionDocumentService
             ],
         );
 
+        $data['qualificacao_html'] = $items->firstWhere('kind', PetitionItem::KIND_QUALIFICACAO)?->renderedContent();
+
         $temporaryPath = (new PetitionDocxGenerator)->generateFull($data);
 
         $baseName = Str::slug($fileName ?: $petition->name) ?: 'peticao-inicial';

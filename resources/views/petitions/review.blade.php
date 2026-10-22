@@ -173,7 +173,8 @@
 
             function renderText(item) {
                 return item.content.replace(/\[([^\[\]<>]+)\]/g, (match, name) => {
-                    const value = (item.field_values[decode(name)] || '').trim();
+                    const raw = (item.field_values[decode(name)] || '').trim();
+                    const value = (item.uppercase || []).includes(decode(name)) ? raw.toLocaleUpperCase('pt-BR') : raw;
                     return value
                         ? `<span class="gb-filled">${escape(value)}</span>`
                         : `<mark class="gb-placeholder">${match}</mark>`;
@@ -182,7 +183,8 @@
 
             function documentBlock(item) {
                 const note = item.notes ? `<p class="gb-document-note"><strong>Orientação interna:</strong> ${escape(item.notes).replace(/\n/g, '<br>')}</p>` : '';
-                return `<p class="gb-document-title">${escape(item.title)}</p>${note}<div class="gb-rich-text">${renderText(item)}</div>`;
+                const title = item.kind === 'qualificacao' ? '' : `<p class="gb-document-title">${escape(item.title)}</p>`;
+                return `${title}${note}<div class="gb-rich-text">${renderText(item)}</div>`;
             }
 
             function itemState(item) {

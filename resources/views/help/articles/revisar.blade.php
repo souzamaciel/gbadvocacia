@@ -1,5 +1,6 @@
 <x-help-figure src="revisao" caption="Revisão de um tópico com orientação interna e uma informação pendente." />
 <ol>
+    <li>O primeiro item é sempre a <strong>Qualificação das partes</strong>: a cidade da Vara e os dados do reclamante e da reclamada que abrem a petição. Preencha os campos como nos outros tópicos. Se algum dado não se aplicar, use <strong>Editar texto</strong> para retirá-lo.</li>
     <li>A lista à esquerda mostra todos os tópicos e a situação de cada um.</li>
     <li>A caixa verde <strong>Orientação interna</strong> traz as instruções do escritório para aquele tópico.</li>
     <li>Em <strong>Complete as informações deste tópico</strong>, preencha cada dado entre [colchetes]. O texto é atualizado na hora e salvo automaticamente.</li>
