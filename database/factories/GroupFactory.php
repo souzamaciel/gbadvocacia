@@ -18,10 +18,7 @@ class GroupFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => mb_strtoupper(fake()->unique()->words(3, true)),
-            'description' => null,
-            'sort_order' => fake()->numberBetween(1, 50),
-            'active' => true,
+            //
         ];
     }
 }
