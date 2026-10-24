@@ -7,6 +7,7 @@ use App\Http\Requests\SuggestTopicVariablesRequest;
 use App\Http\Requests\UpdateTopicRequest;
 use App\Models\Group;
 use App\Models\Topic;
+use App\Services\ActivityLogger;
 use App\Services\OpenAI\TopicVariableSuggestionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -45,13 +46,14 @@ class TopicController extends Controller
             ->where('group_id', $request->integer('group_id'))
             ->max('sort_order') ?? 0;
 
-        Topic::create([
+        $topic = Topic::create([
             'group_id' => $request->integer('group_id'),
             'title' => $request->string('title')->toString(),
             'content' => $request->string('content')->toString(),
             'notes' => $request->filled('notes') ? $request->string('notes')->trim()->toString() : null,
             'sort_order' => $maxOrder + 1,
         ]);
+        app(ActivityLogger::class)->log('topic.created', 'Criou o tópico na Biblioteca.', $topic);
 
         return redirect()
             ->route('settings.topics.index')
@@ -71,6 +73,7 @@ class TopicController extends Controller
             'content' => $request->string('content')->toString(),
             'notes' => $request->filled('notes') ? $request->string('notes')->trim()->toString() : null,
         ]);
+        app(ActivityLogger::class)->log('topic.updated', 'Alterou o tópico na Biblioteca.', $topic);
 
         return redirect()
             ->route('settings.topics.index')
@@ -103,6 +106,7 @@ class TopicController extends Controller
 
     public function destroy(Topic $topic): JsonResponse
     {
+        app(ActivityLogger::class)->log('topic.deleted', 'Excluiu o tópico da Biblioteca.', $topic);
         $topic->delete();
 
         return response()->json([

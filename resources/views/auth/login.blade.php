@@ -60,7 +60,7 @@
 
             <p class="gb-login-note">
                 <i data-lucide="info"></i>
-                Acesso restrito à equipe do escritório.
+                Acesso restrito à equipe do escritório. Por segurança, os acessos e as ações no sistema são registrados (data, IP e localização aproximada).
             </p>
         </form>
     </main>

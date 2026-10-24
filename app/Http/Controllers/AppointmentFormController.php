@@ -8,6 +8,7 @@ use App\Http\Requests\SaveFormQuestionRequest;
 use App\Http\Requests\SaveFormStepRequest;
 use App\Models\AppointmentFormQuestion;
 use App\Models\AppointmentFormStep;
+use App\Services\ActivityLogger;
 use App\Services\AppointmentForm;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -35,6 +36,8 @@ class AppointmentFormController extends Controller
             'position' => (AppointmentFormStep::query()->max('position') ?? 0) + 1,
         ]);
 
+        app(ActivityLogger::class)->log('form.changed', "Criou o assunto “{$step->title}” na ficha.", $step);
+
         return response()->json(['id' => $step->id, 'message' => "Assunto “{$step->title}” criado."]);
     }
 
@@ -45,6 +48,8 @@ class AppointmentFormController extends Controller
             'description' => $request->input('description') ?: null,
             'icon' => $request->input('icon') ?: $step->icon,
         ]);
+
+        app(ActivityLogger::class)->log('form.changed', "Alterou o assunto “{$step->title}” da ficha.", $step);
 
         return response()->json(['id' => $step->id, 'message' => 'Assunto atualizado.']);
     }
@@ -69,6 +74,7 @@ class AppointmentFormController extends Controller
             return response()->json(['message' => 'Perguntas de outros assuntos dependem deste: '.$dependents->pluck('label')->implode('; ').'. Ajuste a condição delas antes de excluir.'], 422);
         }
 
+        app(ActivityLogger::class)->log('form.changed', "Excluiu o assunto “{$step->title}” da ficha.", $step);
         $step->delete();
 
         return response()->json(['message' => "Assunto “{$step->title}” excluído."]);
@@ -86,6 +92,8 @@ class AppointmentFormController extends Controller
             'is_system' => false,
         ]);
 
+        app(ActivityLogger::class)->log('form.changed', "Adicionou a pergunta “{$question->label}” à ficha.", $question);
+
         return response()->json(['id' => $question->id, 'step' => $stepId, 'message' => 'Pergunta adicionada.']);
     }
 
@@ -102,6 +110,8 @@ class AppointmentFormController extends Controller
             $question->update([...$attributes, 'appointment_form_step_id' => $stepId]);
             $this->pruneConditions($question->fresh());
         });
+
+        app(ActivityLogger::class)->log('form.changed', "Alterou a pergunta “{$question->label}” da ficha.", $question);
 
         return response()->json(['id' => $question->id, 'step' => $stepId, 'message' => 'Pergunta atualizada.']);
     }
@@ -129,6 +139,7 @@ class AppointmentFormController extends Controller
             return response()->json(['message' => 'Estas perguntas só aparecem conforme a resposta desta: '.$dependents->pluck('label')->implode('; ').'. Ajuste ou exclua essas perguntas antes.'], 422);
         }
 
+        app(ActivityLogger::class)->log('form.changed', "Excluiu a pergunta “{$question->label}” da ficha.", $question);
         $question->delete();
 
         return response()->json(['message' => 'Pergunta excluída.']);

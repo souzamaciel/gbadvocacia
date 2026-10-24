@@ -59,6 +59,14 @@ class UserFactory extends Factory
         ]);
     }
 
+    /**
+     * The hidden super administrator, who sees the activity logs.
+     */
+    public function superAdmin(): static
+    {
+        return $this->state(fn (array $attributes) => ['is_super_admin' => true]);
+    }
+
     public function inactive(): static
     {
         return $this->state(fn (array $attributes) => ['is_active' => false]);

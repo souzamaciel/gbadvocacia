@@ -13,6 +13,13 @@
         <i data-lucide="book-open"></i> Base de conhecimento
     </a>
 </li>
+@can('logs.view')
+    <li>
+        <a class="dropdown-item" href="{{ route('admin.logs.index') }}">
+            <i data-lucide="scroll-text"></i> Logs de atividade
+        </a>
+    </li>
+@endcan
 <li><hr class="dropdown-divider my-1"></li>
 <li>
     <form method="POST" action="{{ route('logout') }}">

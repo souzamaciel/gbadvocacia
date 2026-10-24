@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\Permission;
 use App\Http\Requests\SaveRoleRequest;
 use App\Models\Role;
+use App\Services\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -34,6 +35,7 @@ class RoleController extends Controller
     public function store(SaveRoleRequest $request): RedirectResponse
     {
         $role = Role::create($this->attributes($request));
+        app(ActivityLogger::class)->log('role.created', "Criou o perfil {$role->name}.", $role);
 
         return redirect()
             ->route('admin.roles.index')
@@ -50,6 +52,7 @@ class RoleController extends Controller
         abort_if($role->isAdministrator(), 403);
 
         $role->update($this->attributes($request));
+        app(ActivityLogger::class)->log('role.updated', "Alterou as permissões do perfil {$role->name}.", $role);
 
         return redirect()
             ->route('admin.roles.index')
@@ -64,6 +67,7 @@ class RoleController extends Controller
             return back()->with('error', "O perfil {$role->name} está em uso. Troque o perfil desses usuários antes de excluir.");
         }
 
+        app(ActivityLogger::class)->log('role.deleted', "Excluiu o perfil {$role->name}.", $role);
         $role->delete();
 
         return redirect()

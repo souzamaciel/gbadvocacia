@@ -9,6 +9,7 @@ use App\Models\Group;
 use App\Models\Petition;
 use App\Models\PetitionItem;
 use App\Models\Topic;
+use App\Services\ActivityLogger;
 use App\Services\BackgroundGeneration;
 use App\Services\PetitionDocumentService;
 use App\Services\PetitionDraftService;
@@ -50,6 +51,7 @@ class PetitionController extends Controller
             'name' => $this->petitionName($request),
             'status' => Petition::STATUS_DRAFT,
         ]);
+        app(ActivityLogger::class)->log('petition.created', 'Criou a petição.', $petition);
 
         return $this->saveSelection($request, $petition);
     }
@@ -62,6 +64,7 @@ class PetitionController extends Controller
     public function update(SavePetitionRequest $request, Petition $petition): RedirectResponse
     {
         $petition->update(['name' => $this->petitionName($request)]);
+        app(ActivityLogger::class)->log('petition.updated', 'Alterou os tópicos da petição.', $petition);
 
         return $this->saveSelection($request, $petition);
     }
@@ -148,6 +151,7 @@ class PetitionController extends Controller
 
         $fileName = $request->input('file_name');
         $petitionId = $petition->id;
+        app(ActivityLogger::class)->log('petition.generated', 'Gerou o Word da petição.', $petition, ['Arquivo' => ($fileName ?: $petition->name).'.docx']);
 
         $token = $generations->start($request->user()->id, function (string $token) use ($generations, $petitionId, $fileName): array {
             $petition = Petition::query()->findOrFail($petitionId);
@@ -166,6 +170,7 @@ class PetitionController extends Controller
             Storage::disk('local')->delete($petition->file_path);
         }
         Storage::disk('local')->deleteDirectory("petitions/{$petition->id}");
+        app(ActivityLogger::class)->log('petition.deleted', 'Excluiu a petição.', $petition);
 
         $petition->delete();
 

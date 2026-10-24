@@ -7,6 +7,7 @@ use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -18,7 +19,7 @@ class UserController extends Controller
 {
     public function index(): View
     {
-        $users = User::query()->with('role')->orderByDesc('is_active')->orderBy('name')->get();
+        $users = User::query()->visible()->with('role')->orderByDesc('is_active')->orderBy('name')->get();
 
         return view('admin.users.index', compact('users'));
     }
@@ -41,6 +42,7 @@ class UserController extends Controller
             'is_active' => true,
             'must_change_password' => true,
         ]);
+        app(ActivityLogger::class)->log('user.created', "Cadastrou o usuário {$user->name}.", $user, ['Perfil' => $user->role?->name]);
 
         return redirect()
             ->route('admin.users.index')
@@ -60,6 +62,7 @@ class UserController extends Controller
     public function update(UpdateUserRequest $request, User $user): RedirectResponse
     {
         $user->update($request->validated());
+        app(ActivityLogger::class)->log('user.updated', "Alterou os dados de {$user->name}.", $user, ['Perfil' => $user->fresh('role')->role?->name]);
 
         return redirect()
             ->route('admin.users.index')
@@ -73,6 +76,7 @@ class UserController extends Controller
             'must_change_password' => true,
         ])->setRememberToken(Str::random(60));
         $user->save();
+        app(ActivityLogger::class)->log('user.password_reset', "Definiu uma senha provisória para {$user->name}.", $user);
 
         return redirect()
             ->route('admin.users.index')
@@ -93,6 +97,7 @@ class UserController extends Controller
 
         $user->forceFill(['is_active' => ! $user->is_active])->setRememberToken(Str::random(60));
         $user->save();
+        app(ActivityLogger::class)->log($user->is_active ? 'user.activated' : 'user.deactivated', ($user->is_active ? 'Reativou' : 'Desativou')." o acesso de {$user->name}.", $user);
 
         return redirect()
             ->route('admin.users.index')

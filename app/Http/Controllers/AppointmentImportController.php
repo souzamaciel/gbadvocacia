@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ImportAppointmentRequest;
 use App\Models\Appointment;
+use App\Services\ActivityLogger;
 use App\Services\BackgroundGeneration;
 use App\Services\DocxText;
 use App\Services\GenerationFailed;
@@ -39,6 +40,7 @@ class AppointmentImportController extends Controller
 
         $userId = $request->user()->id;
         $fileName = mb_substr($file->getClientOriginalName(), 0, 255);
+        app(ActivityLogger::class)->log('appointment.imported', "Importou a ficha do Word “{$fileName}”.", properties: ['Arquivo' => $fileName]);
         $redacted = DocxText::redactPrivate($text);
 
         $token = $generations->start($userId, function () use ($importer, $redacted, $userId, $fileName): array {

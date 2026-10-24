@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\Permission;
 use Database\Factories\UserFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -25,6 +26,7 @@ class User extends Authenticatable
         'password',
         'role_id',
         'is_active',
+        'is_super_admin',
         'must_change_password',
         'last_login_at',
     ];
@@ -50,6 +52,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
+            'is_super_admin' => 'boolean',
             'must_change_password' => 'boolean',
             'last_login_at' => 'datetime',
         ];
@@ -65,12 +68,43 @@ class User extends Authenticatable
 
     public function hasPermission(Permission $permission): bool
     {
-        return $this->is_active && $this->role !== null && $this->role->allows($permission);
+        return $this->is_active && ($this->isSuperAdmin() || ($this->role !== null && $this->role->allows($permission)));
+    }
+
+    /**
+     * Super administrators can do everything, see the activity logs and are hidden from
+     * user management (the office's administrators do not see or change them).
+     */
+    public function isSuperAdmin(): bool
+    {
+        return $this->is_active && $this->is_super_admin;
+    }
+
+    /**
+     * User management never finds a super administrator unless a super administrator asks.
+     *
+     * @param  mixed  $value
+     * @param  string|null  $field
+     */
+    public function resolveRouteBinding($value, $field = null): ?self
+    {
+        return self::query()
+            ->where($field ?? $this->getRouteKeyName(), $value)
+            ->when(! auth()->user()?->isSuperAdmin(), fn ($query) => $query->where('is_super_admin', false))
+            ->first();
+    }
+
+    /**
+     * @param  Builder<self>  $query
+     */
+    public function scopeVisible(Builder $query): void
+    {
+        $query->where('is_super_admin', false);
     }
 
     public function isAdministrator(): bool
     {
-        return $this->role?->isAdministrator() ?? false;
+        return $this->isSuperAdmin() || ($this->role?->isAdministrator() ?? false);
     }
 
     /**
@@ -81,6 +115,7 @@ class User extends Authenticatable
         return self::query()
             ->whereKeyNot($this->id)
             ->where('is_active', true)
+            ->where('is_super_admin', false)
             ->whereHas('role', fn ($query) => $query->where('is_locked', true))
             ->exists();
     }
@@ -90,6 +125,10 @@ class User extends Authenticatable
      */
     public function canManageUser(self $user): bool
     {
-        return $this->isAdministrator() || ! $user->isAdministrator();
+        if ($user->is_super_admin && ! $this->isSuperAdmin()) {
+            return false;
+        }
+
+        return $this->isSuperAdmin() || $this->isAdministrator() || ! $user->isAdministrator();
     }
 }

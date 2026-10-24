@@ -6,6 +6,7 @@ use App\Http\Requests\SaveAppointmentDraftRequest;
 use App\Models\Appointment;
 use App\Models\Group;
 use App\Models\Topic;
+use App\Services\ActivityLogger;
 use App\Services\AppointmentForm;
 use App\Services\AppointmentFormDocxGenerator;
 use App\Services\AppointmentPetitionService;
@@ -54,18 +55,25 @@ class AppointmentController extends Controller
 
     public function storeDraft(SaveAppointmentDraftRequest $request): JsonResponse
     {
-        return $this->draftResponse($this->saveDraft($request, new Appointment(['user_id' => $request->user()->id])), 'Rascunho salvo.');
+        $appointment = $this->saveDraft($request, new Appointment(['user_id' => $request->user()->id]));
+        app(ActivityLogger::class)->log('appointment.created', 'Criou o atendimento (rascunho).', $appointment);
+
+        return $this->draftResponse($appointment, 'Rascunho salvo.');
     }
 
     public function updateDraft(SaveAppointmentDraftRequest $request, Appointment $appointment): JsonResponse
     {
         $appointment->generated_at = null;
 
-        return $this->draftResponse($this->saveDraft($request, $appointment), 'Rascunho atualizado.');
+        $this->saveDraft($request, $appointment);
+        app(ActivityLogger::class)->log('appointment.updated', 'Salvou o rascunho do atendimento.', $appointment);
+
+        return $this->draftResponse($appointment, 'Rascunho atualizado.');
     }
 
     public function destroy(Appointment $appointment): RedirectResponse
     {
+        app(ActivityLogger::class)->log('appointment.deleted', 'Excluiu o atendimento.', $appointment);
         $appointment->delete();
 
         return redirect()->route('appointment.index')->with('status', "Atendimento “{$appointment->displayName()}” excluído.");
@@ -134,8 +142,10 @@ class AppointmentController extends Controller
 
         $appointment = Appointment::query()->find($request->integer('appointment_id'))
             ?? new Appointment(['user_id' => $request->user()->id]);
+        $isNew = ! $appointment->exists;
         $appointment = $this->saveDraft($request, $appointment);
         $appointmentId = $appointment->id;
+        app(ActivityLogger::class)->log('appointment.concluded', ($isNew ? 'Criou e concluiu' : 'Concluiu').' o atendimento e abriu a revisão da petição.', $appointment);
 
         $token = $this->generations->start($request->user()->id, function () use ($appointmentId): array {
             $petition = $this->petitions->prepare(Appointment::query()->findOrFail($appointmentId));
@@ -171,6 +181,8 @@ class AppointmentController extends Controller
                 $request->user()?->name,
                 $request->input('cliente_nome'),
             );
+
+            app(ActivityLogger::class)->log('appointment.printed', 'Imprimiu a ficha de atendimento de '.($request->input('cliente_nome') ?: 'cliente sem nome').'.', Appointment::query()->find($request->integer('appointment_id')));
 
             $clientName = $request->input('cliente_nome') ?: 'formulario';
             $filename = 'ficha-atendimento-'.str()->slug($clientName).'.docx';

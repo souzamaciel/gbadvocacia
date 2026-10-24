@@ -2574,3 +2574,22 @@ a.gb-group-filter { text-decoration: none; }
 .gb-import-progress { display: flex; gap: 12px; align-items: center; padding: 28px 20px; border-radius: var(--df-radius); background: var(--df-brand-01-tint); }
 .gb-import-banner { display: flex; gap: 12px; align-items: flex-start; }
 .gb-import-banner ul { margin: 6px 0 0; padding-left: 18px; }
+
+/* ── Logs de atividade (superadmin) ── */
+.gb-logs-filters {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px 16px;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--df-border);
+    align-items: end;
+}
+.gb-logs-filters .gb-logs-search { grid-column: span 2; }
+.gb-logs-filters .gb-logs-actions { grid-column: span 2; display: flex; gap: 8px; justify-content: flex-end; }
+.gb-logs-table td { vertical-align: top; }
+.gb-logs-icon { width: 14px; height: 14px; vertical-align: -2px; }
+@media (max-width: 767.98px) {
+    .gb-logs-filters { grid-template-columns: 1fr 1fr; padding: 16px; }
+    .gb-logs-filters .gb-logs-search,
+    .gb-logs-filters .gb-logs-actions { grid-column: 1 / -1; }
+}

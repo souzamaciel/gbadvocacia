@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AppointmentFormController;
 use App\Http\Controllers\AppointmentImportController;
@@ -88,6 +89,7 @@ Route::middleware('auth')->group(function (): void {
     });
 
     Route::prefix('admin')->name('admin.')->group(function (): void {
+        Route::get('/logs', [ActivityLogController::class, 'index'])->middleware('can:logs.view')->name('logs.index');
         Route::middleware('can:users.manage')->controller(UserController::class)->group(function (): void {
             Route::get('/users', 'index')->name('users.index');
             Route::get('/users/create', 'create')->name('users.create');

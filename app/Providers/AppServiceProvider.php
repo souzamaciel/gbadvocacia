@@ -25,5 +25,7 @@ class AppServiceProvider extends ServiceProvider
         foreach (Permission::cases() as $permission) {
             Gate::define($permission->value, fn (User $user): bool => $user->hasPermission($permission));
         }
+
+        Gate::define('logs.view', fn (User $user): bool => $user->isSuperAdmin());
     }
 }
