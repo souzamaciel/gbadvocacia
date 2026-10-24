@@ -8,6 +8,7 @@ use App\Models\Petition;
 use App\Models\PetitionItem;
 use App\Models\Topic;
 use App\Models\User;
+use App\Services\PetitionQualification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
@@ -70,6 +71,37 @@ class AppointmentPetitionFlowTest extends TestCase
         $this->assertSame(['JORNADA' => '7h às 19h'], $horas->field_values);
         $this->assertSame(['ADICIONAL'], $horas->pendingPlaceholders());
         $this->assertTrue($petition->items->every(fn (PetitionItem $item): bool => $item->reviewed_at === null));
+    }
+
+    public function test_service_takers_become_extra_defendants_in_the_opening(): void
+    {
+        $this->fakeAi(['itens' => []]);
+
+        $petition = $this->conclude(['tomadoras' => [
+            ['nome' => 'Hospital Municipal de Ipatinga', 'cnpj' => '98.765.432/0001-10', 'endereco' => 'Rua das Flores, 10', 'bairro' => 'Centro', 'cidade' => 'Ipatinga', 'uf' => 'MG', 'cep' => '35160-000'],
+            ['nome' => '', 'cnpj' => ''],
+        ]]);
+
+        $qualification = $petition->items->first();
+        $this->assertSame(1, PetitionQualification::extraDefendants($qualification->content));
+        $this->assertSame('Hospital Municipal de Ipatinga', $qualification->field_values['NOME DA 2ª RECLAMADA']);
+        $this->assertSame('98.765.432/0001-10', $qualification->field_values['CNPJ da 2ª reclamada']);
+
+        $text = strip_tags(str_replace('</p>', "\n", $qualification->renderedContent()));
+        $this->assertStringContainsString('EMPRESA LTDA., pessoa jurídica', $text);
+        $this->assertMatchesRegularExpression('/CEP \[CEP da reclamada\];\n/u', $text);
+        $this->assertStringContainsString('HOSPITAL MUNICIPAL DE IPATINGA, pessoa jurídica de direito privado, inscrita no CNPJ sob o nº 98.765.432/0001-10, com sede na Rua das Flores, 10, Centro, Ipatinga/MG, CEP 35160-000, de acordo com as razões a seguir aduzidas:', $text);
+    }
+
+    public function test_removing_the_service_taker_brings_back_the_single_defendant_opening(): void
+    {
+        $this->fakeAi(['itens' => []]);
+        $this->conclude(['tomadoras' => [['nome' => 'Hospital Municipal de Ipatinga']]]);
+
+        $petition = $this->conclude(['appointment_id' => Appointment::sole()->id, 'tomadoras' => []]);
+
+        $this->assertSame(0, PetitionQualification::extraDefendants($petition->items->first()->content));
+        $this->assertStringEndsWith('CEP [CEP da reclamada], de acordo com as razões a seguir aduzidas:</p>', $petition->items->first()->content);
     }
 
     public function test_the_gov_password_never_reaches_the_ai(): void

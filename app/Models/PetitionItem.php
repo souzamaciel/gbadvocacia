@@ -100,7 +100,7 @@ class PetitionItem extends Model
             $name = html_entity_decode($match[1], ENT_QUOTES, 'UTF-8');
             $value = trim((string) ($values[$name] ?? ''));
 
-            if ($this->kind === self::KIND_QUALIFICACAO && in_array($name, PetitionQualification::UPPERCASE_FIELDS, true)) {
+            if ($this->kind === self::KIND_QUALIFICACAO && PetitionQualification::isUppercase($name)) {
                 $value = mb_strtoupper($value);
             }
 

@@ -86,15 +86,54 @@ class AppointmentPetitionService
             }
         }
 
+        $takers = $this->serviceTakers($appointment);
+        foreach ($takers as $index => $taker) {
+            $number = $index + 2;
+            $fields = [
+                "NOME DA {$number}ª RECLAMADA" => 'nome',
+                "CNPJ da {$number}ª reclamada" => 'cnpj',
+                "endereço da {$number}ª reclamada" => 'endereco',
+                "bairro da {$number}ª reclamada" => 'bairro',
+                "cidade da {$number}ª reclamada" => 'cidade',
+                "UF da {$number}ª reclamada" => 'uf',
+                "CEP da {$number}ª reclamada" => 'cep',
+            ];
+            foreach ($fields as $placeholder => $column) {
+                $value = trim((string) ($taker[$column] ?? ''));
+                if ($value !== '') {
+                    $values[$placeholder] = $value;
+                }
+            }
+        }
+
+        $content = PetitionQualification::extraDefendants($item->content) === count($takers)
+            ? $item->content
+            : PetitionQualification::content(count($takers));
+
         $estadoCivil = trim((string) ($qualification['cliente_estado_civil'] ?? ''));
         $feminine = $estadoCivil !== '' && mb_substr($estadoCivil, -1) === 'a';
         $content = str_replace(
             ['residente e domiciliado ', 'residente e domiciliada '],
             $feminine ? 'residente e domiciliada ' : 'residente e domiciliado ',
-            $item->content,
+            $content,
         );
 
         $item->update(['content' => $content, 'field_values' => $values, 'reviewed_at' => null]);
+    }
+
+    /**
+     * Service takers listed in the form ("2ª reclamada"), the ones with a company name.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function serviceTakers(Appointment $appointment): array
+    {
+        $rows = $appointment->answers['tomadoras'] ?? [];
+
+        return array_values(array_filter(
+            is_array($rows) ? $rows : [],
+            fn ($row): bool => is_array($row) && trim((string) ($row['nome'] ?? '')) !== '',
+        ));
     }
 
     /**

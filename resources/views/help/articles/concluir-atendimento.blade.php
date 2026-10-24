@@ -5,7 +5,7 @@
     <li>Passe pelo assunto <strong>Pedidos</strong>: o botão <strong>Concluir e revisar petição</strong> só fica ativo depois disso.</li>
     <li>Clique em <strong>Concluir e revisar petição</strong>. Se faltar algum campo obrigatório, o sistema mostra quais são e leva você até eles.</li>
     <li>O atendimento é <strong>salvo na hora</strong> e aparece <strong>Preparando a revisão…</strong>. A IA lê a ficha e sugere o valor das informações de cada tópico, como a jornada ou o nome da 2ª reclamada.</li>
-    <li>Abre a tela <strong>Revisar conteúdo</strong>, a mesma da petição montada pela Biblioteca. O primeiro item, <strong>Qualificação das partes</strong>, já vem com os dados da ficha.</li>
+    <li>Abre a tela <strong>Revisar conteúdo</strong>, a mesma da petição montada pela Biblioteca. O primeiro item, <strong>Qualificação das partes</strong>, já vem com os dados da ficha. Se a ficha tiver <strong>empresas tomadoras de serviços</strong>, cada uma entra na abertura como 2ª, 3ª… reclamada.</li>
     <li>Confira cada tópico, complete o que a ficha não informou e marque <strong>Conferi o conteúdo deste tópico</strong>. Depois clique em <strong>Gerar documento</strong>.</li>
     <li>O Word é baixado no seu computador. O atendimento passa para a aba <strong>Geradas</strong>.</li>
 </ol>

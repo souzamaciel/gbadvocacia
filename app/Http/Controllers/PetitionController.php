@@ -187,7 +187,7 @@ class PetitionController extends Controller
             'content' => $item->contentHtml(),
             'rendered' => $item->renderedContent(),
             'placeholders' => $item->placeholders(),
-            'uppercase' => $item->kind === PetitionItem::KIND_QUALIFICACAO ? PetitionQualification::UPPERCASE_FIELDS : [],
+            'uppercase' => $item->kind === PetitionItem::KIND_QUALIFICACAO ? array_values(array_filter($item->placeholders(), PetitionQualification::isUppercase(...))) : [],
             'pending' => $item->pendingPlaceholders(),
             'field_values' => (object) ($item->field_values ?? []),
             'reviewed' => $item->reviewed_at !== null,
