@@ -129,5 +129,8 @@ class AppointmentFormAnswersTest extends TestCase
         $this->assertStringContainsString('Facial', $xml);
         $this->assertStringContainsString('segredo123', $xml);
         $this->assertStringContainsString('Carla Mendes', $xml);
+        $this->assertStringContainsString('Maria Ferreira', $xml);
+        $this->assertStringNotContainsString('?:', $xml);
+        $this->assertStringContainsString('<w:tbl>', $xml);
     }
 }

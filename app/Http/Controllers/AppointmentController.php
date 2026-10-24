@@ -169,6 +169,7 @@ class AppointmentController extends Controller
                     ->all(),
                 array_values(array_filter(array_map(fn (int $id): ?string => $titles[$id] ?? null, $topicIds))),
                 $request->user()?->name,
+                $request->input('cliente_nome'),
             );
 
             $clientName = $request->input('cliente_nome') ?: 'formulario';
