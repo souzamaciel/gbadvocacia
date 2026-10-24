@@ -126,7 +126,7 @@ class ActivityLogger
                 return implode(', ', array_filter([
                     $data['city'] ?? null,
                     $data['stateProv'] ?? null,
-                    $data['countryName'] ?? null,
+                    $this->countryName($data['countryCode'] ?? null, $data['countryName'] ?? null),
                 ])) ?: 'Não identificada';
             });
 
@@ -134,6 +134,22 @@ class ActivityLogger
         } catch (Throwable $e) {
             report($e);
         }
+    }
+
+    /**
+     * Country name in Portuguese (the lookup answers in English).
+     */
+    private function countryName(?string $code, ?string $name): ?string
+    {
+        if ($code === 'BR') {
+            return 'Brasil';
+        }
+
+        if ($code !== null && class_exists(\Locale::class)) {
+            return \Locale::getDisplayRegion('-'.$code, 'pt_BR') ?: $name;
+        }
+
+        return $name;
     }
 
     private function subjectLabel(Model $subject): string

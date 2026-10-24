@@ -63,7 +63,7 @@ class ActivityLogTest extends TestCase
 
     public function test_public_ip_gets_an_approximate_location_after_the_response(): void
     {
-        Http::fake(['api.db-ip.com/*' => Http::response(['city' => 'Ipatinga', 'stateProv' => 'Minas Gerais', 'countryName' => 'Brasil'])]);
+        Http::fake(['api.db-ip.com/*' => Http::response(['city' => 'Ipatinga', 'stateProv' => 'Minas Gerais', 'countryCode' => 'BR', 'countryName' => 'Brazil'])]);
         $user = User::factory()->create();
 
         $this->actingAs($user)->withServerVariables(['REMOTE_ADDR' => '177.10.20.30'])->post(route('logout'));
