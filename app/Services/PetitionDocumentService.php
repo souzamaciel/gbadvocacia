@@ -17,6 +17,8 @@ class PetitionDocumentService
     /**
      * Generate the Word file from the reviewed texts. The file is not kept on the
      * server in this version: it is returned for download and only the draft is saved.
+     * A petition built from an appointment also sends the form's answers, so the
+     * contract narrative and the estimates follow the case.
      *
      * @return string path of the temporary file to download
      */
@@ -34,7 +36,7 @@ class PetitionDocumentService
         $preliminares = $items->where('kind', PetitionItem::KIND_PRELIMINAR)->values()->map($toPayload)->all();
         $topics = $items->where('kind', PetitionItem::KIND_PEDIDO)->values()->map($toPayload)->all();
 
-        $normalized = PetitionFormSerializer::normalizeFormData([], $topics, $preliminares);
+        $normalized = PetitionFormSerializer::normalizeFormData($petition->appointment?->answers ?? [], $topics, $preliminares);
         $resultado = $this->petitionGenerationService->generate($normalized, false, false);
 
         PetitionLog::create([
@@ -64,6 +66,8 @@ class PetitionDocumentService
             'file_path' => null,
             'generated_at' => now(),
         ]);
+
+        $petition->appointment?->update(['generated_at' => now()]);
 
         return $temporaryPath;
     }

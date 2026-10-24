@@ -206,7 +206,7 @@
                 <i data-lucide="printer"></i> Imprimir ficha
             </button>
             <button type="submit" id="btn-submit-appointment" class="btn btn-primary" disabled>
-                Concluir atendimento <i data-lucide="check"></i>
+                Concluir e revisar petição <i data-lucide="arrow-right"></i>
             </button>
         </div>
     </div>
@@ -691,7 +691,7 @@
             var formData = new FormData(form);
 
             btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Gerando a petição…';
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Preparando a revisão…';
             window.gbGenerating = true;
 
             fetch(form.action, {
@@ -702,7 +702,7 @@
             .then(function (response) {
                 return response.json().catch(function () { return {}; }).then(function (data) {
                     if (!response.ok) {
-                        var error = new Error(data.message || 'Erro ao gerar petição.');
+                        var error = new Error(data.message || 'Erro ao preparar a petição.');
                         error.missing = data.missing;
                         throw error;
                     }
@@ -716,27 +716,13 @@
                 });
             })
             .then(function (result) {
-                return gbGeneration.download(result.download_url, result.file_name);
-            })
-            .then(function () {
-                Swal.fire({
-                    title: 'Petição gerada com sucesso!',
-                    text: 'O atendimento ficou salvo em Atendimentos, na aba Geradas. Deseja começar outro atendimento?',
-                    icon: 'success',
-                    showCancelButton: true,
-                    confirmButtonColor: 'var(--df-brand-01)',
-                    cancelButtonColor: '#6c757d',
-                    confirmButtonText: 'Sim, novo atendimento',
-                    cancelButtonText: 'Não',
-                }).then(function (result) {
-                    if (result.isConfirmed) {
-                        window.location.href = '{{ route('appointment.create') }}';
-                    }
-                });
+                window.gbGenerating = false;
+                window.gbLeaving = true;
+                window.location.href = result.redirect;
             })
             .catch(function (err) {
                 if (err.missing && err.missing.length) { showMissing(err.missing); return; }
-                Swal.fire({ icon: 'error', title: 'Não foi possível gerar a petição', text: (err.message || 'Erro de conexão. Tente novamente.') + ' O atendimento continua salvo nos rascunhos.', confirmButtonColor: 'var(--df-brand-01)' });
+                Swal.fire({ icon: 'error', title: 'Não foi possível preparar a petição', text: (err.message || 'Erro de conexão. Tente novamente.') + ' O atendimento continua salvo nos rascunhos.', confirmButtonColor: 'var(--df-brand-01)' });
             })
             .finally(function () {
                 window.gbGenerating = false;

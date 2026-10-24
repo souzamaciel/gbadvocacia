@@ -28,7 +28,7 @@ class PetitionController extends Controller
     public function index(): View
     {
         $petitions = Petition::query()
-            ->with('user')
+            ->with(['user', 'appointment'])
             ->withCount(['items', 'items as reviewed_items_count' => fn ($query) => $query->whereNotNull('reviewed_at')])
             ->latest('updated_at')
             ->get();

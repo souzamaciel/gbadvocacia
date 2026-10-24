@@ -5,15 +5,11 @@ namespace App\Http\Controllers;
 use App\Http\Requests\SaveAppointmentDraftRequest;
 use App\Models\Appointment;
 use App\Models\Group;
-use App\Models\PetitionLog;
 use App\Models\Topic;
 use App\Services\AppointmentForm;
 use App\Services\AppointmentFormDocxGenerator;
+use App\Services\AppointmentPetitionService;
 use App\Services\BackgroundGeneration;
-use App\Services\InternalNotes;
-use App\Services\OpenAI\PetitionGenerationService;
-use App\Services\PetitionDocxGenerator;
-use App\Services\PetitionFormSerializer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -24,14 +20,14 @@ use Throwable;
 class AppointmentController extends Controller
 {
     public function __construct(
-        protected PetitionGenerationService $petitionGenerationService,
         protected AppointmentForm $form,
         protected BackgroundGeneration $generations,
+        protected AppointmentPetitionService $petitions,
     ) {}
 
     public function index(): View
     {
-        $appointments = Appointment::query()->with('user')->latest('updated_at')->get();
+        $appointments = Appointment::query()->with(['user', 'petition'])->latest('updated_at')->get();
 
         return view('appointments.index', compact('appointments'));
     }
@@ -136,52 +132,15 @@ class AppointmentController extends Controller
             ], 422);
         }
 
-        $topicIds = $request->input('topics', []);
-        $preliminarIds = $request->input('preliminares', []);
-
-        $topics = Topic::whereIn('id', $topicIds)
-            ->get(['id', 'title', 'content'])
-            ->sortBy(fn ($t) => array_search($t->id, $topicIds))
-            ->values()
-            ->map(fn ($t, $i) => ['sort_order' => $i + 1, 'topic_id' => $t->id, 'title' => $t->title, 'content' => $t->content])
-            ->all();
-
-        $preliminares = Topic::whereIn('id', $preliminarIds)
-            ->where('group_id', Group::PRELIMINARES_ID)
-            ->orderBy('sort_order')
-            ->get(['id', 'title', 'content'])
-            ->values()
-            ->map(fn ($t, $i) => ['sort_order' => $i + 1, 'topic_id' => $t->id, 'title' => $t->title, 'content' => $t->content])
-            ->all();
-
-        $notesByTopicId = Topic::whereIn('id', [...$topicIds, ...$preliminarIds])->pluck('notes', 'id')->all();
-
-        $normalized = PetitionFormSerializer::normalizeFormData($request->all(), $topics, $preliminares);
-        $filename = 'peticao-inicial-'.str()->slug($normalized['cliente_nome'] ?? 'peticao').'.docx';
-
         $appointment = Appointment::query()->find($request->integer('appointment_id'))
             ?? new Appointment(['user_id' => $request->user()->id]);
         $appointment = $this->saveDraft($request, $appointment);
         $appointmentId = $appointment->id;
 
-        $token = $this->generations->start($request->user()->id, function (string $token) use ($normalized, $notesByTopicId, $preliminares, $topics, $filename, $appointmentId): array {
-            $resultado = $this->petitionGenerationService->generate($normalized, false, true);
+        $token = $this->generations->start($request->user()->id, function () use ($appointmentId): array {
+            $petition = $this->petitions->prepare(Appointment::query()->findOrFail($appointmentId));
 
-            PetitionLog::create([
-                'openai_model' => $resultado['openai_model'],
-                'request_payload' => $resultado['request_payload'],
-                'response_payload' => $resultado['raw_response'],
-            ]);
-
-            $filePath = (new PetitionDocxGenerator)->generateFull(InternalNotes::attach($resultado['blade_data'], $notesByTopicId, [
-                'preliminares' => array_column($preliminares, 'topic_id'),
-                'topicos' => array_column($topics, 'topic_id'),
-            ]));
-
-            $this->generations->storeFile($token, $filePath, $filename);
-            Appointment::query()->whereKey($appointmentId)->update(['generated_at' => now()]);
-
-            return [];
+            return ['redirect' => route('petition.review', $petition)];
         });
 
         return response()->json([

@@ -19,6 +19,7 @@ class Petition extends Model
 
     protected $fillable = [
         'user_id',
+        'appointment_id',
         'name',
         'status',
         'file_name',
@@ -36,6 +37,16 @@ class Petition extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * The appointment this petition was built from, if any.
+     *
+     * @return BelongsTo<Appointment, $this>
+     */
+    public function appointment(): BelongsTo
+    {
+        return $this->belongsTo(Appointment::class);
     }
 
     /**

@@ -51,7 +51,7 @@ class HelpController extends Controller
                     ['slug' => 'atendimento', 'title' => 'Fazer um atendimento', 'summary' => 'Preencher a ficha, perguntas condicionais e campos obrigatórios.', 'can' => 'appointments.create'],
                     ['slug' => 'importar-ficha', 'title' => 'Importar ficha do Word', 'summary' => 'A IA lê a ficha preenchida no Word, preenche o atendimento e sugere a petição.', 'can' => 'appointments.create'],
                     ['slug' => 'rascunhos-atendimento', 'title' => 'Rascunhos de atendimento', 'summary' => 'Salvar, continuar e excluir atendimentos.', 'can' => 'appointments.create'],
-                    ['slug' => 'concluir-atendimento', 'title' => 'Imprimir a ficha e gerar a petição', 'summary' => 'A ficha em Word e a petição feita pela IA.', 'can' => 'appointments.create'],
+                    ['slug' => 'concluir-atendimento', 'title' => 'Imprimir a ficha e revisar a petição', 'summary' => 'A ficha em Word, a revisão de cada tópico e o Word da petição.', 'can' => 'appointments.create'],
                 ],
             ],
             [

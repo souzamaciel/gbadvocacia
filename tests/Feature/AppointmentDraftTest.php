@@ -84,9 +84,9 @@ class AppointmentDraftTest extends TestCase
         $this->assertModelMissing($mine);
     }
 
-    public function test_generating_the_petition_saves_the_appointment_as_a_draft(): void
+    public function test_concluding_saves_the_appointment_and_opens_its_petition_for_review(): void
     {
-        Http::fake(['*/responses' => Http::response(['id' => 'x', 'output' => [['type' => 'message', 'content' => [['type' => 'output_text', 'text' => json_encode(['titulo_acao' => 'RECLAMAÇÃO', 'preliminares' => [], 'contrato_trabalho_html' => '', 'topicos' => [], 'incluir_honorarios' => false, 'honorarios_ordem' => '06', 'honorarios_html' => '', 'pedidos_ordem' => '07', 'pedidos' => [], 'requerimentos_finais_html' => '', 'valor_causa' => 'R$ 1,00', 'valor_causa_extenso' => 'um real', 'pendencias' => []])]]]]])]);
+        Http::fake(['*/responses' => Http::response(['id' => 'x', 'output' => [['type' => 'message', 'content' => [['type' => 'output_text', 'text' => json_encode(['itens' => []])]]]]])]);
 
         $response = $this->actingAs($this->user)->post(route('appointment.store'), [
             'cliente_nome' => 'Maria Ferreira',
@@ -96,17 +96,21 @@ class AppointmentDraftTest extends TestCase
 
         $appointment = Appointment::sole();
         $response->assertAccepted()->assertJsonPath('appointment.id', $appointment->id);
-        $this->assertSame('done', $this->generationResult($response)['status']);
-        $this->assertNotNull($appointment->fresh()->generated_at);
+        $result = $this->generationResult($response);
+        $petition = $appointment->fresh()->petition;
+        $this->assertSame('done', $result['status']);
+        $this->assertSame(route('petition.review', $petition), $result['redirect']);
+        $this->assertNull($appointment->fresh()->generated_at);
 
-        $this->downloadGeneration($this->actingAs($this->user)->post(route('appointment.store'), [
+        $this->generationResult($this->actingAs($this->user)->post(route('appointment.store'), [
             'appointment_id' => $appointment->id,
             'cliente_nome' => 'Maria Ferreira Souza',
             'cliente_cpf' => '123.456.789-00',
             'empregador_nome' => 'Empresa Ltda.',
-        ]))->assertOk();
+        ]));
 
         $this->assertSame(1, Appointment::count());
+        $this->assertSame(1, $appointment->fresh()->petition()->count());
         $this->assertSame('Maria Ferreira Souza', $appointment->fresh()->client_name);
     }
 

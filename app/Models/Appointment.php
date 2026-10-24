@@ -6,6 +6,7 @@ use Database\Factories\AppointmentFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * Draft of an attendance form ("rascunho de atendimento").
@@ -49,6 +50,16 @@ class Appointment extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * The petition reviewed and generated from this appointment.
+     *
+     * @return HasOne<Petition, $this>
+     */
+    public function petition(): HasOne
+    {
+        return $this->hasOne(Petition::class);
     }
 
     public function displayName(): string

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Appointment;
 use App\Models\Group;
 use App\Models\Topic;
 use App\Models\User;
@@ -37,7 +38,11 @@ class AppointmentInternalNotesTest extends TestCase
             'preliminares' => [$gratuidade->id],
         ]);
 
-        $download = $this->downloadGeneration($response)->assertOk();
+        $this->generationResult($response);
+        $petition = Appointment::sole()->petition;
+        $petition->items()->update(['reviewed_at' => now()]);
+
+        $download = $this->downloadGeneration($this->post(route('petition.generate', $petition)))->assertOk();
         $xml = $this->documentXml($download->baseResponse->getFile()->getPathname());
 
         $this->assertMatchesRegularExpression('/w:fill="E2EFDA".*?Orientação interna: .*?Juntar declaração de hipossuficiência\..*?Texto da gratuidade/s', $xml);

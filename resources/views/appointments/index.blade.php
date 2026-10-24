@@ -89,6 +89,11 @@
                             <td>{{ $appointment->updated_at->locale('pt_BR')->calendar() }}</td>
                             <td>
                                 <div class="d-flex justify-content-md-end align-items-center gap-1">
+                                    @if ($appointment->petition)
+                                        @can('petitions.edit')
+                                            <a href="{{ route('petition.review', $appointment->petition) }}" class="btn btn-white btn-sm"><i data-lucide="file-text"></i> Abrir petição</a>
+                                        @endcan
+                                    @endif
                                     <a href="{{ route('appointment.edit', $appointment) }}" class="btn btn-white btn-sm">{{ $appointment->generated_at ? 'Abrir' : 'Continuar' }} <i data-lucide="arrow-right"></i></a>
                                     <form method="POST" action="{{ route('appointment.destroy', $appointment) }}" class="js-delete-appointment" data-name="{{ $appointment->displayName() }}">
                                         @csrf

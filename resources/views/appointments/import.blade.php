@@ -51,7 +51,7 @@
                     <ol class="mb-3">
                         <li>A IA lê a ficha e preenche as perguntas do atendimento do sistema.</li>
                         <li>Ela também <strong>sugere as preliminares e os pedidos</strong> da petição, com base nos fatos da ficha.</li>
-                        <li>O atendimento abre preenchido e salvo como <strong>rascunho</strong>. Confira tudo, ajuste o que precisar e clique em <strong>Concluir atendimento</strong> para gerar a petição.</li>
+                        <li>O atendimento abre preenchido e salvo como <strong>rascunho</strong>. Confira tudo, ajuste o que precisar e clique em <strong>Concluir e revisar petição</strong>: cada tópico passa pela revisão antes de gerar o Word.</li>
                     </ol>
                     <div class="gb-help-note is-warning mb-2"><i data-lucide="shield-check"></i><div>O arquivo <strong>não fica guardado</strong> no sistema, e a <strong>senha GOV</strong> é retirada antes do envio à IA.</div></div>
                     <div class="gb-help-note mb-0"><i data-lucide="info"></i><div>Ficha em <strong>.doc</strong> ou <strong>PDF</strong>? Abra no Word e use “Salvar como” → Documento do Word (.docx).</div></div>

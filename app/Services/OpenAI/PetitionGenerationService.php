@@ -79,8 +79,8 @@ TEXT
             : <<<'TEXT'
 - Cada item selecionado (tanto em "topicos_selecionados" quanto em "preliminares_selecionadas") possui um campo "content" com o texto-base.
 - Esse texto-base contém variáveis delimitadas por colchetes [variável] ou chaves {variável}.
-- Como NÃO há dados de formulário do cliente, você DEVE manter todas as variáveis entre colchetes/chaves exatamente como estão, sem preenchê-las, tanto nos tópicos de mérito quanto nas preliminares.
-- Use o texto-base do "content" como fundamento para a redação, preservando as variáveis no lugar dos dados do cliente.
+- Os textos do "content" JÁ FORAM REVISADOS pelo advogado: o "conteudo_html" de cada tópico e preliminar deve ser exatamente o "content" correspondente, sem reescrever, resumir ou acrescentar nada. Variáveis que ainda estiverem entre colchetes/chaves ficam como estão.
+- Os dados do caso no JSON (qualificação e "ficha_atendimento"), quando houver, servem para redigir "contrato_trabalho_html", definir "cidade_vara" e estimar os valores dos pedidos.
 TEXT;
 
         $instructions = <<<TEXT

@@ -120,6 +120,7 @@
                                         <p class="gb-petition-meta">
                                             {{ $petition->items_count }} {{ $petition->items_count === 1 ? 'tópico' : 'tópicos' }} · {{ $stageLabel }}
                                             @if ($petition->user) · {{ $petition->user->name }} @endif
+                                            @if ($petition->appointment) · Do atendimento de {{ $petition->appointment->displayName() }} @endif
                                         </p>
                                     </div>
                                 </div>
