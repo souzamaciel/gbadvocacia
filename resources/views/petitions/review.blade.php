@@ -161,7 +161,7 @@
             let editing = false;
             const saveTimers = {};
 
-            const escape = text => { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; };
+            const escape = text => { const div = document.createElement('div'); div.textContent = text; return div.innerHTML.replace(/"/g, '&quot;').replace(/'/g, '&#39;'); };
             const decode = html => { const area = document.createElement('textarea'); area.innerHTML = html; return area.value; };
             const itemEditor = gbEditor.create('#item-editor', { label: 'Texto do tópico' });
             let editorStartHtml = '';
