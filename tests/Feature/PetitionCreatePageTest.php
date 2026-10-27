@@ -137,6 +137,7 @@ class PetitionCreatePageTest extends TestCase
         $petition = Petition::query()->sole();
         $petition->items()->update(['reviewed_at' => now()]);
 
+        $this->confirmPedidos($petition);
         $response = $this->post(route('petition.generate', $petition));
 
         $this->assertSame('done', $this->generationResult($response)['status']);

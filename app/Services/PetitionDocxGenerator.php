@@ -33,6 +33,11 @@ class PetitionDocxGenerator
     /** @var array<string, mixed> */
     protected array $styles;
 
+    /**
+     * Whether the pedido amounts were confirmed by the lawyer (printed without highlight).
+     */
+    protected bool $confirmedAmounts = false;
+
     public function __construct()
     {
         $this->word = new PhpWord;
@@ -48,6 +53,7 @@ class PetitionDocxGenerator
      */
     public function generateFull(array $data): string
     {
+        $this->confirmedAmounts = ! empty($data['valores_conferidos']);
         $section = $this->word->addSection($this->styles['section']);
         $this->addHeaderAndFooter($section);
 
@@ -75,6 +81,7 @@ class PetitionDocxGenerator
      */
     public function generateMerit(array $data): string
     {
+        $this->confirmedAmounts = ! empty($data['valores_conferidos']);
         $section = $this->word->addSection($this->styles['section']);
         $this->addHeaderAndFooter($section);
 
@@ -490,7 +497,7 @@ class PetitionDocxGenerator
             return;
         }
 
-        $textRun->addText(MoneyInWords::formatCents($cents), $this->styles['estimate']);
+        $textRun->addText(MoneyInWords::formatCents($cents), $this->amountStyle());
     }
 
     /**
@@ -558,6 +565,9 @@ class PetitionDocxGenerator
         if ($cents !== null) {
             $valor = MoneyInWords::formatCents($cents);
             $extenso = MoneyInWords::spell($cents);
+        } elseif ($this->confirmedAmounts) {
+            $valor = 'R$ ________';
+            $extenso = '';
         } else {
             $valor = ! empty($data['valor_causa']) ? $data['valor_causa'] : 'R$ 0,00';
             $extenso = $data['valor_causa_extenso'] ?? '';
@@ -565,8 +575,19 @@ class PetitionDocxGenerator
 
         $textRun = $section->addTextRun($this->styles['indent']);
         $textRun->addText('Dá à causa o valor de ');
-        $textRun->addText($valor.(! empty($extenso) ? " ({$extenso})" : ''), $this->styles['estimate']);
+        $textRun->addText($valor.(! empty($extenso) ? " ({$extenso})" : ''), $this->amountStyle());
         $textRun->addText(', para os fins legais.');
+    }
+
+    /**
+     * AI estimates are highlighted in yellow for the lawyer to check; amounts confirmed in
+     * the "Valores dos pedidos" step are printed plainly.
+     *
+     * @return array<string, string>|null
+     */
+    protected function amountStyle(): ?array
+    {
+        return $this->confirmedAmounts ? null : $this->styles['estimate'];
     }
 
     /**

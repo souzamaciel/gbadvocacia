@@ -6,6 +6,7 @@ use App\Models\Petition;
 use App\Models\PetitionItem;
 use App\Models\PetitionLog;
 use App\Services\OpenAI\PetitionGenerationService;
+use App\Services\Pedidos\PedidoValues;
 use Illuminate\Support\Str;
 
 class PetitionDocumentService
@@ -18,7 +19,8 @@ class PetitionDocumentService
      * Generate the Word file from the reviewed texts. The file is not kept on the
      * server in this version: it is returned for download and only the draft is saved.
      * A petition built from an appointment also sends the form's answers, so the
-     * contract narrative and the estimates follow the case.
+     * contract narrative follows the case. The pedidos and their amounts are the ones
+     * confirmed in the "Valores dos pedidos" step.
      *
      * @return string path of the temporary file to download
      */
@@ -55,6 +57,11 @@ class PetitionDocumentService
         );
 
         $data['qualificacao_html'] = $items->firstWhere('kind', PetitionItem::KIND_QUALIFICACAO)?->renderedContent();
+
+        if ($petition->hasConfirmedPedidos()) {
+            $data['pedidos'] = PedidoValues::forDocument($petition->pedidos);
+            $data['valores_conferidos'] = true;
+        }
 
         $temporaryPath = (new PetitionDocxGenerator)->generateFull($data);
 

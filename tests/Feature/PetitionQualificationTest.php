@@ -81,6 +81,7 @@ class PetitionQualificationTest extends TestCase
         $petition->items()->update(['reviewed_at' => now()]);
         $this->fakeOpenAi();
 
+        $this->confirmPedidos($petition);
         $response = $this->downloadGeneration($this->actingAs($this->user)->postJson(route('petition.generate', $petition)))->assertOk();
 
         $text = $this->documentText($response->baseResponse->getFile()->getPathname());

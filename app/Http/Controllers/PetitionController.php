@@ -137,6 +137,12 @@ class PetitionController extends Controller
                 ->with('status', 'Revise todos os tópicos antes de gerar o documento.');
         }
 
+        if (! $petition->hasConfirmedPedidos()) {
+            return redirect()
+                ->route('petition.values.show', $petition)
+                ->with('status', 'Confira os valores dos pedidos antes de gerar o documento.');
+        }
+
         return view('petitions.generate', compact('petition'));
     }
 
@@ -147,6 +153,10 @@ class PetitionController extends Controller
     {
         if (! $petition->isFullyReviewed()) {
             return response()->json(['message' => 'Revise todos os tópicos antes de gerar o documento.'], 422);
+        }
+
+        if (! $petition->hasConfirmedPedidos()) {
+            return response()->json(['message' => 'Confira os valores dos pedidos antes de gerar o documento.'], 422);
         }
 
         $fileName = $request->input('file_name');

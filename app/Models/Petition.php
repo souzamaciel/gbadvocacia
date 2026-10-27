@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\Pedidos\PedidoValues;
 use Database\Factories\PetitionFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -22,6 +23,9 @@ class Petition extends Model
         'appointment_id',
         'name',
         'status',
+        'pedidos',
+        'pedidos_signature',
+        'pedidos_confirmed_at',
         'file_name',
         'file_path',
         'generated_at',
@@ -31,6 +35,8 @@ class Petition extends Model
     {
         return [
             'generated_at' => 'datetime',
+            'pedidos' => 'array',
+            'pedidos_confirmed_at' => 'datetime',
         ];
     }
 
@@ -62,6 +68,16 @@ class Petition extends Model
     public function isGenerated(): bool
     {
         return $this->status === self::STATUS_GENERATED;
+    }
+
+    /**
+     * Whether the lawyer confirmed the amounts of the pedidos for the current topics and ficha.
+     */
+    public function hasConfirmedPedidos(): bool
+    {
+        return $this->pedidos_confirmed_at !== null
+            && $this->pedidos !== null
+            && $this->pedidos_signature === app(PedidoValues::class)->signature($this);
     }
 
     /**

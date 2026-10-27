@@ -2593,3 +2593,25 @@ a.gb-group-filter { text-decoration: none; }
     .gb-logs-filters .gb-logs-search,
     .gb-logs-filters .gb-logs-actions { grid-column: 1 / -1; }
 }
+
+/* Valores dos pedidos */
+.gb-values-list { list-style: none; margin: 0; padding: 0; }
+.gb-value-line { display: grid; grid-template-columns: 1fr 180px; gap: 16px; align-items: start; padding: 14px 24px; border-top: 1px solid var(--df-border); }
+.gb-value-line.is-sub { padding-left: 56px; background: var(--df-ui-01); }
+.gb-value-title { display: block; font: 500 14px/20px var(--df-font); color: var(--df-text-01); margin: 0; }
+.gb-value-line.is-sub .gb-value-title { font-weight: 400; }
+.gb-value-letter { color: var(--df-text-03); margin-right: 2px; }
+.gb-value-memory { margin: 4px 0 0; font: 400 12px/18px var(--df-font); color: var(--df-text-03); }
+.gb-value-amount { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.gb-value-blank-badge { display: none; }
+.gb-value-line.is-blank .gb-value-blank-badge { display: inline-flex; }
+.gb-value-line.is-blank .form-control { border-color: var(--df-warning); }
+.gb-values-summary { position: sticky; top: 16px; }
+.gb-values-total { font: 600 28px/36px var(--df-font); color: var(--df-text-01); }
+
+@media (max-width: 767.98px) {
+    .gb-value-line { grid-template-columns: 1fr; gap: 8px; padding: 12px 16px; }
+    .gb-value-line.is-sub { padding-left: 32px; }
+    .gb-value-amount { align-items: stretch; }
+    .gb-value-blank-badge { align-self: flex-start; }
+}

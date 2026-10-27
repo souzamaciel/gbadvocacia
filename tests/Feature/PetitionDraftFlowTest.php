@@ -177,6 +177,7 @@ class PetitionDraftFlowTest extends TestCase
         ]);
         $petition->items()->update(['reviewed_at' => now()]);
 
+        $this->confirmPedidos($petition);
         $started = $this->actingAs($this->user)->postJson(route('petition.generate', $petition), ['file_name' => 'Petição Maria']);
         $status = $this->generationResult($started);
 
@@ -205,6 +206,7 @@ class PetitionDraftFlowTest extends TestCase
         $petition = $this->draftWith([$this->horasExtras, $this->multa]);
         $petition->items()->update(['reviewed_at' => now()]);
 
+        $this->confirmPedidos($petition);
         $response = $this->downloadGeneration($this->actingAs($this->user)->postJson(route('petition.generate', $petition)))->assertOk();
 
         $xml = $this->documentXml($response->baseResponse->getFile()->getPathname());

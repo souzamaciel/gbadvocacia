@@ -120,11 +120,9 @@
         </div>
         <div class="gb-page-actions">
             <button type="button" class="btn btn-white" data-bs-toggle="modal" data-bs-target="#full-petition"><i data-lucide="file-text"></i> Ver petição completa</button>
-            @can('petitions.generate')
-                <a href="{{ route('petition.generate.show', $petition) }}" class="btn btn-primary" id="go-generate" aria-disabled="true">
-                    Gerar documento <i data-lucide="arrow-right"></i>
-                </a>
-            @endcan
+            <a href="{{ route('petition.values.show', $petition) }}" class="btn btn-primary" id="go-generate" aria-disabled="true">
+                Valores dos pedidos <i data-lucide="arrow-right"></i>
+            </a>
         </div>
     </section>
 
@@ -235,8 +233,8 @@
                 document.getElementById('summary-title').textContent = `${reviewed} de ${items.length} tópicos revisados`;
                 const link = document.getElementById('go-generate');
                 document.getElementById('summary-text').textContent = done
-                    ? (link ? 'Tudo revisado. Você já pode gerar o documento.' : 'Tudo revisado. A geração do documento fica com quem tem essa permissão no perfil.')
-                    : (pending ? `${pending} ${pending === 1 ? 'informação ainda precisa' : 'informações ainda precisam'} ser preenchida${pending === 1 ? '' : 's'}.` : 'Marque cada tópico como conferido para gerar o documento.');
+                    ? 'Tudo revisado. Agora confira os valores dos pedidos.'
+                    : (pending ? `${pending} ${pending === 1 ? 'informação ainda precisa' : 'informações ainda precisam'} ser preenchida${pending === 1 ? '' : 's'}.` : 'Marque cada tópico como conferido para seguir aos valores dos pedidos.');
                 if (link) {
                     link.classList.toggle('disabled', !done);
                     link.setAttribute('aria-disabled', String(!done));

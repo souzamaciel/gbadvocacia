@@ -42,6 +42,7 @@ class AppointmentInternalNotesTest extends TestCase
         $petition = Appointment::sole()->petition;
         $petition->items()->update(['reviewed_at' => now()]);
 
+        $this->confirmPedidos($petition);
         $download = $this->downloadGeneration($this->post(route('petition.generate', $petition)))->assertOk();
         $xml = $this->documentXml($download->baseResponse->getFile()->getPathname());
 

@@ -145,6 +145,7 @@ class AppointmentPetitionFlowTest extends TestCase
         $petition = $this->conclude(['jornada_cidade' => 'Coronel Fabriciano']);
         $petition->items()->update(['reviewed_at' => now()]);
 
+        $this->confirmPedidos($petition);
         $this->downloadGeneration($this->actingAs($this->user)->post(route('petition.generate', $petition)))->assertOk();
 
         Http::assertSent(fn (Request $request): bool => str_contains($request->body(), 'ficha_atendimento')

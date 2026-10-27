@@ -21,7 +21,7 @@
 @endsection
 
 @section('content')
-    <x-petition-steps :current="3" :petition="$petition" />
+    <x-petition-steps :current="4" :petition="$petition" />
 
     <div class="row g-3 align-items-start">
         <div class="col-12 col-lg-6">
@@ -131,7 +131,7 @@
     </div>
 
     <div class="gb-form-actions">
-        <a href="{{ route('petition.review', $petition) }}" class="btn btn-white"><i data-lucide="arrow-left"></i> Voltar à revisão</a>
+        <a href="{{ route('petition.values.show', $petition) }}" class="btn btn-white"><i data-lucide="arrow-left"></i> Voltar aos valores</a>
         <span class="gb-field-hint m-0">Seleção, ordem e textos preservados no rascunho.</span>
     </div>
 

@@ -4,7 +4,8 @@
     $steps = [
         1 => ['Selecionar e organizar', 'Escolha os tópicos', $petition ? route('petition.edit', $petition) : null],
         2 => ['Revisar conteúdo', 'Ajuste os textos', $petition ? route('petition.review', $petition) : null],
-        3 => ['Gerar documento', 'Word', $petition && $petition->isFullyReviewed() ? route('petition.generate.show', $petition) : null],
+        3 => ['Valores dos pedidos', 'Confira os cálculos', $petition && $petition->isFullyReviewed() ? route('petition.values.show', $petition) : null],
+        4 => ['Gerar documento', 'Word', $petition && $petition->isFullyReviewed() && $petition->hasConfirmedPedidos() ? route('petition.generate.show', $petition) : null],
     ];
 @endphp
 

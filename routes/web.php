@@ -11,6 +11,7 @@ use App\Http\Controllers\GroupController;
 use App\Http\Controllers\HelpController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PetitionController;
+use App\Http\Controllers\PetitionValuesController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\TopicController;
@@ -52,6 +53,9 @@ Route::middleware('auth')->group(function (): void {
         Route::delete('/{petition}', 'destroy')->middleware('can:petitions.delete')->name('destroy');
         Route::get('/{petition}/review', 'review')->name('review');
         Route::put('/{petition}/items/{item}', 'updateItem')->scopeBindings()->name('items.update');
+        Route::get('/{petition}/valores', [PetitionValuesController::class, 'show'])->name('values.show');
+        Route::post('/{petition}/valores/calcular', [PetitionValuesController::class, 'calculate'])->name('values.calculate');
+        Route::put('/{petition}/valores', [PetitionValuesController::class, 'update'])->name('values.update');
         Route::get('/{petition}/generate', 'showGenerate')->middleware('can:petitions.generate')->name('generate.show');
         Route::post('/{petition}/generate', 'generate')->middleware('can:petitions.generate')->name('generate');
     });

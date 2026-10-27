@@ -61,6 +61,7 @@ class PetitionDocxPreliminaresTest extends TestCase
         $petition = Petition::query()->sole();
         $petition->items()->update(['reviewed_at' => now()]);
 
+        $this->confirmPedidos($petition);
         $response = $this->downloadGeneration($this->post(route('petition.generate', $petition)))->assertOk();
 
         $text = $this->docxText($response->baseResponse->getFile()->getPathname());
