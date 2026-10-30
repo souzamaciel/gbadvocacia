@@ -30,7 +30,7 @@ class StoreSuggestionRequest extends FormRequest
         return [
             'type' => ['required', Rule::in(array_keys(Suggestion::TYPES))],
             'area' => ['required', Rule::in(array_keys(Suggestion::AREAS))],
-            'impact' => ['required', Rule::in(array_keys(Suggestion::IMPACTS))],
+            'impact' => ['required', Rule::in(['alta', 'media', 'baixa'])],
             'title' => ['required', 'string', 'min:5', 'max:150'],
             'description' => ['required', 'string', 'min:10', 'max:5000'],
             'page_title' => ['nullable', 'string', 'max:255'],

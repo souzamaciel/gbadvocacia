@@ -19,7 +19,7 @@ class SuggestionTest extends TestCase
     private const VALID = [
         'type' => 'novo',
         'area' => 'peticoes',
-        'impact' => 'ajudaria',
+        'impact' => 'alta',
         'title' => 'Duplicar uma petição gerada',
         'description' => 'Seria ótimo poder copiar uma petição pronta para outro cliente.',
         'page_title' => 'Petições iniciais',
@@ -70,7 +70,8 @@ class SuggestionTest extends TestCase
         Mail::assertSent(SuggestionReceived::class, fn (SuggestionReceived $mail): bool => count($mail->attachments()) === 2);
 
         $html = (new SuggestionReceived($suggestion))->render();
-        $this->assertStringContainsString('2 imagens anexadas', $html);
+        $this->assertStringContainsString('2 prints enviados (também em anexo):', $html);
+        $this->assertSame(2, substr_count($html, '<img src="data:image/png;base64,'));
         $this->assertStringContainsString('Novo recurso', $html);
     }
 
@@ -88,6 +89,20 @@ class SuggestionTest extends TestCase
 
         $this->assertSame(0, Suggestion::count());
         Mail::assertNothingSent();
+    }
+
+    public function test_the_impact_answer_follows_the_type(): void
+    {
+        $this->actingAs(User::factory()->create())->postJson(route('suggestions.store'), [...self::VALID, 'type' => 'erro', 'impact' => 'alta'])->assertCreated();
+
+        $suggestion = Suggestion::sole();
+        $this->assertSame('Impede o meu trabalho', $suggestion->impactLabel());
+        $html = (new SuggestionReceived($suggestion))->render();
+        $this->assertStringContainsString('Qual a gravidade do erro?', $html);
+        $this->assertStringContainsString('Impede o meu trabalho', $html);
+
+        $this->actingAs(User::factory()->create())->postJson(route('suggestions.store'), [...self::VALID, 'impact' => 'ajudaria'])
+            ->assertJsonValidationErrors(['impact']);
     }
 
     public function test_external_page_addresses_are_not_kept(): void

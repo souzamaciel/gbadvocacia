@@ -22,11 +22,28 @@ class Suggestion extends Model
         'outro' => 'Outro',
     ];
 
+    /**
+     * The question and its answers change with the type; the answer is kept as a level.
+     */
     public const IMPACTS = [
-        'atrapalha' => 'Atrapalha meu trabalho',
-        'ajudaria' => 'Ajudaria bastante',
-        'bom' => 'Seria bom ter',
+        'melhoria' => [
+            'question' => 'Quanto essa melhoria ajudaria?',
+            'levels' => ['alta' => 'Faria muita diferença no dia a dia', 'media' => 'Ajudaria bastante', 'baixa' => 'Seria bom ter'],
+        ],
+        'novo' => [
+            'question' => 'Quanto esse recurso ajudaria?',
+            'levels' => ['alta' => 'Essencial para o meu trabalho', 'media' => 'Ajudaria bastante', 'baixa' => 'Seria bom ter'],
+        ],
+        'erro' => [
+            'question' => 'Qual a gravidade do erro?',
+            'levels' => ['alta' => 'Impede o meu trabalho', 'media' => 'Atrapalha, mas consigo contornar', 'baixa' => 'É um pequeno detalhe'],
+        ],
     ];
+
+    public function impactLabel(): string
+    {
+        return self::IMPACTS[$this->type]['levels'][$this->impact] ?? $this->impact;
+    }
 
     protected $fillable = [
         'user_id',

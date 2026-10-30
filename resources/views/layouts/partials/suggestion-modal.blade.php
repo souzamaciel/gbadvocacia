@@ -36,10 +36,11 @@
                         </select>
                     </div>
                     <div class="col-12 col-md-6">
-                        <label for="gb-suggestion-impact" class="form-label">Quanto isso afeta o seu trabalho?</label>
+                        @php($firstImpact = \App\Models\Suggestion::IMPACTS[array_key_first(\App\Models\Suggestion::TYPES)])
+                        <label for="gb-suggestion-impact" class="form-label" id="gb-suggestion-impact-label">{{ $firstImpact['question'] }}</label>
                         <select id="gb-suggestion-impact" name="impact" class="form-select">
-                            @foreach (\App\Models\Suggestion::IMPACTS as $value => $label)
-                                <option value="{{ $value }}" @selected($value === 'ajudaria')>{{ $label }}</option>
+                            @foreach ($firstImpact['levels'] as $value => $label)
+                                <option value="{{ $value }}" @selected($value === 'media')>{{ $label }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -82,6 +83,20 @@
             error.hidden = true;
         });
         modal.addEventListener('shown.bs.modal', () => document.getElementById('gb-suggestion-name').focus());
+
+        const impacts = @json(\App\Models\Suggestion::IMPACTS);
+        const impactSelect = document.getElementById('gb-suggestion-impact');
+        function showImpacts() {
+            const type = form.querySelector('input[name=type]:checked')?.value;
+            const impact = impacts[type];
+            if (!impact) { return; }
+            const current = impactSelect.value || 'media';
+            document.getElementById('gb-suggestion-impact-label').textContent = impact.question;
+            impactSelect.innerHTML = '';
+            Object.entries(impact.levels).forEach(([value, label]) => impactSelect.add(new Option(label, value, false, value === current)));
+        }
+        form.querySelectorAll('input[name=type]').forEach(radio => radio.addEventListener('change', showImpacts));
+        form.addEventListener('reset', () => setTimeout(() => { impactSelect.value = 'media'; showImpacts(); impactSelect.value = 'media'; }, 0));
 
         const fileInput = document.getElementById('gb-suggestion-images');
         const fileName = document.getElementById('gb-suggestion-files-name');

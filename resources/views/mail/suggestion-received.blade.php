@@ -3,7 +3,7 @@
     $rows = [
         'Tipo' => \App\Models\Suggestion::TYPES[$suggestion->type] ?? $suggestion->type,
         'Área' => \App\Models\Suggestion::AREAS[$suggestion->area] ?? $suggestion->area,
-        'Impacto' => \App\Models\Suggestion::IMPACTS[$suggestion->impact] ?? $suggestion->impact,
+        \App\Models\Suggestion::IMPACTS[$suggestion->type]['question'] ?? 'Impacto' => $suggestion->impactLabel(),
         'Enviada por' => $suggestion->user_name.($suggestion->user?->email ? ' ('.$suggestion->user->email.')' : ''),
         'Data' => $suggestion->created_at->format('d/m/Y').' às '.$suggestion->created_at->format('H:i'),
         'Tela de origem' => $suggestion->page_title ?: '—',
@@ -24,7 +24,7 @@
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;">
                     @foreach ($rows as $label => $value)
                         <tr>
-                            <td style="padding:6px 0;color:#555b6e;width:140px;vertical-align:top;">{{ $label }}</td>
+                            <td style="padding:6px 0;color:#555b6e;width:200px;vertical-align:top;">{{ $label }}</td>
                             <td style="padding:6px 0;font-weight:bold;">{{ $value }}</td>
                         </tr>
                     @endforeach
@@ -36,7 +36,14 @@
                     <p style="font-size:13px;color:#555b6e;margin:16px 0 0;">Endereço da tela: <a href="{{ $suggestion->page_url }}" style="color:#232a54;">{{ $suggestion->page_url }}</a></p>
                 @endif
                 @if (! empty($suggestion->attachments))
-                    <p style="font-size:13px;color:#555b6e;margin:8px 0 0;">{{ count($suggestion->attachments) }} {{ count($suggestion->attachments) === 1 ? 'imagem anexada' : 'imagens anexadas' }}.</p>
+                    <p style="font-size:13px;color:#555b6e;margin:16px 0 8px;">{{ count($suggestion->attachments) === 1 ? 'Print enviado (também em anexo):' : count($suggestion->attachments).' prints enviados (também em anexo):' }}</p>
+                    @foreach ($suggestion->attachments as $file)
+                        @php($path = \Illuminate\Support\Facades\Storage::disk('local')->path($file['path']))
+                        @if (is_file($path))
+                            <img src="{{ isset($message) ? $message->embed($path) : 'data:'.mime_content_type($path).';base64,'.base64_encode(file_get_contents($path)) }}"
+                                 alt="{{ $file['name'] }}" width="592" style="display:block;width:100%;max-width:592px;height:auto;border:1px solid #d5d8e0;border-radius:4px;margin:0 0 10px;">
+                        @endif
+                    @endforeach
                 @endif
                 <p style="font-size:12px;color:#888888;margin:20px 0 0;">Para responder a quem enviou, basta responder este e-mail.</p>
             </td>
