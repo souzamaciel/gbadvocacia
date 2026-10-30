@@ -42,6 +42,9 @@ class ActivityLogger
             'petition.generated' => 'Word da petição gerado',
             'petition.deleted' => 'Petição excluída',
         ],
+        'Sugestões' => [
+            'suggestion.sent' => 'Sugestão enviada',
+        ],
         'Usuários e perfis' => [
             'user.created' => 'Usuário cadastrado',
             'user.updated' => 'Usuário alterado',

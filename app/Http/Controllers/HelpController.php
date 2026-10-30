@@ -87,6 +87,7 @@ class HelpController extends Controller
                 'icon' => 'circle-help',
                 'articles' => [
                     ['slug' => 'perguntas-frequentes', 'title' => 'Perguntas frequentes', 'summary' => 'Respostas rápidas para as dúvidas mais comuns.', 'can' => null],
+                    ['slug' => 'sugestoes', 'title' => 'Sugerir melhorias', 'summary' => 'Enviar ideias, pedir recursos e avisar sobre erros.', 'can' => null],
                 ],
             ],
         ];

@@ -118,6 +118,9 @@
             });
         })();
     </script>
+    @auth
+        @include('layouts.partials.suggestion-modal')
+    @endauth
     @yield('scripts')
 </body>
 </html>

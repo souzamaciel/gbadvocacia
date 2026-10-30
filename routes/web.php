@@ -13,6 +13,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PetitionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\SuggestionController;
 use App\Http\Controllers\TopicController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -57,6 +58,7 @@ Route::middleware('auth')->group(function (): void {
     });
 
     Route::get('/ajuda', [HelpController::class, 'index'])->name('help.index');
+    Route::post('/sugestoes', [SuggestionController::class, 'store'])->middleware('throttle:10,60')->name('suggestions.store');
     Route::get('/geracoes/{token}', [GenerationController::class, 'status'])->where('token', '[A-Za-z0-9]{40}')->name('generation.status');
     Route::get('/geracoes/{token}/arquivo', [GenerationController::class, 'download'])->where('token', '[A-Za-z0-9]{40}')->name('generation.download');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

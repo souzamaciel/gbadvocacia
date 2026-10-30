@@ -29,6 +29,11 @@
         </ul>
     </nav>
 
+    <button type="button" class="gb-suggest-link" data-bs-toggle="modal" data-bs-target="#gb-suggestion" title="Enviar uma sugestão de melhoria ou relatar um erro">
+        <i data-lucide="lightbulb"></i>
+        <span>Sugerir melhoria</span>
+    </button>
+
     <a href="{{ route('help.index') }}" class="gb-help-link {{ request()->routeIs('help.*') ? 'active' : '' }}" title="Tutoriais do sistema"
        @if (request()->routeIs('help.*')) aria-current="page" @endif>
         <i data-lucide="circle-help"></i>

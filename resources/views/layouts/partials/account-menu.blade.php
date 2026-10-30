@@ -13,6 +13,11 @@
         <i data-lucide="book-open"></i> Base de conhecimento
     </a>
 </li>
+<li>
+    <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#gb-suggestion">
+        <i data-lucide="lightbulb"></i> Sugerir melhoria
+    </button>
+</li>
 @can('logs.view')
     <li>
         <a class="dropdown-item" href="{{ route('admin.logs.index') }}">
