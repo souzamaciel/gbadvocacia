@@ -86,7 +86,7 @@ class ActivityLogTest extends TestCase
 
     public function test_logs_screen_filters_and_removes_records_older_than_six_months(): void
     {
-        $super = User::factory()->superAdmin()->create();
+        $super = User::factory()->superAdmin()->create(['name' => 'Superadmin']);
         ActivityLog::query()->create(['event' => 'auth.login', 'description' => 'Entrou no sistema.', 'user_name' => 'Antigo'])->forceFill(['created_at' => now()->subMonths(7)])->save();
         ActivityLog::query()->create(['event' => 'topic.deleted', 'description' => 'Excluiu o tópico da Biblioteca.', 'user_name' => 'Carla', 'subject_label' => 'HORAS EXTRAS']);
         ActivityLog::query()->create(['event' => 'auth.login', 'description' => 'Entrou no sistema.', 'user_name' => 'João']);
