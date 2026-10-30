@@ -2,7 +2,7 @@
 <ol>
     <li>Em qualquer tela, clique em <strong>Sugerir melhoria</strong>, no topo (no celular, fica no menu do seu nome).</li>
     <li>Escolha o <strong>tipo</strong>: melhoria em algo que já existe, novo recurso ou algo que não funciona.</li>
-    <li>Confira a <strong>área</strong> (já vem marcada conforme a tela em que você está) e diga o quanto isso afeta o seu trabalho.</li>
+    <li>Confira a <strong>área</strong> (já vem marcada conforme a tela em que você está) e responda à pergunta ao lado, que muda conforme o tipo: <strong>quanto a melhoria ou o recurso ajudaria</strong>, ou <strong>qual a gravidade do erro</strong>.</li>
     <li>Dê um <strong>título curto</strong> e <strong>descreva</strong>. Se for um erro, conte o que fez, o que esperava e o que aconteceu.</li>
     <li>Se quiser, anexe até 3 <strong>prints da tela</strong>. Depois clique em <strong>Enviar sugestão</strong>.</li>
 </ol>
