@@ -79,6 +79,7 @@ class HelpController extends Controller
                 'articles' => [
                     ['slug' => 'usuarios', 'title' => 'Usuários', 'summary' => 'Cadastrar, editar, redefinir senha e desativar.', 'can' => 'users.manage'],
                     ['slug' => 'perfis', 'title' => 'Perfis de permissão', 'summary' => 'O que cada perfil pode fazer.', 'can' => 'roles.manage'],
+                    ['slug' => 'logs', 'title' => 'Logs de atividade', 'summary' => 'Quem fez o quê, quando e de onde (só para o superadmin).', 'can' => 'logs.view'],
                     ['slug' => 'configurar-ficha', 'title' => 'Configurar a ficha de atendimento', 'summary' => 'Assuntos, perguntas, tipos e condições.', 'can' => 'appointment_form.manage'],
                 ],
             ],

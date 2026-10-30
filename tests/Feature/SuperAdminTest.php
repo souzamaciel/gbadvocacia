@@ -39,6 +39,17 @@ class SuperAdminTest extends TestCase
         $this->actingAs($super)->get(route('home'))->assertSee('Logs de atividade');
     }
 
+    public function test_logs_tutorial_is_only_in_the_super_admin_knowledge_base(): void
+    {
+        $this->actingAs(User::factory()->create())->get(route('help.index'))
+            ->assertOk()
+            ->assertSee('Sugerir melhorias')
+            ->assertDontSee('Quem fez o quê, quando e de onde');
+
+        $this->actingAs(User::factory()->superAdmin()->create())->get(route('help.index'))
+            ->assertSee('Quem fez o quê, quando e de onde');
+    }
+
     public function test_super_admin_can_do_everything_even_without_a_profile(): void
     {
         $super = User::factory()->superAdmin()->create(['role_id' => null]);

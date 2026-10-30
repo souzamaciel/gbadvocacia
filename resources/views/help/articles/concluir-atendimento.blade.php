@@ -1,5 +1,13 @@
 <h4>Imprimir a ficha</h4>
-<p>Clique em <strong>Imprimir ficha</strong> para baixar a ficha em Word com as respostas preenchidas, os pedidos escolhidos, “Atendimento feito por”, local, data e espaço para as assinaturas do atendente e do cliente. Anexe o arquivo à pasta do cliente.</p>
+<p>Clique em <strong>Imprimir ficha</strong> para baixar a ficha em Word, organizada como um formulário:</p>
+<ul>
+    <li>No topo, o <strong>cliente</strong>, a <strong>data</strong> e quem fez o <strong>atendimento</strong>.</li>
+    <li>Cada assunto em uma tabela: a pergunta à esquerda e a resposta à direita. Listas, como empresas, funções e testemunhas, saem uma por linha.</li>
+    <li>As preliminares e os pedidos escolhidos, numerados.</li>
+    <li>A declaração, o local, a data e o espaço para as assinaturas do atendente e do cliente.</li>
+    <li>Todas as páginas são numeradas e identificadas com o nome do cliente no rodapé.</li>
+</ul>
+<p>Anexe o arquivo à pasta do cliente.</p>
 <h4>Revisar e gerar a petição</h4>
 <ol>
     <li>Passe pelo assunto <strong>Pedidos</strong>: o botão <strong>Concluir e revisar petição</strong> só fica ativo depois disso.</li>
