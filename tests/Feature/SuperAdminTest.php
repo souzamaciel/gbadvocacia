@@ -43,7 +43,7 @@ class SuperAdminTest extends TestCase
     {
         $this->actingAs(User::factory()->create())->get(route('help.index'))
             ->assertOk()
-            ->assertSee('Sugerir melhorias')
+            ->assertSee('Primeiros passos')
             ->assertDontSee('Quem fez o quê, quando e de onde');
 
         $this->actingAs(User::factory()->superAdmin()->create())->get(route('help.index'))
